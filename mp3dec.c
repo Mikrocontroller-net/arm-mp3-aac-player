@@ -24,9 +24,6 @@
 #include <lpc/lpc210x.h>
 #include <lpc/dev_cntrl.h>
 #include <lpc/lpc_ioctl.h>
-#include "mp3dec.h"
-
-#include "data/mp3.h"
 
 	/**** Device table.  List of device drivers for newlib.	****/
 const struct device_table_entry *device_table[] = {
@@ -54,84 +51,22 @@ volatile int dummy;
 
 int main( void)
 { 
-  MP3FrameInfo mp3FrameInfo;
-	HMP3Decoder hMP3Decoder;
-  const unsigned char *readPtr;
-  int bytesLeft, nRead, err, offset, outOfData, eofReached;
-  int nFrames;
-  short outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
-  unsigned long long time;
-  
+
   setup_cpu();
-  
+
   puts("Setup complete\r");
   
-  IOSET = (1<<LRCK);	// set Bit = LED off (active low)
-	IODIR |= (1<<LRCK);	// define LED-Pin as output
-	IODIR &= ~(1<<SWPIN);	// define Switch-Pin as input
+  IOSET = (1<<LRCK);   // set Bit = LED off (active low)
+  IODIR |= (1<<LRCK);     // define LED-Pin as output
+  IODIR &= ~(1<<SWPIN);   // define Switch-Pin as input
   
-  printf("VPBRate: %lu\r\n", VPBRate());
-  
-  assert(hMP3Decoder = MP3InitDecoder());
-	
-	readPtr = mp3data;
-	offset = 0;
-	bytesLeft = sizeof mp3data;
-	nFrames = 0;
-	outOfData = 0;
-	
-	do {
-	  offset = MP3FindSyncWord(readPtr, bytesLeft);
-	  if (offset < 0) {
-		  puts("Error: MP3FindSyncWord returned 0\r");
-		  outOfData = 1;
-		  break;
-  	} else {
-  	  printf("Found a frame at offset %i\r\n", offset);
-  	}
-  	readPtr += offset;
-  	bytesLeft -= offset;
-	
-  	puts("beginning decoding\r");
-  	time = GetUs();
-  	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf, 0);
-  	nFrames++;
-  	time = GetUs() - time;
-  	puts("decoding finished\r");
-  	printf("elapsed time: %i us\r\n", time);
-	
-  	if (err) {
-  		/* error occurred */
-  		switch (err) {
-  		case ERR_MP3_INDATA_UNDERFLOW:
-  			puts("ERR_MP3_INDATA_UNDERFLOW\r");
-  			outOfData = 1;
-  			break;
-  		case ERR_MP3_MAINDATA_UNDERFLOW:
-  			/* do nothing - next call to decode will provide more mainData */
-  			puts("ERR_MP3_MAINDATA_UNDERFLOW\r");
-  			break;
-  		case ERR_MP3_FREE_BITRATE_SYNC:
-  		default:
-  			puts("unknown error\r");
-  			outOfData = 1;
-  			break;
-  		}
-  	} else {
-  		/* no error */
-  		MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
-  		printf("Bitrate: %i\r\n", mp3FrameInfo.bitrate);
-  	}
-	}  while (!outOfData);
-	
-  puts("Out of data.\r");
-  printf("Decoded frames: %i\r\n", nFrames);
-
   /*
   SPCR |= (1<<7); // enable SPI interrupt
   bytenum = 1;
   SPPR = 0xAA; // transfer first byte
   */
+  
+  puts("Main finished\r");
 
   while( 1) {			/*lint !e716				*/
 
@@ -177,7 +112,7 @@ void setup_cpu(void)
   T1TCR = (1<<0);
   
   assert_success(VICSetup(10, 1, spi_int, 0));
-  assert_success(VICSetup(5, 2, timer_int, 0)); // FIQ
+  assert_success(VICSetup(5, 2, timer_int, 0));
   
 	/*  Start timer.						*/
   StartClock();
@@ -196,30 +131,33 @@ void __attribute__ ((interrupt("IRQ"))) timer_int(void)
   else
     IOSET = (1<<LRCK);
 
-  /*
+  
   SPCR |= (1<<7); // enable SPI interrupt
+  dummy = SPSR;
+  dummy = SPPR;
   bytenum = 1;
   SPPR = 0xAA; // transfer first byte
-  */
+  
   
   T1IR = (1<<0); // Clear interrupt flag by writing 1 to Bit 0
 	VICVectAddrRead = 0;       // Acknowledge Interrupt (rough?)
 }
 
 void __attribute__ ((interrupt("IRQ"))) spi_int(void)
-{/*
+{
   assert(SPSR & (1 << 7));
   // SPIF
   if (bytenum == 1) {
+    //puts("x");
     bytenum = 2;
     dummy = SPSR;
     dummy = SPPR;
-    SPINT = (1<<0); // clear flag
     SPCR &= ~(1<<7); // disable SPI interrupt        
     SPPR = 0xAA;  // transfer second byte
   } else {
     // finished
   }
-*/
+
+  SPINT = (1<<0); // clear flag
   VICVectAddrRead = 0;       // Acknowledge Interrupt (rough?)
 }

@@ -51,20 +51,7 @@ TARGET = mp3dec
 SRC = 
 
 # List C source files here which must be compiled in ARM-Mode.
-SRCARM = $(TARGET).c mp3/codec/fixpt/mp3dec.c \
-  mp3/codec/fixpt/mp3tabs.c \
-  mp3/codec/fixpt/real/bitstream.c \
-  mp3/codec/fixpt/real/buffers.c \
-  mp3/codec/fixpt/real/dct32.c \
-  mp3/codec/fixpt/real/dequant.c \
-  mp3/codec/fixpt/real/dqchan.c \
-  mp3/codec/fixpt/real/huffman.c \
-  mp3/codec/fixpt/real/hufftabs.c \
-  mp3/codec/fixpt/real/imdct.c \
-  mp3/codec/fixpt/real/scalfact.c \
-  mp3/codec/fixpt/real/stproc.c \
-  mp3/codec/fixpt/real/subband.c \
-  mp3/codec/fixpt/real/trigtabs.c
+SRCARM = $(TARGET).c
 
 # List Assembler source files here.
 # Make them always end in a capital .S.  Files ending in a lowercase .s
@@ -76,7 +63,7 @@ SRCARM = $(TARGET).c mp3/codec/fixpt/mp3dec.c \
 ASRC = 
 
 # List Assembler source files here which must be assembled in ARM-Mode..
-ASRCARM = crt0.S mp3/codec/fixpt/real/arm/asmpoly_gcc.S
+ASRCARM = crt0.S
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 # 0 = turn off optimization. s = optimize for size.
@@ -92,7 +79,7 @@ DEBUG = stabs
 # List any extra directories to look for include files here.
 #     Each directory must be seperated by a space.
 #EXTRAINCDIRS = ./include
-EXTRAINCDIRS = mp3/codec/fixpt/pub
+EXTRAINCDIRS = 
 
 # Compiler flag to set the C Standard level.
 # c89   - "ANSI" C
