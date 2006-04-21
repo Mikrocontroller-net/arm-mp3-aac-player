@@ -1,5 +1,5 @@
 /*
-	FreeRTOS V3.2.3 - Copyright (C) 2003-2005 Richard Barry.
+	FreeRTOS V4.0.1 - Copyright (C) 2003-2006 Richard Barry.
 
 	This file is part of the FreeRTOS distribution.
 
@@ -177,7 +177,7 @@ signed portBASE_TYPE xQueueSend( xQueueHandle xQueue, const void * pvItemToQueue
  * <pre>
  portBASE_TYPE xQueueReceive( 
                                 xQueueHandle xQueue, 
-                                void *pcBuffer, 
+                                void *pvBuffer, 
                                 portTickType xTicksToWait 
                             );</pre>
  *
@@ -191,7 +191,7 @@ signed portBASE_TYPE xQueueSend( xQueueHandle xQueue, const void * pvItemToQueue
  * @param pxQueue The handle to the queue from which the item is to be
  * received.
  *
- * @param pcBuffer Pointer to the buffer into which the received item will
+ * @param pvBuffer Pointer to the buffer into which the received item will
  * be copied.
  * 
  * @param xTicksToWait The maximum amount of time the task should block
@@ -257,7 +257,7 @@ signed portBASE_TYPE xQueueSend( xQueueHandle xQueue, const void * pvItemToQueue
  * \defgroup xQueueReceive xQueueReceive
  * \ingroup QueueManagement
  */
-signed portBASE_TYPE xQueueReceive( xQueueHandle xQueue, void *pcBuffer, portTickType xTicksToWait );
+signed portBASE_TYPE xQueueReceive( xQueueHandle xQueue, void *pvBuffer, portTickType xTicksToWait );
 
 /**
  * queue. h
@@ -368,7 +368,7 @@ signed portBASE_TYPE xQueueSendFromISR( xQueueHandle pxQueue, const void *pvItem
  * <pre>
  portBASE_TYPE xQueueReceiveFromISR( 
                                        xQueueHandle pxQueue, 
-                                       void *pcBuffer, 
+                                       void *pvBuffer, 
                                        portBASE_TYPE *pxTaskWoken 
                                    ); 
  * </pre>
@@ -379,12 +379,12 @@ signed portBASE_TYPE xQueueSendFromISR( xQueueHandle pxQueue, const void *pvItem
  * @param pxQueue The handle to the queue from which the item is to be
  * received.
  *
- * @param pcBuffer Pointer to the buffer into which the received item will
+ * @param pvBuffer Pointer to the buffer into which the received item will
  * be copied.
  * 
- * @param pcTaskWoken A task may be blocked waiting for space to become
+ * @param pxTaskWoken A task may be blocked waiting for space to become
  * available on the queue.  If xQueueReceiveFromISR causes such a task to
- * unblock *pcTaskWoken will get set to pdTRUE, otherwise *pcTaskWoken will
+ * unblock *pxTaskWoken will get set to pdTRUE, otherwise *pxTaskWoken will
  * remain unchanged.
  *
  * @return pdTRUE if an item was successfully received from the queue,
@@ -450,8 +450,22 @@ signed portBASE_TYPE xQueueSendFromISR( xQueueHandle pxQueue, const void *pvItem
  * \defgroup xQueueReceiveFromISR xQueueReceiveFromISR
  * \ingroup QueueManagement
  */
-signed portBASE_TYPE xQueueReceiveFromISR( xQueueHandle pxQueue, void *pcBuffer, signed portBASE_TYPE *pxTaskWoken );
+signed portBASE_TYPE xQueueReceiveFromISR( xQueueHandle pxQueue, void *pvBuffer, signed portBASE_TYPE *pxTaskWoken );
 
+
+/* 
+ * The functions defined above are for passing data to and from tasks.  The 
+ * functions below are the equivalents for passing data to and from 
+ * co-rtoutines.
+ *
+ * These functions are called from the co-routine macro implementation and
+ * should not be called directly from application code.  Instead use the macro
+ * wrappers defined within croutine.h.
+ */
+signed portBASE_TYPE xQueueCRSendFromISR( xQueueHandle pxQueue, const void *pvItemToQueue, signed portBASE_TYPE xCoRoutinePreviouslyWoken );
+signed portBASE_TYPE xQueueCRReceiveFromISR( xQueueHandle pxQueue, void *pvBuffer, signed portBASE_TYPE *pxTaskWoken );
+signed portBASE_TYPE xQueueCRSend( xQueueHandle pxQueue, const void *pvItemToQueue, portTickType xTicksToWait );
+signed portBASE_TYPE xQueueCRReceive( xQueueHandle pxQueue, void *pvBuffer, portTickType xTicksToWait );
 
 #endif
 

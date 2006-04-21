@@ -1,5 +1,5 @@
 /*
-	FreeRTOS V3.2.3 - Copyright (C) 2003-2005 Richard Barry.
+	FreeRTOS V4.0.1 - Copyright (C) 2003-2006 Richard Barry.
 
 	This file is part of the FreeRTOS distribution.
 
@@ -40,7 +40,7 @@
  * MACROS AND DEFINITIONS
  *----------------------------------------------------------*/
 
-#define tskKERNEL_VERSION_NUMBER "V3.2.3"
+#define tskKERNEL_VERSION_NUMBER "V3.2.4"
 
 /**
  * task. h
@@ -634,10 +634,6 @@ void vTaskEndScheduler( void );
  * After calling vTaskSuspendAll () the calling task will continue to execute
  * without risk of being swapped out until a call to xTaskResumeAll () has been
  * made.
- *
- * Calls to vTaskSuspendAll () are not accumulative.  A single call to
- * vTaskResume () will start the real time kernel again no matter how many
- * calls to vTaskSuspendAll () have been made.
  *
  * Example usage:
    <pre>

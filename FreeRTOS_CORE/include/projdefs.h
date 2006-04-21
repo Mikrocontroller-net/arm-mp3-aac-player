@@ -1,5 +1,5 @@
 /*
-	FreeRTOS V3.2.3 - Copyright (C) 2003-2005 Richard Barry.
+	FreeRTOS V4.0.1 - Copyright (C) 2003-2006 Richard Barry.
 
 	This file is part of the FreeRTOS distribution.
 
@@ -30,50 +30,25 @@
 	***************************************************************************
 */
 
+#ifndef PROJDEFS_H
+#define PROJDEFS_H
 
-/*
- * Implementation of pvPortMalloc() and vPortFree() that relies on the
- * compilers own malloc() and free() implementations.
- *
- * This file can only be used if the linker is configured to to generate
- * a heap memory area.
- *
- * See heap_2.c and heap_1.c for alternative implementations, and the memory
- * management pages of http://www.FreeRTOS.org for more information.
- */
+/* Defines to prototype to which task functions must conform. */
+typedef void (*pdTASK_CODE)( void * );
 
-#include <stdlib.h>
+#define pdTRUE		( 1 )
+#define pdFALSE		( 0 )
 
-#include "FreeRTOS.h"
-#include "task.h"
+#define pdPASS		( 1 )
+#define pdFAIL		( 0 )
 
-/*-----------------------------------------------------------*/
+/* Error definitions. */
+#define errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY	( -1 )
+#define errNO_TASK_TO_RUN						( -2 )
+#define errQUEUE_FULL							( -3 )
+#define errQUEUE_BLOCKED						( -4 )
+#define errQUEUE_YIELD							( -5 )
 
-void *pvPortMalloc( size_t xWantedSize )
-{
-void *pvReturn;
-
-	vTaskSuspendAll();
-	{
-		pvReturn = malloc( xWantedSize );
-	}
-	xTaskResumeAll();
-
-	return pvReturn;
-}
-/*-----------------------------------------------------------*/
-
-void vPortFree( void *pv )
-{
-	if( pv )
-	{
-		vTaskSuspendAll();
-		{
-			free( pv );
-		}
-		xTaskResumeAll();
-	}
-}
-
+#endif
 
 

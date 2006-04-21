@@ -1,5 +1,5 @@
 /*
-	FreeRTOS V3.2.3 - Copyright (C) 2003-2005 Richard Barry.
+	FreeRTOS V4.0.1 - Copyright (C) 2003-2006 Richard Barry.
 
 	This file is part of the FreeRTOS distribution.
 
@@ -28,6 +28,11 @@
 	and contact details.  Please ensure to read the configuration and relevant
 	port sections of the online documentation.
 	***************************************************************************
+
+  Changes:
+
+  + manual selection of port header file
+
 */
 
 /*-----------------------------------------------------------
@@ -37,6 +42,7 @@
 #ifndef PORTABLE_H
 #define PORTABLE_H
 
+#if 0
 /* Include the macro file relevant to the port being used. */
 
 #ifdef OPEN_WATCOM_INDUSTRIAL_PC_PORT
@@ -70,8 +76,7 @@
 #endif
 
 #ifdef GCC_ARM7
-	//#include "../../Source/portable/GCC/ARM7_LPC2000/portmacro.h"
-	#include "../LPC2148_PORT/portmacro.h"
+	#include "../../Source/portable/GCC/ARM7_LPC2000/portmacro.h"
 #endif
 
 #ifdef GCC_MSP430
@@ -110,9 +115,21 @@
 	#include "../../Source/portable/GCC/ARM7_AT91FR40008/portmacro.h"
 #endif
 
+#ifdef RVDS_ARMCM3_LM3S102
+	#include "../../Source/portable/RVDS/ARM_CM3/portmacro.h"
+#endif
+
+#ifdef GCC_ARMCM3_LM3S102
+	#include "../../Source/portable/GCC/ARM_CM3/portmacro.h"
+#endif
+
 #ifdef HCS12_CODE_WARRIOR
 	#include "../../Source/portable/CodeWarrior/HCS12/portmacro.h"
 #endif	
+
+#ifdef MICROBLAZE_GCC
+	#include "../../Source/portable/GCC/MicroBlaze/portmacro.h"
+#endif
 
 #ifdef BCC_INDUSTRIAL_PC_PORT
 	/* A short file name has to be used in place of the normal
@@ -129,6 +146,11 @@
 	#include "..\portable\BCC\16BitDOS\flsh186\prtmacro.h"
     typedef void ( __interrupt __far *pxISR )();
 #endif
+
+#endif
+
+#include "FreeRTOS_CORE/portable/GCC/ARM7_LPC2000/portmacro.h"
+
 /*
  * Setup the stack of a new task so it is ready to be placed under the
  * scheduler control.  The registers have to be placed on the stack in
@@ -158,4 +180,3 @@ void vPortEndScheduler( void );
 
 
 #endif /* PORTABLE_H */
-

@@ -1,5 +1,5 @@
 /*
-	FreeRTOS V3.2.3 - Copyright (C) 2003-2005 Richard Barry.
+	FreeRTOS V4.0.1 - Copyright (C) 2003-2006 Richard Barry.
 
 	This file is part of the FreeRTOS distribution.
 
@@ -30,6 +30,21 @@
 	***************************************************************************
 */
 
+/*
+	Changes from V3.2.3
+	
+	+ Modified portENTER_SWITCHING_ISR() to allow use with GCC V4.0.1.
+
+	Changes from V3.2.4
+
+	+ Removed the use of the %0 parameter within the assembler macros and 
+	  replaced them with hard coded registers.  This will ensure the
+	  assembler does not select the link register as the temp register as
+	  was occasionally happening previously.
+
+	+ The assembler statements are now included in a single asm block rather
+	  than each line having its own asm block.
+*/
 
 #ifndef PORTMACRO_H
 #define PORTMACRO_H
@@ -66,6 +81,7 @@
 #define portSTACK_GROWTH			( -1 )
 #define portTICK_RATE_MS			( ( portTickType ) 1000 / configTICK_RATE_HZ )		
 #define portBYTE_ALIGNMENT			4
+#define portNOP()					asm volatile ( "NOP" );
 /*-----------------------------------------------------------*/	
 
 
@@ -84,30 +100,34 @@ extern volatile void * volatile pxCurrentTCB;							\
 extern volatile unsigned portLONG ulCriticalNesting;					\
 																		\
 	/* Set the LR to the task stack. */									\
-	asm volatile ( "LDR		R0, %0" : : "m" (pxCurrentTCB) );			\
-	asm volatile ( "LDR		LR, [R0]" );								\
+	asm volatile (														\
+	"LDR		R0, =pxCurrentTCB								\n\t"	\
+	"LDR		R0, [R0]										\n\t"	\
+	"LDR		LR, [R0]										\n\t"	\
 																		\
 	/* The critical nesting depth is the first item on the stack. */	\
 	/* Load it into the ulCriticalNesting variable. */					\
-	asm volatile ( "LDR		R0, =ulCriticalNesting" );					\
-	asm volatile ( "LDMFD	LR!, {R1}" );								\
-	asm volatile ( "STR		R1, [R0]" );								\
+	"LDR		R0, =ulCriticalNesting							\n\t"	\
+	"LDMFD	LR!, {R1}											\n\t"	\
+	"STR		R1, [R0]										\n\t"	\
 																		\
 	/* Get the SPSR from the stack. */									\
-	asm volatile ( "LDMFD	LR!, {R0}" );								\
-	asm volatile ( "MSR		SPSR, R0" );								\
+	"LDMFD	LR!, {R0}											\n\t"	\
+	"MSR		SPSR, R0										\n\t"	\
 																		\
 	/* Restore all system mode registers for the task. */				\
-	asm volatile ( "LDMFD	LR, {R0-R14}^" );							\
-	asm volatile ( "NOP" );												\
+	"LDMFD	LR, {R0-R14}^										\n\t"	\
+	"NOP														\n\t"	\
 																		\
 	/* Restore the return address. */									\
-	asm volatile ( "LDR		LR, [LR, #+60]" );							\
+	"LDR		LR, [LR, #+60]									\n\t"	\
 																		\
 	/* And return - correcting the offset in the LR to obtain the */	\
 	/* correct address. */												\
-	asm volatile ( "SUBS	PC, LR, #4" );								\
+	"SUBS	PC, LR, #4											\n\t"	\
+	);																	\
 	( void ) ulCriticalNesting;											\
+	( void ) pxCurrentTCB;												\
 }
 /*-----------------------------------------------------------*/
 
@@ -117,38 +137,44 @@ extern volatile void * volatile pxCurrentTCB;							\
 extern volatile unsigned portLONG ulCriticalNesting;					\
 																		\
 	/* Push R0 as we are going to use the register. */					\
-	asm volatile ( "STMDB	SP!, {R0}" );								\
+	asm volatile (														\
+	"STMDB	SP!, {R0}											\n\t"	\
 																		\
 	/* Set R0 to point to the task stack pointer. */					\
-	asm volatile ( "STMDB	SP,{SP}^" );								\
-	asm volatile ( "SUB		SP, SP, #4" );								\
-	asm volatile ( "LDMIA	SP!,{R0}" );								\
+	"STMDB	SP,{SP}^											\n\t"	\
+	"NOP														\n\t"	\
+	"SUB	SP, SP, #4											\n\t"	\
+	"LDMIA	SP!,{R0}											\n\t"	\
 																		\
 	/* Push the return address onto the stack. */						\
-	asm volatile ( "STMDB	R0!, {LR}" );								\
+	"STMDB	R0!, {LR}											\n\t"	\
 																		\
 	/* Now we have saved LR we can use it instead of R0. */				\
-	asm volatile ( "MOV		LR, R0" );									\
+	"MOV	LR, R0												\n\t"	\
 																		\
 	/* Pop R0 so we can save it onto the system mode stack. */			\
-	asm volatile ( "LDMIA	SP!, {R0}" );								\
+	"LDMIA	SP!, {R0}											\n\t"	\
 																		\
 	/* Push all the system mode registers onto the task stack. */		\
-	asm volatile ( "STMDB	LR,{R0-LR}^");								\
-	asm volatile ( "SUB		LR, LR, #60" );								\
+	"STMDB	LR,{R0-LR}^											\n\t"	\
+	"NOP														\n\t"	\
+	"SUB	LR, LR, #60											\n\t"	\
 																		\
 	/* Push the SPSR onto the task stack. */							\
-	asm volatile ( "MRS		R0, SPSR" );								\
-	asm volatile ( "STMDB	LR!, {R0}" );								\
+	"MRS	R0, SPSR											\n\t"	\
+	"STMDB	LR!, {R0}											\n\t"	\
 																		\
-	asm volatile ( "LDR		R0, =ulCriticalNesting " );					\
-	asm volatile ( "LDR		R0, [R0]" );								\
-	asm volatile ( "STMDB	LR!, {R0}" );								\
+	"LDR	R0, =ulCriticalNesting								\n\t"	\
+	"LDR	R0, [R0]											\n\t"	\
+	"STMDB	LR!, {R0}											\n\t"	\
 																		\
 	/* Store the new top of stack for the task. */						\
-	asm volatile ( "LDR		R0, %0" : : "m" (pxCurrentTCB) );			\
-	asm volatile ( "STR		LR, [R0]" );								\
+	"LDR	R0, =pxCurrentTCB									\n\t"	\
+	"LDR	R0, [R0]											\n\t"	\
+	"STR	LR, [R0]											\n\t"	\
+	);																	\
 	( void ) ulCriticalNesting;											\
+	( void ) pxCurrentTCB;												\
 }
 
 
@@ -166,7 +192,7 @@ extern volatile unsigned portLONG ulCriticalNesting;					\
 	/* pointer will be set to the top of the task stack, and the stack*/\
 	/* pointer left where it is.  The IRQ stack will get used for any */\
 	/* functions calls made by this ISR. */								\
-	asm volatile ( "MOV		R11, LR" );									\
+	asm volatile ( "SUB		R11, LR, #4" );							\
 	{
 
 #define portEXIT_SWITCHING_ISR( SwitchRequired )						\
@@ -205,19 +231,21 @@ extern volatile unsigned portLONG ulCriticalNesting;					\
 	
 #else
 
-	#define portDISABLE_INTERRUPTS()																\
-		asm volatile ( "STMDB	SP!, {R0}" );		/* Push R0.									*/	\
-		asm volatile ( "MRS		R0, CPSR" );		/* Get CPSR.								*/	\
-		asm volatile ( "ORR		R0, R0, #0xC0" );	/* Disable IRQ, FIQ.						*/	\
-		asm volatile ( "MSR		CPSR, R0" );		/* Write back modified value.				*/	\
-		asm volatile ( "LDMIA	SP!, {R0}" )		/* Pop R0.									*/
+	#define portDISABLE_INTERRUPTS()											\
+		asm volatile (															\
+			"STMDB	SP!, {R0}		\n\t"	/* Push R0.						*/	\
+			"MRS	R0, CPSR		\n\t"	/* Get CPSR.					*/	\
+			"ORR	R0, R0, #0xC0	\n\t"	/* Disable IRQ, FIQ.			*/	\
+			"MSR	CPSR, R0		\n\t"	/* Write back modified value.	*/	\
+			"LDMIA	SP!, {R0}			" )	/* Pop R0.						*/
 			
-	#define portENABLE_INTERRUPTS()																	\
-		asm volatile ( "STMDB	SP!, {R0}" );		/* Push R0.									*/	\
-		asm volatile ( "MRS		R0, CPSR" );		/* Get CPSR.								*/	\
-		asm volatile ( "BIC		R0, R0, #0xC0" );	/* Enable IRQ, FIQ.							*/	\
-		asm volatile ( "MSR		CPSR, R0" );		/* Write back modified value.				*/	\
-		asm volatile ( "LDMIA	SP!, {R0}" )		/* Pop R0. */
+	#define portENABLE_INTERRUPTS()												\
+		asm volatile (															\
+			"STMDB	SP!, {R0}		\n\t"	/* Push R0.						*/	\
+			"MRS	R0, CPSR		\n\t"	/* Get CPSR.					*/	\
+			"BIC	R0, R0, #0xC0	\n\t"	/* Enable IRQ, FIQ.				*/	\
+			"MSR	CPSR, R0		\n\t"	/* Write back modified value.	*/	\
+			"LDMIA	SP!, {R0}			" )	/* Pop R0.						*/
 
 #endif /* THUMB_INTERWORK */
 

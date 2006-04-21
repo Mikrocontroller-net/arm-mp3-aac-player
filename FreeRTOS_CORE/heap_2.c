@@ -1,5 +1,5 @@
 /*
-	FreeRTOS V3.2.3 - Copyright (C) 2003-2005 Richard Barry.
+	FreeRTOS V4.0.1 - Copyright (C) 2003-2006 Richard Barry.
 
 	This file is part of the FreeRTOS distribution.
 
@@ -19,13 +19,13 @@
 
 	A special exception to the GPL can be applied should you wish to distribute
 	a combined work that includes FreeRTOS, without being obliged to provide
-	the source code for any proprietary components.  See the licensing section 
+	the source code for any proprietary components.  See the licensing section
 	of http://www.FreeRTOS.org for full details of how and when the exception
 	can be applied.
 
 	***************************************************************************
-	See http://www.FreeRTOS.org for documentation, latest information, license 
-	and contact details.  Please ensure to read the configuration and relevant 
+	See http://www.FreeRTOS.org for documentation, latest information, license
+	and contact details.  Please ensure to read the configuration and relevant
 	port sections of the online documentation.
 	***************************************************************************
 */
@@ -33,7 +33,7 @@
 /*
  * A sample implementation of pvPortMalloc() and vPortFree() that permits
  * allocated blocks to be freed, but does not combine adjacent free blocks
- * into a single larger block. 
+ * into a single larger block.
  *
  * See heap_1.c and heap_3.c for alternative implementations, and the memory
  * management pages of http://www.FreeRTOS.org for more information.
@@ -52,7 +52,7 @@
 	#define heapBYTE_ALIGNMENT_MASK	( ( size_t ) 0x0001 )
 #endif
 
-#if portBYTE_ALIGNMENT == 1 
+#if portBYTE_ALIGNMENT == 1
 	#define heapBYTE_ALIGNMENT_MASK	( ( size_t ) 0x0000 )
 #endif
 
@@ -86,9 +86,9 @@ static xBlockLink xStart, xEnd;
 /* STATIC FUNCTIONS ARE DEFINED AS MACROS TO MINIMIZE THE FUNCTION CALL DEPTH. */
 
 /*
- * Insert a block into the list of free blocks - which is ordered by size of 
+ * Insert a block into the list of free blocks - which is ordered by size of
  * the block.  Small blocks at the start of the list and large blocks at the end
- * of the list. 
+ * of the list.
  */
 #define prvInsertBlockIntoFreeList( pxBlockToInsert )								\
 {																					\
@@ -193,7 +193,7 @@ void *pvReturn = NULL;
 					used to prevent byte alignment warnings from the compiler. */
 					pxNewBlockLink = ( void * ) ( ( ( unsigned portCHAR * ) pxBlock ) + xWantedSize );
 					
-					/* Calculate the sizes of two blocks split from the single 
+					/* Calculate the sizes of two blocks split from the single
 					block. */
 					pxNewBlockLink->xBlockSize = pxBlock->xBlockSize - xWantedSize;	
 					pxBlock->xBlockSize = xWantedSize;			

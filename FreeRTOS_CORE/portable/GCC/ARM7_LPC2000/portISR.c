@@ -1,5 +1,5 @@
 /*
-	FreeRTOS V3.2.3 - Copyright (C) 2003-2005 Richard Barry.
+	FreeRTOS V4.0.1 - Copyright (C) 2003-2006 Richard Barry.
 
 	This file is part of the FreeRTOS distribution.
 
@@ -48,6 +48,16 @@
 
 	+ Removed the 'static' from the definition of vNonPreemptiveTick() to 
 	  allow the demo to link when using the cooperative scheduler.
+
+	Changes from V3.2.4
+
+	+ The assembler statements are now included in a single asm block rather
+	  than each line having its own asm block.
+
+  Changes:
+
+  + replaced T0_IR with T0IR
+
 */
 
 
@@ -165,22 +175,24 @@ void vPortYieldProcessor( void )
 
 	void vPortDisableInterruptsFromThumb( void )
 	{
-		asm volatile ( "STMDB	SP!, {R0}" );		/* Push R0.									*/
-		asm volatile ( "MRS		R0, CPSR" );		/* Get CPSR.								*/
-		asm volatile ( "ORR		R0, R0, #0xC0" );	/* Disable IRQ, FIQ.						*/
-		asm volatile ( "MSR		CPSR, R0" );		/* Write back modified value.				*/
-		asm volatile ( "LDMIA	SP!, {R0}" );		/* Pop R0.									*/
-		asm volatile ( "BX		R14" );				/* Return back to thumb.					*/
+		asm volatile ( 
+			"STMDB	SP!, {R0}		\n\t"	/* Push R0.									*/
+			"MRS	R0, CPSR		\n\t"	/* Get CPSR.								*/
+			"ORR	R0, R0, #0xC0	\n\t"	/* Disable IRQ, FIQ.						*/
+			"MSR	CPSR, R0		\n\t"	/* Write back modified value.				*/
+			"LDMIA	SP!, {R0}		\n\t"	/* Pop R0.									*/
+			"BX		R14" );					/* Return back to thumb.					*/
 	}
 			
 	void vPortEnableInterruptsFromThumb( void )
 	{
-		asm volatile ( "STMDB	SP!, {R0}" );		/* Push R0.									*/	
-		asm volatile ( "MRS		R0, CPSR" );		/* Get CPSR.								*/	
-		asm volatile ( "BIC		R0, R0, #0xC0" );	/* Enable IRQ, FIQ.							*/	
-		asm volatile ( "MSR		CPSR, R0" );		/* Write back modified value.				*/	
-		asm volatile ( "LDMIA	SP!, {R0}" );		/* Pop R0.									*/
-		asm volatile ( "BX		R14" );				/* Return back to thumb.					*/
+		asm volatile ( 
+			"STMDB	SP!, {R0}		\n\t"	/* Push R0.									*/	
+			"MRS	R0, CPSR		\n\t"	/* Get CPSR.								*/	
+			"BIC	R0, R0, #0xC0	\n\t"	/* Enable IRQ, FIQ.							*/	
+			"MSR	CPSR, R0		\n\t"	/* Write back modified value.				*/	
+			"LDMIA	SP!, {R0}		\n\t"	/* Pop R0.									*/
+			"BX		R14" );					/* Return back to thumb.					*/
 	}
 
 #endif /* THUMB_INTERWORK */
@@ -191,12 +203,13 @@ be saved to the stack.  Instead the critical section nesting level is stored
 in a variable, which is then saved as part of the stack context. */
 void vPortEnterCritical( void )
 {
-	/* Disable interrupts as per portDISABLE_INTERRUPTS(); 								*/
-	asm volatile ( "STMDB	SP!, {R0}" );		/* Push R0.								*/
-	asm volatile ( "MRS		R0, CPSR" );		/* Get CPSR.							*/
-	asm volatile ( "ORR		R0, R0, #0xC0" );	/* Disable IRQ, FIQ.					*/
-	asm volatile ( "MSR		CPSR, R0" );		/* Write back modified value.			*/
-	asm volatile ( "LDMIA	SP!, {R0}" );		/* Pop R0.								*/
+	/* Disable interrupts as per portDISABLE_INTERRUPTS(); 							*/
+	asm volatile ( 
+		"STMDB	SP!, {R0}			\n\t"	/* Push R0.								*/
+		"MRS	R0, CPSR			\n\t"	/* Get CPSR.							*/
+		"ORR	R0, R0, #0xC0		\n\t"	/* Disable IRQ, FIQ.					*/
+		"MSR	CPSR, R0			\n\t"	/* Write back modified value.			*/
+		"LDMIA	SP!, {R0}" );				/* Pop R0.								*/
 
 	/* Now interrupts are disabled ulCriticalNesting can be accessed 
 	directly.  Increment ulCriticalNesting to keep a count of how many times
@@ -215,13 +228,13 @@ void vPortExitCritical( void )
 		re-enabled. */
 		if( ulCriticalNesting == portNO_CRITICAL_NESTING )
 		{
-			/* Enable interrupts as per portEXIT_CRITICAL(). */
-			asm volatile ( "STMDB	SP!, {R0}" );		/* Push R0.						*/	
-			asm volatile ( "MRS		R0, CPSR" );		/* Get CPSR.					*/	
-			asm volatile ( "BIC		R0, R0, #0xC0" );	/* Enable IRQ, FIQ.				*/	
-			asm volatile ( "MSR		CPSR, R0" );		/* Write back modified value.	*/	
-			asm volatile ( "LDMIA	SP!, {R0}" );		/* Pop R0.						*/
+			/* Enable interrupts as per portEXIT_CRITICAL().					*/
+			asm volatile ( 
+				"STMDB	SP!, {R0}		\n\t"	/* Push R0.						*/	
+				"MRS	R0, CPSR		\n\t"	/* Get CPSR.					*/	
+				"BIC	R0, R0, #0xC0	\n\t"	/* Enable IRQ, FIQ.				*/	
+				"MSR	CPSR, R0		\n\t"	/* Write back modified value.	*/	
+				"LDMIA	SP!, {R0}" );			/* Pop R0.						*/
 		}
 	}
 }
-

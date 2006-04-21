@@ -1,5 +1,5 @@
 /*
-	FreeRTOS V3.2.3 - Copyright (C) 2003-2005 Richard Barry.
+	FreeRTOS V4.0.1 - Copyright (C) 2003-2006 Richard Barry.
 
 	This file is part of the FreeRTOS distribution.
 
@@ -47,9 +47,13 @@
 
 	Changes from V3.2.2
 
-	+ Bug fix - The prescale value for the timer setup is not written to T0_PR 
+	+ Bug fix - The prescale value for the timer setup is now written to T0_PR 
 	  instead of T0_PC.  This bug would have had no effect unless a prescale 
 	  value was actually used.
+
+  Changes:
+
+  + adapted constants to Keil header file
 */
 
 
@@ -207,7 +211,7 @@ unsigned portLONG ulCompareMatch;
 	in a warning - hence the #if. */
 	#if portPRESCALE_VALUE != 0
 	{
-		ulCompareMatch /= portPRESCALE_VALUE;
+		ulCompareMatch /= ( portPRESCALE_VALUE + 1 );
 	}
 	#endif
 	T0MR0 = ulCompareMatch;

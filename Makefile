@@ -41,12 +41,12 @@ WARNINGS=-Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align
 PROJECT=mp3
 
 RTOS_SOURCE_DIR=./FreeRTOS_CORE
-RTOS_PORT_DIR = ./LPC2148_PORT
+RTOS_PORT_DIR = ./FreeRTOS_CORE/portable/GCC/ARM7_LPC2000
 
 #
 # CFLAGS common to both the THUMB and ARM mode builds
 #
-CFLAGS=$(WARNINGS) -D $(RUN_MODE) -D GCC_ARM7 -I. -I$(RTOS_SOURCE_DIR) \
+CFLAGS=$(WARNINGS) -D $(RUN_MODE) -D GCC_ARM7 -I. -I$(RTOS_SOURCE_DIR)/include \
 		-I$(RTOS_PORT_DIR) -mcpu=arm7tdmi -T$(LDSCRIPT) \
 		 $(OPTIM)
 
@@ -67,7 +67,7 @@ rtc/rtc.c \
 $(RTOS_SOURCE_DIR)/tasks.c \
 $(RTOS_SOURCE_DIR)/queue.c \
 $(RTOS_SOURCE_DIR)/list.c \
-$(RTOS_PORT_DIR)/heap_2.c \
+$(RTOS_SOURCE_DIR)/heap_2.c \
 $(RTOS_PORT_DIR)/port.c
 
 
