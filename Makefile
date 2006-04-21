@@ -42,22 +42,18 @@ PROJECT=mp3
 
 RTOS_SOURCE_DIR=./FreeRTOS_CORE
 RTOS_PORT_DIR = ./LPC2148_PORT
+
 #
 # CFLAGS common to both the THUMB and ARM mode builds
 #
-CFLAGS=$(WARNINGS) -D $(RUN_MODE) -D GCC_ARM7 -I. \
-		-I $(RTOS_SOURCE_DIR) \
-		-I $(RTOS_PORT_DIR)  \
-       		-I ./LPC2148_Serial \
-		-I ./LPC2148_RTC \
-		$(DEBUG) -mcpu=arm7tdmi -T$(LDSCRIPT) \
-		$(OPTIM)
+CFLAGS=$(WARNINGS) -D $(RUN_MODE) -D GCC_ARM7 -I. -I$(RTOS_SOURCE_DIR) \
+		-I$(RTOS_PORT_DIR) -mcpu=arm7tdmi -T$(LDSCRIPT) \
+		 $(OPTIM)
 
 ifeq ($(USE_THUMB_MODE),YES)
 	CFLAGS += -mthumb-interwork -D THUMB_INTERWORK
 	THUMB_FLAGS=-mthumb
 endif
-
 
 LINKER_FLAGS=-Xlinker -o$(PROJECT).elf -Xlinker -M -Xlinker -Map=$(PROJECT).map
 
@@ -66,8 +62,8 @@ LINKER_FLAGS=-Xlinker -o$(PROJECT).elf -Xlinker -M -Xlinker -Map=$(PROJECT).map
 # Source files that can be built to THUMB mode.
 THUMB_SRC = \
 main.c \
-LPC2148_Serial/serial.c \
-LPC2148_RTC/rtc.c \
+serial/serial.c \
+rtc/rtc.c \
 $(RTOS_SOURCE_DIR)/tasks.c \
 $(RTOS_SOURCE_DIR)/queue.c \
 $(RTOS_SOURCE_DIR)/list.c \
@@ -79,9 +75,8 @@ $(RTOS_PORT_DIR)/port.c
 # Source files that must be built to ARM mode.
 ARM_SRC = \
 $(RTOS_PORT_DIR)/portISR.c \
-LPC2148_Serial/serialISR.c \
-LPC2148_RTC/rtcISR.c \
-
+serial/serialISR.c \
+rtc/rtcISR.c 
 
 
 # Define all object files.

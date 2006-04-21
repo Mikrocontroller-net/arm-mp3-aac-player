@@ -42,8 +42,8 @@
 #include "task.h"
 
 // Demo application includes. 
-#include "serial.h"
-#include "rtc.h"
+#include "serial/serial.h"
+#include "rtc/rtc.h"
 
 
 //-----------------------------------------------------------
