@@ -65,6 +65,11 @@ extern void vSerialISRCreateQueues(portCHAR pxPort,unsigned portBASE_TYPE uxQueu
 
 /*-----------------------------------------------------------*/
 
+void vPuts(char *text)
+{
+	vSerialPutString(0, text, strlen(text));
+}
+
 xComPortHandle xSerialPortInitMinimal(portCHAR pxPort, unsigned portLONG ulWantedBaud, unsigned portBASE_TYPE uxQueueLength )
 {
 unsigned portLONG ulDivisor, ulWantedClock;

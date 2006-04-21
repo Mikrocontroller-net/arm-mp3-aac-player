@@ -41,9 +41,10 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-// Demo application includes. 
+// application includes. 
 #include "serial/serial.h"
 #include "rtc/rtc.h"
+#include "mp3_decoder.h"
 
 
 //-----------------------------------------------------------
@@ -191,6 +192,7 @@ int main( void )
 
 
 	vStartTestTasks( tskIDLE_PRIORITY + 1 );
+	//vStartMP3DecoderTasks( tskIDLE_PRIORITY + 1 );
 
 
 	//NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.

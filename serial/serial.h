@@ -37,6 +37,7 @@
 
 typedef void * xComPortHandle;
 
+void vPuts(char *text);
 xComPortHandle xSerialPortInitMinimal(portCHAR pxPort, unsigned portLONG ulWantedBaud, unsigned portBASE_TYPE uxQueueLength );
 void vSerialPutString( portCHAR pxPort, const signed portCHAR * const pcString, portTickType xBlockTime );
 signed portBASE_TYPE xSerialGetChar( portCHAR pxPort, signed portCHAR *pcRxedChar, portTickType xBlockTime );
