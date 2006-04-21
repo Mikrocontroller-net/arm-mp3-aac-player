@@ -52,11 +52,15 @@
 #define configTICK_RATE_HZ		( ( portTickType ) 1000 )
 #define configMAX_PRIORITIES		( ( unsigned portBASE_TYPE ) 5 )
 #define configMINIMAL_STACK_SIZE	( ( unsigned portSHORT ) 128 )
-#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 15 * 1024 ) )
+#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 27 * 1024 ) )
 #define configMAX_TASK_NAME_LEN		( 16 )
 #define configUSE_TRACE_FACILITY	0
 #define configUSE_16_BIT_TICKS		0
 #define configIDLE_SHOULD_YIELD		1
+#define configUSE_TICK_HOOK 0
+#define configUSE_CO_ROUTINES 0
+#define configMAX_CO_ROUTINE_PRIORITIES 1
+
 
 
 /* Set the following definitions to 1 to include the API function, or zero

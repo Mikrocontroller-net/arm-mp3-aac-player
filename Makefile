@@ -41,23 +41,19 @@ WARNINGS=-Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align
 PROJECT=mp3
 
 RTOS_SOURCE_DIR=./FreeRTOS_CORE
-RTOS_PORT_DIR = ./LPC2148_PORT
+RTOS_PORT_DIR = ./FreeRTOS_CORE/portable/GCC/ARM7_LPC2000
+
 #
 # CFLAGS common to both the THUMB and ARM mode builds
 #
-CFLAGS=$(WARNINGS) -D $(RUN_MODE) -D GCC_ARM7 -I. \
-		-I $(RTOS_SOURCE_DIR) \
-		-I $(RTOS_PORT_DIR)  \
-       		-I ./LPC2148_Serial \
-		-I ./LPC2148_RTC \
-		$(DEBUG) -mcpu=arm7tdmi -T$(LDSCRIPT) \
-		$(OPTIM)
+CFLAGS=$(WARNINGS) -D $(RUN_MODE) -D GCC_ARM7 -D ARM -I. -I$(RTOS_SOURCE_DIR)/include \
+		-I$(RTOS_PORT_DIR) -Imp3/codec/fixpt/pub -mcpu=arm7tdmi -T$(LDSCRIPT) \
+		 $(OPTIM) $(DEBUG)
 
 ifeq ($(USE_THUMB_MODE),YES)
 	CFLAGS += -mthumb-interwork -D THUMB_INTERWORK
 	THUMB_FLAGS=-mthumb
 endif
-
 
 LINKER_FLAGS=-Xlinker -o$(PROJECT).elf -Xlinker -M -Xlinker -Map=$(PROJECT).map
 
@@ -66,12 +62,14 @@ LINKER_FLAGS=-Xlinker -o$(PROJECT).elf -Xlinker -M -Xlinker -Map=$(PROJECT).map
 # Source files that can be built to THUMB mode.
 THUMB_SRC = \
 main.c \
-LPC2148_Serial/serial.c \
-LPC2148_RTC/rtc.c \
+mp3_decoder.c \
+serial/serial.c \
+rtc/rtc.c \
+newlib-syscalls.c \
 $(RTOS_SOURCE_DIR)/tasks.c \
 $(RTOS_SOURCE_DIR)/queue.c \
 $(RTOS_SOURCE_DIR)/list.c \
-$(RTOS_PORT_DIR)/heap_2.c \
+$(RTOS_SOURCE_DIR)/heap_2.c \
 $(RTOS_PORT_DIR)/port.c
 
 
@@ -79,26 +77,45 @@ $(RTOS_PORT_DIR)/port.c
 # Source files that must be built to ARM mode.
 ARM_SRC = \
 $(RTOS_PORT_DIR)/portISR.c \
-LPC2148_Serial/serialISR.c \
-LPC2148_RTC/rtcISR.c \
+serial/serialISR.c \
+rtc/rtcISR.c \
+mp3/codec/fixpt/mp3dec.c \
+mp3/codec/fixpt/mp3tabs.c \
+mp3/codec/fixpt/real/bitstream.c \
+mp3/codec/fixpt/real/buffers.c \
+mp3/codec/fixpt/real/dct32.c \
+mp3/codec/fixpt/real/dequant.c \
+mp3/codec/fixpt/real/dqchan.c \
+mp3/codec/fixpt/real/huffman.c \
+mp3/codec/fixpt/real/hufftabs.c \
+mp3/codec/fixpt/real/imdct.c \
+mp3/codec/fixpt/real/scalfact.c \
+mp3/codec/fixpt/real/stproc.c \
+mp3/codec/fixpt/real/subband.c \
+mp3/codec/fixpt/real/trigtabs.c
 
-
+ARM_ASM_SRC = \
+mp3/codec/fixpt/real/arm/asmpoly_gcc.S
 
 # Define all object files.
 ARM_OBJ = $(ARM_SRC:.c=.o)
 THUMB_OBJ = $(THUMB_SRC:.c=.o)
+ARM_ASM_OBJ = $(ARM_ASM_SRC:.S=.o)
 
 $(PROJECT).hex : $(PROJECT).elf
 	$(OBJCOPY) $(PROJECT).elf -O ihex $(PROJECT).hex
 
-$(PROJECT).elf : $(ARM_OBJ) $(THUMB_OBJ) $(CRT0) Makefile
-	$(CC) $(CFLAGS) $(ARM_OBJ) $(THUMB_OBJ) -nostartfiles $(CRT0) $(LINKER_FLAGS)
+$(PROJECT).elf : $(ARM_OBJ) $(ARM_ASM_OBJ) $(THUMB_OBJ) $(CRT0) Makefile
+	$(CC) $(CFLAGS) $(ARM_OBJ) $(ARM_ASM_OBJ) $(THUMB_OBJ) -nostartfiles $(CRT0) $(LINKER_FLAGS)
 	arm-elf-size -A $(PROJECT).elf
 
 $(THUMB_OBJ) : %.o : %.c $(LDSCRIPT) Makefile
 	$(CC) -c $(THUMB_FLAGS) $(CFLAGS) $< -o $@
 
 $(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(ARM_ASM_OBJ) : %.o : %.S $(LDSCRIPT) Makefile
 	$(CC) -c $(CFLAGS) $< -o $@
 
 clean :
