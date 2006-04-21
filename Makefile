@@ -48,7 +48,7 @@ RTOS_PORT_DIR = ./FreeRTOS_CORE/portable/GCC/ARM7_LPC2000
 #
 CFLAGS=$(WARNINGS) -D $(RUN_MODE) -D GCC_ARM7 -D ARM -I. -I$(RTOS_SOURCE_DIR)/include \
 		-I$(RTOS_PORT_DIR) -Imp3/codec/fixpt/pub -mcpu=arm7tdmi -T$(LDSCRIPT) \
-		 $(OPTIM)
+		 $(OPTIM) $(DEBUG)
 
 ifeq ($(USE_THUMB_MODE),YES)
 	CFLAGS += -mthumb-interwork -D THUMB_INTERWORK

@@ -10,20 +10,26 @@
 #include "mp3dec.h"
 #include "data/mp3.h"
 
-#define mp3STACK_SIZE				500
+#define mp3STACK_SIZE				600
+
+HMP3Decoder hMP3Decoder;
 
 /* The decoder task. */
 static portTASK_FUNCTION_PROTO( vMP3DecoderTask, pvParameters );
 
 /*-----------------------------------------------------------*/
 
-HMP3Decoder hMP3Decoder;
-
 void vStartMP3DecoderTasks( unsigned portBASE_TYPE uxPriority )
 {
 	/* Initialise the com port then spawn the Rx and Tx tasks. */
 	vTaskSuspendAll();
-	hMP3Decoder = MP3InitDecoder();
+	if (hMP3Decoder = MP3InitDecoder()) {
+		IOSET0 = (1<<10);
+		IOCLR0 = (1<<11);
+	} else {
+		IOSET0 = (1<<10);
+		IOSET0 = (1<<11);
+	}
 	xTaskResumeAll();
 	
 	xTaskCreate( vMP3DecoderTask, ( const signed portCHAR * const ) "MP3", mp3STACK_SIZE, NULL, uxPriority, ( xTaskHandle * ) NULL );
@@ -32,23 +38,25 @@ void vStartMP3DecoderTasks( unsigned portBASE_TYPE uxPriority )
 
 static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 {
-	MP3FrameInfo mp3FrameInfo;
-  const unsigned char *readPtr;
-  int bytesLeft, nRead, err, offset, outOfData, eofReached;
-  int nFrames;
-  static short outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
-  unsigned long long time;
+//	static HMP3Decoder hMP3Decoder;
+	static MP3FrameInfo mp3FrameInfo;
+  static const unsigned char *readPtr;
+  static int bytesLeft, nRead, err, offset, outOfData, eofReached;
+  static int nFrames;
+  //static short outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
+	static short outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP] __attribute__ ((section (".dmaram")));
+  static unsigned long long time;
 	
 	/* Just to stop compiler warnings. */
 	( void ) pvParameters;
 
 	vPuts("initializing decoder...");
 
-	/*vTaskSuspendAll();
+	/*vTaskSuspendAll();*/
 	//portENTER_CRITICAL();
-	hMP3Decoder = MP3InitDecoder();
+	//hMP3Decoder = MP3InitDecoder();
 	//portEXIT_CRITICAL();
-	xTaskResumeAll();*/
+	/*xTaskResumeAll();*/
 	
 	if (hMP3Decoder == 0) {
 		vPuts("MP3InitDecoder() failed\r\n");
@@ -56,6 +64,7 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 		vPuts("MP3InitDecoder() successful\r\n");
 	}
 	
+	vTaskDelay( 1000 );
 
 	for( ;; )
 	{

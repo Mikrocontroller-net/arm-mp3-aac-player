@@ -2,6 +2,7 @@ MEMORY
 {
 	flash	: ORIGIN = 0, LENGTH = 500K
 	ram		: ORIGIN = 0x40000000, LENGTH = 32K
+	dmaram	: ORIGIN = 0x7FD00000, LENGTH = 8K
 }
 
 __stack_end__ = 0x40000000 + 32K - 4;
@@ -34,16 +35,25 @@ SECTIONS
 	{
 		__bss_beg__ = .;
 		*(.bss)
+		_bss_end__ = . ; __bss_end__ = . ;
 	} >ram
 
 	/* Align here to ensure that the .bss section occupies space up to
 	_end.  Align after .bss to ensure correct alignment even if the
 	.bss section disappears because there are no input sections.  */
 	. = ALIGN(32 / 8);
+
+	.dmaram (NOLOAD):
+	{
+	__dmaram_beg__ = .;
+	*(.dmaram)
+		__dmaram_end__ = .;
+	} >dmaram
+
 }
 	. = ALIGN(32 / 8);
 	_end = .;
-	_bss_end__ = . ; __bss_end__ = . ; __end__ = . ;
+	__end__ = . ;
 	PROVIDE (end = .);
 
 

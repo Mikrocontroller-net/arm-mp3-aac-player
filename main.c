@@ -187,12 +187,12 @@ int main( void )
 	InitRTC();
 
 
-	xSerialPortInitMinimal(0, 115200, 250 );
-	xSerialPortInitMinimal(1, 115200, 250 );   	
+	xSerialPortInitMinimal(0, 115200, 10 );
+	//xSerialPortInitMinimal(1, 115200, 250 );   	
 
 
-	vStartTestTasks( tskIDLE_PRIORITY + 1 );
-	//vStartMP3DecoderTasks( tskIDLE_PRIORITY + 1 );
+	//vStartTestTasks( tskIDLE_PRIORITY + 1 );
+	vStartMP3DecoderTasks( tskIDLE_PRIORITY + 1 );
 
 
 	//NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
