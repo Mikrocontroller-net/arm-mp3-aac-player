@@ -27,8 +27,8 @@ void InitDAC(void)
 	
 	VICIntSelect &= ~( (1 << 5) );
 	VICIntEnable |= (1 << 5);
-	VICVectAddr6 = ( portLONG ) vSampleInt;
-	VICVectCntl6 = 5 /* Timer1 int channel # */ | (1 << 5 /* enable */);
+	VICVectAddr0 = ( portLONG ) vSampleInt;
+	VICVectCntl0 = 5 /* Timer1 int channel # */ | (1 << 5 /* enable */);
 	T1TCR = 1; // enable timer 1
 	
 	// enable DAC

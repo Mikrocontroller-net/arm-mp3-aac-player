@@ -228,16 +228,16 @@ unsigned portLONG ulCompareMatch;
 	#if configUSE_PREEMPTION == 1
 	{
 		extern void ( vPreemptiveTick )( void );
-		VICVectAddr0 = ( portLONG ) vPreemptiveTick;
+		VICVectAddr6 = ( portLONG ) vPreemptiveTick;
 	}
 	#else
 	{
 		extern void ( vNonPreemptiveTick )( void );
-		VICVectAddr0 = ( portLONG ) vNonPreemptiveTick;
+		VICVectAddr6 = ( portLONG ) vNonPreemptiveTick;
 	}
 	#endif
 
-	VICVectCntl0 = portTIMER_VIC_CHANNEL | portTIMER_VIC_ENABLE;
+	VICVectCntl6 = portTIMER_VIC_CHANNEL | portTIMER_VIC_ENABLE;
 
 	/* Start the timer - interrupts are disabled when this function is called
 	so it is okay to do this here. */
