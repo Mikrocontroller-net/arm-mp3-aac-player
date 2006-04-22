@@ -12,8 +12,6 @@
 
 #define mp3STACK_SIZE				600
 
-HMP3Decoder hMP3Decoder;
-
 /* The decoder task. */
 static portTASK_FUNCTION_PROTO( vMP3DecoderTask, pvParameters );
 
@@ -21,24 +19,13 @@ static portTASK_FUNCTION_PROTO( vMP3DecoderTask, pvParameters );
 
 void vStartMP3DecoderTasks( unsigned portBASE_TYPE uxPriority )
 {
-	/* Initialise the com port then spawn the Rx and Tx tasks. */
-	vTaskSuspendAll();
-	if (hMP3Decoder = MP3InitDecoder()) {
-		IOSET0 = (1<<10);
-		IOCLR0 = (1<<11);
-	} else {
-		IOSET0 = (1<<10);
-		IOSET0 = (1<<11);
-	}
-	xTaskResumeAll();
-	
 	xTaskCreate( vMP3DecoderTask, ( const signed portCHAR * const ) "MP3", mp3STACK_SIZE, NULL, uxPriority, ( xTaskHandle * ) NULL );
 }
 /*-----------------------------------------------------------*/
 
 static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 {
-//	static HMP3Decoder hMP3Decoder;
+	static HMP3Decoder hMP3Decoder;
 	static MP3FrameInfo mp3FrameInfo;
   static const unsigned char *readPtr;
   static int bytesLeft, nRead, err, offset, outOfData, eofReached;
@@ -54,7 +41,7 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 
 	/*vTaskSuspendAll();*/
 	//portENTER_CRITICAL();
-	//hMP3Decoder = MP3InitDecoder();
+	hMP3Decoder = MP3InitDecoder();
 	//portEXIT_CRITICAL();
 	/*xTaskResumeAll();*/
 	
