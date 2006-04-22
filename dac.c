@@ -1,14 +1,21 @@
 #include "FreeRTOS.h"
 #include "dac.h"
+#include "mp3_decoder.h"
 
 void vSampleInt(void)
 {
 	portENTER_SWITCHING_ISR();
 	
-	if((DACR >> 6) & 1023 == 1023) {
+	static int position = 0;
+	
+	if(position >= 2304/2) {
 		DACR = (0 << 6);
+		position = 0;
 	}	else {
-		DACR = (1023 << 6);
+		DACR = ((outBuf[position * 2] / 64 + 512) << 6);
+		position++;
+		IOCLR0 |= (1<<10);
+		IOCLR0 |= (1<<11);
 	}
 	
 	/* Ready for the next interrupt. */

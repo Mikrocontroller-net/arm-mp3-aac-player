@@ -178,6 +178,9 @@ static void prvSetupHardware( void )
 	//IODIR0 = ~( mainP0_14 + mainJTAG_PORT );
 	IOCLR0 |= (1<<10);
 	IOSET0 |= (1<<11);
+	
+	// enable USB to use USB DMA RAM
+	PCONP |= (1 << 31);
 }
 
 //Starts all the other tasks, then starts the scheduler. 

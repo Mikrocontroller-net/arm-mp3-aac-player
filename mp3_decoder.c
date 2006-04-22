@@ -16,6 +16,8 @@
 
 HMP3Decoder hMP3Decoder;
 
+volatile short outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP] __attribute__ ((section (".dmaram")));
+
 /* The decoder task. */
 static portTASK_FUNCTION_PROTO( vMP3DecoderTask, pvParameters );
 
@@ -40,7 +42,6 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
   static int bytesLeft, nRead, err, offset, outOfData, eofReached;
   static int nFrames;
   //static short outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
-	static short outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP] __attribute__ ((section (".dmaram")));
   static unsigned long long time;
 	
 	/* Just to stop compiler warnings. */
@@ -56,6 +57,11 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 	
 	assert (hMP3Decoder != 0);
 	
+	iprintf("outBuf: 0x%x\r\n", outBuf);
+	iprintf("&outBuf[0]: 0x%x\r\n", &outBuf[0]);
+	outBuf[0] = 22;
+	assert(outBuf[0] == 22);
+	
 	vTaskDelay( 1000 );
 
 	for( ;; )
@@ -67,8 +73,6 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 		outOfData = 0;
 
 		do {
-			iprintf("Timer 1 value: %i\r\n", T1TC);
-			iprintf("VICIRQStatus: %x\r\n", VICIRQStatus);
 			vPuts("trying to sync... ");
 		  offset = MP3FindSyncWord(readPtr, bytesLeft);
 		  if (offset < 0) {
@@ -111,7 +115,10 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 	  		// no error
 	  		MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
 	  		iprintf("Bitrate: %i\r\n", mp3FrameInfo.bitrate);
+				iprintf("Samples: %i\r\n", mp3FrameInfo.outputSamps);
+				iprintf("Bits per sample: %i\r\n", mp3FrameInfo.bitsPerSample);
 				vPuts("OK\r\n");
+				vTaskDelay( 10000 );
 	  	}
 		}  while (!outOfData);
 
