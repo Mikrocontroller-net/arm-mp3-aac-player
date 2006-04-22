@@ -73,6 +73,7 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 		outOfData = 0;
 
 		do {
+			iprintf("Timer 1 value: %i\r\n", T1TC);
 			vPuts("trying to sync... ");
 		  offset = MP3FindSyncWord(readPtr, bytesLeft);
 		  if (offset < 0) {

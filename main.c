@@ -175,6 +175,15 @@ static void prvSetupHardware( void )
 	//IODIR0 = ~( mainP0_14 + mainJTAG_PORT );
 	IOCLR0 |= (1<<10);
 	IOSET0 |= (1<<11);
+	
+	// enable DAC
+	PINSEL1 |= (1<<19);
+
+	// setup timer 1
+	T1PR = 0; // no prescaler
+	T1MR0 = configCPU_CLOCK_HZ / 44100; // compare match
+	T1MCR = (1 << 1 /* reset count on match */ ) ; //| portINTERRUPT_ON_MATCH;
+	T1TCR = 1;
 }
 
 
@@ -186,6 +195,8 @@ int main( void )
 	prvSetupHardware();
 	InitRTC();
 
+	// set AOUT = VREF/2
+	DACR = (512 << 6);
 
 	xSerialPortInitMinimal(0, 115200, 10 );
 	//xSerialPortInitMinimal(1, 115200, 250 );   	
