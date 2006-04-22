@@ -109,10 +109,10 @@ $(PROJECT).elf : $(ARM_OBJ) $(ARM_ASM_OBJ) $(THUMB_OBJ) $(CRT0) Makefile
 	$(CC) $(CFLAGS) $(ARM_OBJ) $(ARM_ASM_OBJ) $(THUMB_OBJ) -nostartfiles $(CRT0) $(LINKER_FLAGS)
 	arm-elf-size -A $(PROJECT).elf
 
-$(THUMB_OBJ) : %.o : %.c $(LDSCRIPT) Makefile
+$(THUMB_OBJ) : %.o : %.c $(LDSCRIPT) FreeRTOSConfig.h Makefile
 	$(CC) -c $(THUMB_FLAGS) $(CFLAGS) $< -o $@
 
-$(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile
+$(ARM_OBJ) : %.o : %.c $(LDSCRIPT) FreeRTOSConfig.h Makefile
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(ARM_ASM_OBJ) : %.o : %.S $(LDSCRIPT) Makefile
