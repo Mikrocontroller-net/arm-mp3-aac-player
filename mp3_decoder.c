@@ -4,6 +4,8 @@
 #include "task.h"
 #include "queue.h"
 
+#include <assert.h>
+
 #include "mp3_decoder.h"
 #include "serial/serial.h"
 
@@ -50,7 +52,7 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 	/* Just to stop compiler warnings. */
 	( void ) pvParameters;
 
-	vPuts("initializing decoder...");
+	vPuts("initializing decoder\r\n");
 
 	/*vTaskSuspendAll();*/
 	//portENTER_CRITICAL();
@@ -58,11 +60,7 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 	//portEXIT_CRITICAL();
 	/*xTaskResumeAll();*/
 	
-	if (hMP3Decoder == 0) {
-		vPuts("MP3InitDecoder() failed\r\n");
-	} else {
-		vPuts("MP3InitDecoder() successful\r\n");
-	}
+	assert (hMP3Decoder != 0);
 	
 	vTaskDelay( 1000 );
 
@@ -83,6 +81,7 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 			  break;
 	  	} else {
 	  	  iprintf("Found a frame at offset %i\r\n", offset);
+				//assert(offset == 0);
 			}
 	  	readPtr += offset;
 	  	bytesLeft -= offset;
