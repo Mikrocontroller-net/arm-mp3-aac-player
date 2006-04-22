@@ -45,6 +45,7 @@
 #include "serial/serial.h"
 #include "rtc/rtc.h"
 #include "mp3_decoder.h"
+#include "dac.h"
 
 
 //-----------------------------------------------------------
@@ -103,20 +104,22 @@ static portTASK_FUNCTION( vTaskTest, pvParameters )
 
 	for(;;)
 	{
+		/*
 		IOCLR0 |= (1<<10);
 		IOSET0 |= (1<<11);
 		vTaskDelay(100);
 		IOSET0 |= (1<<10);
-		IOCLR0 |= (1<<11);
-		vSerialPutString(0,"Hello World\n\r",0);
-		vSerialPutString(1,"Hello World\n\r",0);
+		IOCLR0 |= (1<<11);*/
+		//vSerialPutString(0,"Hello World\n\r",0);
+		//vSerialPutString(1,"Hello World\n\r",0);
 
-		//vTaskDelay(100);
-		xWaitRTC_Tick(5000);
+		vTaskDelay(100);
+		//xWaitRTC_Tick(5000);
 
 
 	}
 }
+
 
 /*-----------------------------------------------------------*/
 static void prvSetupHardware( void )
@@ -175,18 +178,7 @@ static void prvSetupHardware( void )
 	//IODIR0 = ~( mainP0_14 + mainJTAG_PORT );
 	IOCLR0 |= (1<<10);
 	IOSET0 |= (1<<11);
-	
-	// enable DAC
-	PINSEL1 |= (1<<19);
-
-	// setup timer 1
-	T1PR = 0; // no prescaler
-	T1MR0 = configCPU_CLOCK_HZ / 44100; // compare match
-	T1MCR = (1 << 1 /* reset count on match */ ) ; //| portINTERRUPT_ON_MATCH;
-	T1TCR = 1;
 }
-
-
 
 //Starts all the other tasks, then starts the scheduler. 
 int main( void )
@@ -194,17 +186,14 @@ int main( void )
 	// Setup the hardware for use with the Olimex demo board.
 	prvSetupHardware();
 	InitRTC();
-
-	// set AOUT = VREF/2
-	DACR = (512 << 6);
+	InitDAC();
 
 	xSerialPortInitMinimal(0, 115200, 10 );
 	//xSerialPortInitMinimal(1, 115200, 250 );   	
 
 
-	//vStartTestTasks( tskIDLE_PRIORITY + 1 );
 	vStartMP3DecoderTasks( tskIDLE_PRIORITY + 1 );
-
+	vStartTestTasks( tskIDLE_PRIORITY + 2 );
 
 	//NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
 	//The processor MUST be in supervisor mode when vTaskStartScheduler is 

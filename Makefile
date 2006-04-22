@@ -77,6 +77,7 @@ $(RTOS_PORT_DIR)/port.c
 # Source files that must be built to ARM mode.
 ARM_SRC = \
 $(RTOS_PORT_DIR)/portISR.c \
+dac.c \
 serial/serialISR.c \
 rtc/rtcISR.c \
 mp3/codec/fixpt/mp3dec.c \

@@ -12,7 +12,7 @@
 #include "mp3dec.h"
 #include "data/mp3.h"
 
-#define mp3STACK_SIZE				400
+#define mp3STACK_SIZE				600
 
 HMP3Decoder hMP3Decoder;
 
@@ -25,13 +25,7 @@ void vStartMP3DecoderTasks( unsigned portBASE_TYPE uxPriority )
 {
 	/* Initialise the com port then spawn the Rx and Tx tasks. */
 	vTaskSuspendAll();
-	if (hMP3Decoder = MP3InitDecoder()) {
-		IOSET0 = (1<<10);
-		IOCLR0 = (1<<11);
-	} else {
-		IOSET0 = (1<<10);
-		IOSET0 = (1<<11);
-	}
+	hMP3Decoder = MP3InitDecoder();
 	xTaskResumeAll();
 	
 	xTaskCreate( vMP3DecoderTask, ( const signed portCHAR * const ) "MP3", mp3STACK_SIZE, NULL, uxPriority, ( xTaskHandle * ) NULL );
@@ -74,6 +68,7 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 
 		do {
 			iprintf("Timer 1 value: %i\r\n", T1TC);
+			iprintf("VICIRQStatus: %x\r\n", VICIRQStatus);
 			vPuts("trying to sync... ");
 		  offset = MP3FindSyncWord(readPtr, bytesLeft);
 		  if (offset < 0) {
