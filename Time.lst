@@ -1,0 +1,187 @@
+   1              		.file	"Time.c"
+   9              	.Ltext0:
+  10              		.global	__umodsi3
+  11              		.section	.fastrun,"ax",%progbits
+  12              		.align	2
+  13              		.global	system_int
+  15              	system_int:
+  16              	.LFB2:
+  17              		.file 1 "Time.c"
+   1:Time.c        **** /******************************************************************************/
+   2:Time.c        **** /*                                                                            */
+   3:Time.c        **** /*  TIME.C:  Time Functions for 1000Hz Clock Tick                             */
+   4:Time.c        **** /*                                                                            */
+   5:Time.c        **** /******************************************************************************/
+   6:Time.c        **** /*  ported to arm-elf-gcc / WinARM by Martin Thomas, KL, .de                  */
+   7:Time.c        **** /*  <eversmith@heizung-thomas.de>                                             */
+   8:Time.c        **** /*  modifications Copyright Martin Thomas 2005                                */
+   9:Time.c        **** /*                                                                            */
+  10:Time.c        **** /*  Based on a file that has been a part of the uVision/ARM development       */
+  11:Time.c        **** /*  tools, Copyright KEIL ELEKTRONIK GmbH 2002-2004                           */
+  12:Time.c        **** /******************************************************************************/
+  13:Time.c        **** 
+  14:Time.c        **** /*
+  15:Time.c        ****   - mt: modified interrupt ISR handling
+  16:Time.c        **** */
+  17:Time.c        **** 
+  18:Time.c        **** #include <AT91SAM7S64.H>                    /* AT91SAMT7S64 definitions */
+  19:Time.c        **** #include "Board.h"
+  20:Time.c        **** #include "interrupt_utils.h"
+  21:Time.c        **** #include "Time.h"
+  22:Time.c        **** 
+  23:Time.c        **** #ifdef ERAM  /* Fast IRQ functions Run in RAM  - see board.h */
+  24:Time.c        **** #define ATTR RAMFUNC
+  25:Time.c        **** #else
+  26:Time.c        **** #define ATTR
+  27:Time.c        **** #endif
+  28:Time.c        **** 
+  29:Time.c        **** #define TCK  1000                           /* Timer Clock  */
+  30:Time.c        **** 
+  31:Time.c        **** #define PIV  ((MCK/TCK/16)-1)               /* Periodic Interval Value */
+  32:Time.c        **** 
+  33:Time.c        **** 
+  34:Time.c        **** volatile unsigned long timeval;             /* Current Time Tick */
+  35:Time.c        **** 
+  36:Time.c        **** 
+  37:Time.c        **** // mt void system_int (void) __irq __atr {        /* System Interrupt Handler */
+  38:Time.c        **** //void  __attribute__ ((interrupt("IRQ"))) system_int (void) __atr {        /* System Interrupt Han
+  39:Time.c        **** //void  INTFUNC ATTR system_int (void) {        /* System Interrupt Handler */
+  40:Time.c        **** 
+  41:Time.c        **** void  NACKEDFUNC ATTR system_int (void) {        /* System Interrupt Handler */
+  18              		.loc 1 41 0
+  19              		@ Function supports interworking.
+  20              		@ Naked Function: prologue and epilogue provided by programmer.
+  21              		@ args = 0, pretend = 0, frame = 0
+  22              		@ frame_needed = 0, uses_anonymous_args = 0
+  42:Time.c        ****   volatile AT91S_PITC * pPIT = AT91C_BASE_PITC;
+  43:Time.c        **** 
+  44:Time.c        ****   ISR_ENTRY();
+  23              		.loc 1 44 0
+  24 0000 04E04EE2 		 sub   lr, lr,#4
+  25 0004 FF5F2DE9 	 stmfd sp!,{r0-r12,lr}
+  26 0008 00104FE1 	 mrs   r1, spsr
+  27 000c 02002DE9 	 stmfd sp!,{r1}
+  45:Time.c        **** 
+  46:Time.c        ****   if (pPIT->PITC_PISR & AT91C_PITC_PITS) {  /* Check PIT Interrupt */
+  28              		.loc 1 46 0
+  29 0010 024CE0E3 		mvn	r4, #512
+  30 0014 CB3014E5 		ldr	r3, [r4, #-203]
+  31 0018 012013E2 		ands	r2, r3, #1
+  47:Time.c        ****     timeval++;                              /* Increment Time Tick */
+  32              		.loc 1 47 0
+  33 001c 44009FE5 		ldr	r0, .L8
+  48:Time.c        ****     if ((timeval % 500) == 0) {             /* 500ms Elapsed ? */
+  34              		.loc 1 48 0
+  35 0020 7D1FA0E3 		mov	r1, #500
+  36              		.loc 1 46 0
+  37 0024 1300000A 		beq	.L2
+  38              		.loc 1 47 0
+  39 0028 003090E5 		ldr	r3, [r0, #0]
+  40 002c 013083E2 		add	r3, r3, #1
+  41 0030 003080E5 		str	r3, [r0, #0]
+  42              		.loc 1 48 0
+  43 0034 000090E5 		ldr	r0, [r0, #0]
+  44 0038 FEFFFFEB 		bl	__umodsi3
+  49:Time.c        ****       *AT91C_PIOA_ODSR ^= LED4;             /* Toggle LED4 */
+  45              		.loc 1 49 0
+  46 003c 0020E0E3 		mvn	r2, #0
+  47              		.loc 1 48 0
+  48 0040 000050E3 		cmp	r0, #0
+  49              		.loc 1 49 0
+  50 0044 C73B1205 		ldreq	r3, [r2, #-3015]
+  51 0048 08302302 		eoreq	r3, r3, #8
+  52 004c C73B0205 		streq	r3, [r2, #-3015]
+  50:Time.c        ****     }
+  51:Time.c        ****     *AT91C_AIC_EOICR = pPIT->PITC_PIVR;     /* Ack & End of Interrupt */
+  53              		.loc 1 51 0
+  54 0050 C72014E5 		ldr	r2, [r4, #-199]
+  55              	.L2:
+  52:Time.c        ****   } else {
+  53:Time.c        ****     *AT91C_AIC_EOICR = 0;                   /* End of Interrupt */
+  56              		.loc 1 53 0
+  57 0054 0030E0E3 		mvn	r3, #0
+  58 0058 CF2E03E5 		str	r2, [r3, #-3791]
+  54:Time.c        ****   }
+  55:Time.c        ****   
+  56:Time.c        ****   ISR_EXIT();
+  59              		.loc 1 56 0
+  60 005c 0200BDE8 		 ldmfd sp!,{r1}
+  61 0060 01F061E1 	 msr   spsr_c,r1
+  62 0064 FF9FFDE8 	 ldmfd sp!,{r0-r12,pc}^
+  57:Time.c        **** }
+  63              		.loc 1 57 0
+  64              	.L9:
+  65              		.align	2
+  66              	.L8:
+  67 0068 00000000 		.word	timeval
+  68              	.LFE2:
+  70              		.text
+  71              		.align	2
+  72              		.global	init_timer
+  74              	init_timer:
+  75              	.LFB3:
+  58:Time.c        **** 
+  59:Time.c        **** 
+  60:Time.c        **** void init_timer (void) {                    /* Setup PIT with Interrupt */
+  76              		.loc 1 60 0
+  77              		@ Function supports interworking.
+  78              		@ args = 0, pretend = 0, frame = 0
+  79              		@ frame_needed = 0, uses_anonymous_args = 0
+  80              		@ link register save eliminated.
+  61:Time.c        ****   volatile AT91S_AIC * pAIC = AT91C_BASE_AIC;
+  62:Time.c        **** 
+  63:Time.c        ****   //*AT91C_PIOA_CODR = LED3; 
+  64:Time.c        **** 
+  65:Time.c        ****   *AT91C_PITC_PIMR = AT91C_PITC_PITIEN |    /* PIT Interrupt Enable */ 
+  81              		.loc 1 65 0
+  82 0000 24209FE5 		ldr	r2, .L12
+  83 0004 0030E0E3 		mvn	r3, #0
+  84 0008 CF2203E5 		str	r2, [r3, #-719]
+  66:Time.c        ****                      AT91C_PITC_PITEN  |    /* PIT Enable */
+  67:Time.c        ****                      PIV;                   /* Periodic Interval Value */ 
+  68:Time.c        **** 
+  69:Time.c        ****   /* Setup System Interrupt Mode and Vector with Priority 7 and Enable it */
+  70:Time.c        ****   // mt pAIC->AIC_SMR[AT91C_ID_SYS] = AT91C_AIC_SRCTYPE_INT_EDGE_TRIGGERED | 7;
+  71:Time.c        ****   pAIC->AIC_SMR[AT91C_ID_SYS] = AT91C_AIC_SRCTYPE_INT_POSITIVE_EDGE | 7;
+  85              		.loc 1 71 0
+  86 000c 0F1CE0E3 		mvn	r1, #3840
+  87 0010 283083E2 		add	r3, r3, #40
+  88 0014 FB3001E5 		str	r3, [r1, #-251]
+  72:Time.c        ****   
+  73:Time.c        ****   pAIC->AIC_SVR[AT91C_ID_SYS] = (unsigned long) system_int;
+  89              		.loc 1 73 0
+  90 0018 10309FE5 		ldr	r3, .L12+4
+  91 001c 7B3001E5 		str	r3, [r1, #-123]
+  74:Time.c        ****   pAIC->AIC_IECR = (1 << AT91C_ID_SYS);
+  92              		.loc 1 74 0
+  93 0020 0230A0E3 		mov	r3, #2
+  94              		.loc 1 60 0
+  95              		@ lr needed for prologue
+  96              		.loc 1 74 0
+  97 0024 213081E5 		str	r3, [r1, #33]
+  75:Time.c        ****   
+  76:Time.c        ****   //*AT91C_PIOA_CODR = LED2; 
+  77:Time.c        ****   
+  78:Time.c        **** }
+  98              		.loc 1 78 0
+  99 0028 1EFF2FE1 		bx	lr
+ 100              	.L13:
+ 101              		.align	2
+ 102              	.L12:
+ 103 002c BA0B0003 		.word	50334650
+ 104 0030 00000000 		.word	system_int
+ 105              	.LFE3:
+ 107              		.comm	timeval,4,4
+ 141              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 Time.c
+/var/tmp//ccadWgMb.s:15     .fastrun:00000000 system_int
+/var/tmp//ccadWgMb.s:24     .fastrun:00000000 $a
+/var/tmp//ccadWgMb.s:67     .fastrun:00000068 $d
+                            *COM*:00000004 timeval
+/var/tmp//ccadWgMb.s:74     .text:00000000 init_timer
+/var/tmp//ccadWgMb.s:82     .text:00000000 $a
+/var/tmp//ccadWgMb.s:103    .text:0000002c $d
+
+UNDEFINED SYMBOLS
+__umodsi3

@@ -1,0 +1,338 @@
+   1              		.code	16
+   2              		.file	"main.c"
+  10              	.Ltext0:
+  11              		.section	.rodata.str1.4,"aMS",%progbits,1
+  12              		.align	2
+  13              	.LC1:
+  14 0000 48656C6C 		.ascii	"Hello from the WinARM example!  (1 2 %i %i)\015\012"
+  14      6F206672 
+  14      6F6D2074 
+  14      68652057 
+  14      696E4152 
+  15 002d 00       		.ascii	"\000"
+  16 002e 0000     		.align	2
+  17              	.LC3:
+  18 0030 6D61696E 		.ascii	"main.c\000"
+  18      2E6300
+  19 0037 00       		.align	2
+  20              	.LC5:
+  21 0038 2A415439 		.ascii	"*AT91C_SSC_SR & (1 << 16)\000"
+  21      31435F53 
+  21      53435F53 
+  21      52202620 
+  21      2831203C 
+  22 0052 0000     		.text
+  23              		.align	2
+  24              		.global	main
+  25              		.code 16
+  26              		.thumb_func
+  28              	main:
+  29              	.LFB3:
+  30              		.file 1 "main.c"
+   1:main.c        **** /******************************************************************************/
+   2:main.c        **** /*                                                                            */
+   3:main.c        **** /*  HELLO.C:  Hello World Example                                             */
+   4:main.c        **** /*                                                                            */
+   5:main.c        **** /******************************************************************************/
+   6:main.c        **** /*  ported and extended for arm-elf-gcc / WinARM by                           */
+   7:main.c        **** /*  Martin Thomas, KL, .de <eversmith@heizung-thomas.de>                      */
+   8:main.c        **** /*  modifications Copyright Martin Thomas 2005                                */
+   9:main.c        **** /*                                                                            */
+  10:main.c        **** /*  Based on a file that has been a part of the uVision/ARM development       */
+  11:main.c        **** /*  tools, Copyright KEIL ELEKTRONIK GmbH 2002-2004                           */
+  12:main.c        **** /******************************************************************************/
+  13:main.c        **** 
+  14:main.c        **** /* see file Abstract.txt for more info on the gcc-port */
+  15:main.c        **** 
+  16:main.c        **** #include <stdio.h>                          /* I/O Functions */
+  17:main.c        **** #include <assert.h>
+  18:main.c        **** #include "Board.h"
+  19:main.c        **** // #include "AT91SAM7S64.h"    /* AT91SAMT7S64 definitions (already in thru board.h) */
+  20:main.c        **** // define __inline inline
+  21:main.c        **** // #include "lib_AT91SAM7S64.h"
+  22:main.c        **** 
+  23:main.c        **** #include "global.h"
+  24:main.c        **** #include "serial.h"
+  25:main.c        **** #include "Time.h"
+  26:main.c        **** #include "ExtInt.h"
+  27:main.c        **** 
+  28:main.c        **** AT91S_PIO * pPIO = AT91C_BASE_PIOA;         /* Global Pointer to PIO */
+  29:main.c        **** 
+  30:main.c        **** static void wait(unsigned long time)
+  31:main.c        **** {
+  32:main.c        **** 	unsigned long tick;
+  33:main.c        **** 	
+  34:main.c        **** 	tick = timeval;
+  35:main.c        **** 	
+  36:main.c        **** 	/* Wait for specified Time */
+  37:main.c        **** 	while ((unsigned long)(timeval - tick) < time);
+  38:main.c        **** }
+  39:main.c        **** 
+  40:main.c        **** #if 0
+  41:main.c        **** static void test(void)
+  42:main.c        **** {
+  43:main.c        **** 	unsigned short q = 0;
+  44:main.c        **** 	volatile unsigned long* p = (unsigned long)(0);
+  45:main.c        **** 	do {
+  46:main.c        **** 		iprintf("Addr %i %08x\n", q, *p);
+  47:main.c        **** 		q++;
+  48:main.c        **** 		p++;
+  49:main.c        **** 	} while (q<22);
+  50:main.c        **** }
+  51:main.c        **** #endif
+  52:main.c        **** 
+  53:main.c        **** 
+  54:main.c        **** /*** Main Program ***/
+  55:main.c        **** 
+  56:main.c        **** int main (void) {
+  31              		.loc 1 56 0
+  32 0000 30B5     		push	{r4, r5, lr}
+  33              	.LCFI0:
+  57:main.c        ****   unsigned long n;
+  58:main.c        ****   char flag;
+  59:main.c        ****    
+  60:main.c        **** 	// enable reset-button (mt)
+  61:main.c        **** 	// AT91F_RSTSetMode( AT91C_BASE_RSTC , AT91C_RSTC_URSTEN );
+  62:main.c        **** 	*AT91C_RSTC_RMR = ( 0xA5000000 | AT91C_RSTC_URSTEN );
+  34              		.loc 1 62 0
+  35 0002 2F4A     		ldr	r2, .L24
+  36 0004 2F4B     		ldr	r3, .L24+4
+  63:main.c        **** 	
+  64:main.c        **** 	*AT91C_PMC_PCER = (1 << AT91C_ID_PIOA) |  /* Enable Clock for PIO    */
+  65:main.c        **** 		(1 << AT91C_ID_IRQ0) |  /* Enable Clock for IRQ0   */
+  66:main.c        **** 		(1 << AT91C_ID_US0);    /* Enable Clock for USART0 */
+  67:main.c        **** 	
+  68:main.c        **** 	pPIO->PIO_PER  = LED_MASK;                /* Enable PIO for LED1..4  */
+  37              		.loc 1 68 0
+  38 0006 304D     		ldr	r5, .L24+8
+  39              		.loc 1 62 0
+  40 0008 1A60     		str	r2, [r3]
+  41              		.loc 1 64 0
+  42 000a 304C     		ldr	r4, .L24+12
+  43 000c 304B     		ldr	r3, .L24+16
+  44              		.loc 1 68 0
+  45 000e 2A68     		ldr	r2, [r5]
+  46              		.loc 1 64 0
+  47 0010 2360     		str	r3, [r4]
+  48              		.loc 1 68 0
+  49 0012 0F23     		mov	r3, #15
+  50 0014 1360     		str	r3, [r2]
+  69:main.c        **** 	pPIO->PIO_OER  = LED_MASK;                /* LED1..4 are Outputs     */
+  51              		.loc 1 69 0
+  52 0016 1361     		str	r3, [r2, #16]
+  70:main.c        **** 	pPIO->PIO_SODR = LED_MASK;                /* Turn off LED's ("1")    */
+  53              		.loc 1 70 0
+  54 0018 1363     		str	r3, [r2, #48]
+  71:main.c        **** 	pPIO->PIO_OWER = LED4;                    /* LED4 ODSR Write Enable  */
+  55              		.loc 1 71 0
+  56 001a 0823     		mov	r3, #8
+  57 001c A032     		add	r2, r2, #160
+  58 001e 1360     		str	r3, [r2]
+  72:main.c        **** 	
+  73:main.c        **** 	uart0_init();                             /* Initialize Serial Interface */
+  59              		.loc 1 73 0
+  60 0020 FFF7FEFF 		bl	uart0_init
+  74:main.c        **** 	
+  75:main.c        **** 	unsigned short q = 4;
+  76:main.c        **** 	iprintf("Hello from the WinARM example!  (1 2 %i %i)\r\n", 3, q);
+  61              		.loc 1 76 0
+  62 0024 0321     		mov	r1, #3
+  63 0026 0422     		mov	r2, #4
+  64 0028 2A48     		ldr	r0, .L24+20
+  65 002a FFF7FEFF 		bl	iprintf
+  77:main.c        **** 	// *AT91C_PIOA_CODR = LED4; 
+  78:main.c        **** 	// test();
+  79:main.c        **** 	
+  80:main.c        **** 	init_timer ();                            /* Initialize Timer */
+  66              		.loc 1 80 0
+  67 002e FFF7FEFF 		bl	init_timer
+  81:main.c        **** 	init_extint();                            /* Initialize External Interrupt */
+  68              		.loc 1 81 0
+  69 0032 FFF7FEFF 		bl	init_extint
+  82:main.c        **** 	
+  83:main.c        **** 	flag = 0;
+  84:main.c        **** 
+  85:main.c        **** 	/************  PWM  ***********/
+  86:main.c        **** 	/*   PWM0 = MAINCK/4          */
+  87:main.c        **** 	*AT91C_PMC_PCER = (1 << AT91C_ID_PWMC); // Enable Clock for PWM controller
+  70              		.loc 1 87 0
+  71 0036 8023     		mov	r3, #128
+  72 0038 DB00     		lsl	r3, r3, #3
+  73 003a 2360     		str	r3, [r4]
+  88:main.c        **** 	*AT91C_PWMC_CH0_CPRDR = 2; // channel period = 2
+  74              		.loc 1 88 0
+  75 003c 264B     		ldr	r3, .L24+24
+  76 003e 0222     		mov	r2, #2
+  77 0040 1A60     		str	r2, [r3]
+  89:main.c        **** 	*AT91C_PWMC_CH0_CMR = 1; // prescaler = 2
+  90:main.c        **** 	pPIO->PIO_PDR = AT91C_PA0_PWM0; // enable pin
+  78              		.loc 1 90 0
+  79 0042 2D68     		ldr	r5, [r5]
+  80              		.loc 1 89 0
+  81 0044 0122     		mov	r2, #1
+  82 0046 083B     		sub	r3, r3, #8
+  83 0048 1A60     		str	r2, [r3]
+  91:main.c        **** 	*AT91C_PWMC_CH0_CUPDR = 1;
+  84              		.loc 1 91 0
+  85 004a 1033     		add	r3, r3, #16
+  86              		.loc 1 90 0
+  87 004c 6A60     		str	r2, [r5, #4]
+  88              		.loc 1 91 0
+  89 004e 1A60     		str	r2, [r3]
+  92:main.c        **** 	*AT91C_PWMC_ENA = AT91C_PWMC_CHID0; // enable channel 0 output
+  90              		.loc 1 92 0
+  91 0050 224B     		ldr	r3, .L24+28
+  93:main.c        **** 
+  94:main.c        **** 	/************  SSC  ***********/
+  95:main.c        **** 	*AT91C_PMC_PCER = (1 << AT91C_ID_SSC); // Enable Clock for SSC controller
+  96:main.c        **** 	*AT91C_SSC_CR = AT91C_SSC_SWRST; // reset
+  92              		.loc 1 96 0
+  93 0052 2348     		ldr	r0, .L24+32
+  94              		.loc 1 92 0
+  95 0054 1A60     		str	r2, [r3]
+  96              		.loc 1 95 0
+  97 0056 8021     		mov	r1, #128
+  98              		.loc 1 96 0
+  99 0058 8023     		mov	r3, #128
+ 100              		.loc 1 95 0
+ 101 005a 4900     		lsl	r1, r1, #1
+ 102              		.loc 1 96 0
+ 103 005c 1B02     		lsl	r3, r3, #8
+ 104              		.loc 1 95 0
+ 105 005e 2160     		str	r1, [r4]
+ 106              		.loc 1 96 0
+ 107 0060 0360     		str	r3, [r0]
+  97:main.c        **** 	*AT91C_SSC_CMR = 16;
+ 108              		.loc 1 97 0
+ 109 0062 204B     		ldr	r3, .L24+36
+ 110 0064 1022     		mov	r2, #16
+ 111 0066 1A60     		str	r2, [r3]
+  98:main.c        **** 	*AT91C_SSC_TCMR = AT91C_SSC_CKS_DIV | AT91C_SSC_CKO_CONTINOUS |
+ 112              		.loc 1 98 0
+ 113 0068 1F4A     		ldr	r2, .L24+40
+ 114 006a 1433     		add	r3, r3, #20
+ 115 006c 1A60     		str	r2, [r3]
+  99:main.c        **** 	                  AT91C_SSC_START_FALL_RF |
+ 100:main.c        **** 	                  (1 << 16) |   // STTDLY = 1
+ 101:main.c        **** 	                  (15 << 24);   // PERIOD = 15
+ 102:main.c        **** 	pPIO->PIO_PDR = AT91C_PA16_TK | AT91C_PA15_TF | AT91C_PA17_TD; // enable pins
+ 116              		.loc 1 102 0
+ 117 006e E023     		mov	r3, #224
+ 118 0070 9B02     		lsl	r3, r3, #10
+ 119 0072 6B60     		str	r3, [r5, #4]
+ 103:main.c        **** 	*AT91C_SSC_TFMR = (15) |        // 16 bit word length
+ 120              		.loc 1 103 0
+ 121 0074 1D4A     		ldr	r2, .L24+44
+ 122 0076 1E4B     		ldr	r3, .L24+48
+ 123 0078 1A60     		str	r2, [r3]
+ 104:main.c        **** 	                  (1 << 8) |		// DATNB = 1 => 2 words per frame
+ 105:main.c        **** 	                  (15 << 16) |	// FSLEN = 15
+ 106:main.c        **** 	                  AT91C_SSC_MSBF | AT91C_SSC_FSOS_NEGATIVE;
+ 107:main.c        **** 	*AT91C_SSC_CR = AT91C_SSC_TXEN; // enable TX
+ 124              		.loc 1 107 0
+ 125 007a 0160     		str	r1, [r0]
+ 108:main.c        **** 	
+ 109:main.c        **** 	assert(*AT91C_SSC_SR & (1 << 16)); // TX enabled
+ 126              		.loc 1 109 0
+ 127 007c 2433     		add	r3, r3, #36
+ 128 007e 1B68     		ldr	r3, [r3]
+ 129 0080 DA03     		lsl	r2, r3, #15
+ 130 0082 04D4     		bmi	.L22
+ 131 0084 1B48     		ldr	r0, .L24+52
+ 132 0086 1C4A     		ldr	r2, .L24+56
+ 133 0088 6D21     		mov	r1, #109
+ 134 008a FFF7FEFF 		bl	__assert
+ 135              	.L22:
+ 136 008e 0021     		mov	r1, #0
+ 137              	.LVL0:
+ 138 0090 07E0     		b	.L19
+ 139              	.L16:
+ 140              	.LBB2:
+ 110:main.c        **** 	
+ 111:main.c        **** 	while (1) {                              /* Loop forever */
+ 112:main.c        **** 		int i;
+ 113:main.c        **** 		
+ 114:main.c        **** 		for (i = 0; i < 100; i++) { 
+ 115:main.c        **** 			while (!(*AT91C_SSC_SR & AT91C_SSC_TXRDY));
+ 141              		.loc 1 115 0
+ 142 0092 1A4B     		ldr	r3, .L24+60
+ 143 0094 1B68     		ldr	r3, [r3]
+ 144 0096 DA07     		lsl	r2, r3, #31
+ 145 0098 FBD5     		bpl	.L16
+ 116:main.c        **** 			*AT91C_SSC_THR = -20000;
+ 146              		.loc 1 116 0
+ 147 009a 194A     		ldr	r2, .L24+64
+ 148 009c 194B     		ldr	r3, .L24+68
+ 149 009e 1A60     		str	r2, [r3]
+ 150              		.loc 1 114 0
+ 151 00a0 0131     		add	r1, r1, #1
+ 152              	.L19:
+ 153 00a2 6329     		cmp	r1, #99
+ 154 00a4 F5DD     		ble	.L16
+ 155 00a6 6321     		mov	r1, #99
+ 156              	.LVL1:
+ 157              	.L23:
+ 117:main.c        **** 		}
+ 118:main.c        **** 
+ 119:main.c        **** 		for (i = 0; i < 100; i++) { 
+ 120:main.c        **** 			while (!(*AT91C_SSC_SR & AT91C_SSC_TXRDY));
+ 158              		.loc 1 120 0
+ 159 00a8 144B     		ldr	r3, .L24+60
+ 160 00aa 1B68     		ldr	r3, [r3]
+ 161 00ac DA07     		lsl	r2, r3, #31
+ 162 00ae FBD5     		bpl	.L23
+ 121:main.c        **** 			*AT91C_SSC_THR = 20000;
+ 163              		.loc 1 121 0
+ 164 00b0 154A     		ldr	r2, .L24+72
+ 165 00b2 144B     		ldr	r3, .L24+68
+ 166 00b4 1A60     		str	r2, [r3]
+ 167 00b6 0139     		sub	r1, r1, #1
+ 168 00b8 F6D5     		bpl	.L23
+ 169              		.loc 1 119 0
+ 170 00ba 0021     		mov	r1, #0
+ 171              	.LVL2:
+ 172 00bc E9E7     		b	.L16
+ 173              	.L25:
+ 174 00be 0000     		.align	2
+ 175              	.L24:
+ 176 00c0 010000A5 		.word	-1526726655
+ 177 00c4 08FDFFFF 		.word	-760
+ 178 00c8 00000000 		.word	pPIO
+ 179 00cc 10FCFFFF 		.word	-1008
+ 180 00d0 44000040 		.word	1073741892
+ 181 00d4 00000000 		.word	.LC1
+ 182 00d8 08C2FCFF 		.word	-212472
+ 183 00dc 04C0FCFF 		.word	-212988
+ 184 00e0 0040FDFF 		.word	-180224
+ 185 00e4 0440FDFF 		.word	-180220
+ 186 00e8 0404010F 		.word	251724804
+ 187 00ec 8F011F00 		.word	2032015
+ 188 00f0 1C40FDFF 		.word	-180196
+ 189 00f4 30000000 		.word	.LC3
+ 190 00f8 38000000 		.word	.LC5
+ 191 00fc 4040FDFF 		.word	-180160
+ 192 0100 E0B1FFFF 		.word	-20000
+ 193 0104 2440FDFF 		.word	-180188
+ 194 0108 204E0000 		.word	20000
+ 195              	.LBE2:
+ 196              	.LFE3:
+ 198              		.global	pPIO
+ 199              		.data
+ 200              		.align	2
+ 203              	pPIO:
+ 204 0000 00F4FFFF 		.word	-3072
+ 241              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.c
+/var/tmp//ccJfeDOb.s:1      .text:00000000 $t
+/var/tmp//ccJfeDOb.s:28     .text:00000000 main
+/var/tmp//ccJfeDOb.s:176    .text:000000c0 $d
+/var/tmp//ccJfeDOb.s:203    .data:00000000 pPIO
+/var/tmp//ccJfeDOb.s:204    .data:00000000 $d
+
+UNDEFINED SYMBOLS
+uart0_init
+iprintf
+init_timer
+init_extint
+__assert

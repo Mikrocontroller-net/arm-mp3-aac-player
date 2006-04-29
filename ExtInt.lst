@@ -1,0 +1,178 @@
+   1              		.file	"ExtInt.c"
+   9              	.Ltext0:
+  10              		.section	.fastrun,"ax",%progbits
+  11              		.align	2
+  12              		.global	irq0_int
+  14              	irq0_int:
+  15              	.LFB2:
+  16              		.file 1 "ExtInt.c"
+   1:ExtInt.c      **** /******************************************************************************//*                 
+   2:ExtInt.c      **** /*                                                                            */
+   3:ExtInt.c      **** /*  EXTINT.C:  External Interrupt                                             */
+   4:ExtInt.c      **** /*                                                                            */
+   5:ExtInt.c      **** /******************************************************************************/
+   6:ExtInt.c      **** /*  ported to arm-elf-gcc / WinARM by Martin Thomas, KL, .de                  */
+   7:ExtInt.c      **** /*  <eversmith@heizung-thomas.de>                                             */
+   8:ExtInt.c      **** /*  modifications Copyright Martin Thomas 2005                                */
+   9:ExtInt.c      **** /*                                                                            */
+  10:ExtInt.c      **** /*  Based on a file that has been a part of the uVision/ARM development       */
+  11:ExtInt.c      **** /*  tools, Copyright KEIL ELEKTRONIK GmbH 2002-2004                           */
+  12:ExtInt.c      **** /******************************************************************************/
+  13:ExtInt.c      **** 
+  14:ExtInt.c      **** /* 
+  15:ExtInt.c      ****   - changed ISR "in" and "out" for gcc
+  16:ExtInt.c      ****   - adapted "ramfunc" to gcc
+  17:ExtInt.c      **** */
+  18:ExtInt.c      **** 
+  19:ExtInt.c      **** #include <AT91SAM7S64.H>                    /* AT91SAMT7S64 definitions */
+  20:ExtInt.c      **** #include "Board.h"
+  21:ExtInt.c      **** #include "global.h"
+  22:ExtInt.c      **** #include "interrupt_utils.h"
+  23:ExtInt.c      **** #include "ExtInt.h"
+  24:ExtInt.c      **** 
+  25:ExtInt.c      **** #ifdef ERAM   /* if defined fast IRQ functions Run in RAM  - see board.h */
+  26:ExtInt.c      **** #define ATTR RAMFUNC
+  27:ExtInt.c      **** #else
+  28:ExtInt.c      **** #define ATTR
+  29:ExtInt.c      **** #endif
+  30:ExtInt.c      **** 
+  31:ExtInt.c      **** 
+  32:ExtInt.c      **** #if 0
+  33:ExtInt.c      **** // mthomas: The assembler code has been ported to gcc/gas, see file
+  34:ExtInt.c      **** //          interrupt_utils.h.
+  35:ExtInt.c      **** // Keil's original code:
+  36:ExtInt.c      **** // Macros for Interrupt Nesting
+  37:ExtInt.c      **** #define IENABLE                             /* Nested Interrupts Entry */   \
+  38:ExtInt.c      ****   __asm { MRS     LR, SPSR      }           /* Copy SPSR_irq to LR     */   \
+  39:ExtInt.c      ****   __asm { STMFD   SP!, {LR}     }           /* Save SPSR_irq           */   \
+  40:ExtInt.c      ****   __asm { MSR     CPSR_c, #0x1F }           /* Enable IRQ (Sys Mode)   */   \
+  41:ExtInt.c      ****   __asm { STMFD   SP!, {LR}     }           /* Save LR                 */ 
+  42:ExtInt.c      **** 
+  43:ExtInt.c      **** #define IDISABLE                            /* Nested Interrupts Exit  */   \
+  44:ExtInt.c      ****   __asm { LDMFD   SP!, {LR}     }           /* Restore LR              */   \
+  45:ExtInt.c      ****   __asm { MSR     CPSR_c, #0x92 }           /* Disable IRQ (IRQ Mode)  */   \
+  46:ExtInt.c      ****   __asm { LDMFD   SP!, {LR}     }           /* Restore SPSR_irq to LR  */   \
+  47:ExtInt.c      ****   __asm { MSR     SPSR_cxsf, LR }           /* Copy LR to SPSR_irq     */ 
+  48:ExtInt.c      **** 
+  49:ExtInt.c      **** #endif
+  50:ExtInt.c      ****  
+  51:ExtInt.c      **** // void irq0_int (void) __irq __atr {          /* IRQ0 (Push button SW2)    */
+  52:ExtInt.c      **** //void INTFUNC ATTR irq0_int (void) {          /* IRQ0 (Push button SW2)    */
+  53:ExtInt.c      **** void NACKEDFUNC ATTR irq0_int (void) {          /* IRQ0 (Push button SW2)    */
+  17              		.loc 1 53 0
+  18              		@ Function supports interworking.
+  19              		@ Naked Function: prologue and epilogue provided by programmer.
+  20              		@ args = 0, pretend = 0, frame = 0
+  21              		@ frame_needed = 0, uses_anonymous_args = 0
+  54:ExtInt.c      **** 
+  55:ExtInt.c      ****   ISR_STORE(); 
+  22              		.loc 1 55 0
+  23 0000 FF5F2DE9 		STMDB SP!,{R0-R12,LR}
+  24              	
+  56:ExtInt.c      ****   ISR_ENABLE_NEST();                        /* Enable Interrupt nesting  */
+  25              		.loc 1 56 0
+  26 0004 00E04FE1 		MRS     LR, SPSR 
+  27 0008 00402DE9 	STMFD   SP!, {LR} 
+  28 000c 1FF021E3 	MSR     CPSR_c, #0x1F 
+  29 0010 00402DE9 	STMFD   SP!, {LR} 
+  57:ExtInt.c      ****   if ((pPIO->PIO_PDSR & SW2) == 0) {       /* Check if SW2 is pressed   */
+  30              		.loc 1 57 0
+  31 0014 4C309FE5 		ldr	r3, .L9
+  32 0018 002093E5 		ldr	r2, [r3, #0]
+  33 001c 3C3092E5 		ldr	r3, [r2, #60]
+  34 0020 010613E3 		tst	r3, #1048576
+  35 0024 0F00001A 		bne	.L2
+  58:ExtInt.c      ****     pPIO->PIO_CODR = LED2;                  /* Turn On LED2              */
+  36              		.loc 1 58 0
+  37 0028 0230A0E3 		mov	r3, #2
+  38 002c 343082E5 		str	r3, [r2, #52]
+  39              	.L4:
+  59:ExtInt.c      ****     while ((pPIO->PIO_PDSR & SW2) == 0);   /* Wait until SW2 is released */
+  40              		.loc 1 59 0
+  41 0030 3C3092E5 		ldr	r3, [r2, #60]
+  42 0034 010613E3 		tst	r3, #1048576
+  43 0038 0A00000A 		beq	.L4
+  60:ExtInt.c      ****     pPIO->PIO_SODR = LED2;                  /* Turn Off LED2             */
+  44              		.loc 1 60 0
+  45 003c 0230A0E3 		mov	r3, #2
+  46 0040 303082E5 		str	r3, [r2, #48]
+  47              	.L2:
+  61:ExtInt.c      ****   }
+  62:ExtInt.c      ****   ISR_DISABLE_NEST();                       /* Disable Interrupt nesting */
+  48              		.loc 1 62 0
+  49 0044 0040BDE8 		LDMFD   SP!, {LR} 
+  50 0048 92F021E3 	MSR     CPSR_c, #0x92 
+  51 004c 0040BDE8 	LDMFD   SP!, {LR} 
+  52 0050 0EF06FE1 	MSR     SPSR_cxsf, LR 
+  53              	
+  63:ExtInt.c      ****   *AT91C_AIC_EOICR = 0;                     /* End of Interrupt          */
+  54              		.loc 1 63 0
+  55 0054 0020A0E3 		mov	r2, #0
+  56 0058 0030E0E3 		mvn	r3, #0
+  57 005c CF2E03E5 		str	r2, [r3, #-3791]
+  64:ExtInt.c      ****   ISR_RESTORE();
+  58              		.loc 1 64 0
+  59 0060 FF5FBDE8 		LDMIA SP!,{R0-R12,LR}
+  60 0064 04F05EE2 	SUBS  R15,R14,#0x0004
+  61              	
+  65:ExtInt.c      **** }
+  62              		.loc 1 65 0
+  63              	.L10:
+  64              		.align	2
+  65              	.L9:
+  66 0068 00000000 		.word	pPIO
+  67              	.LFE2:
+  69              		.text
+  70              		.align	2
+  71              		.global	init_extint
+  73              	init_extint:
+  74              	.LFB3:
+  66:ExtInt.c      **** 
+  67:ExtInt.c      **** 
+  68:ExtInt.c      **** void init_extint (void) {                   /* Setup IRQ 0 Interrupt */
+  75              		.loc 1 68 0
+  76              		@ Function supports interworking.
+  77              		@ args = 0, pretend = 0, frame = 0
+  78              		@ frame_needed = 0, uses_anonymous_args = 0
+  79              		@ link register save eliminated.
+  69:ExtInt.c      ****   volatile AT91S_AIC * pAIC = AT91C_BASE_AIC;
+  70:ExtInt.c      **** 
+  71:ExtInt.c      ****   /* Setup IRQ0 Interrupt Mode and Vector with Priority 0 and Enable it */
+  72:ExtInt.c      ****   // mt: pAIC->AIC_SMR[AT91C_ID_IRQ0] = AT91C_AIC_SRCTYPE_INT_EDGE_TRIGGERED | 0;
+  73:ExtInt.c      ****   pAIC->AIC_SMR[AT91C_ID_IRQ0] = AT91C_AIC_SRCTYPE_INT_POSITIVE_EDGE | 0;
+  80              		.loc 1 73 0
+  81 0000 0F2CE0E3 		mvn	r2, #3840
+  82 0004 2030A0E3 		mov	r3, #32
+  83 0008 873002E5 		str	r3, [r2, #-135]
+  74:ExtInt.c      ****  
+  75:ExtInt.c      ****   pAIC->AIC_SVR[AT91C_ID_IRQ0] = (unsigned long) irq0_int;
+  84              		.loc 1 75 0
+  85 000c 0C309FE5 		ldr	r3, .L13
+  86 0010 073002E5 		str	r3, [r2, #-7]
+  76:ExtInt.c      ****   pAIC->AIC_IECR = (1 << AT91C_ID_IRQ0);
+  87              		.loc 1 76 0
+  88 0014 0131A0E3 		mov	r3, #1073741824
+  89              		.loc 1 68 0
+  90              		@ lr needed for prologue
+  91              		.loc 1 76 0
+  92 0018 213082E5 		str	r3, [r2, #33]
+  77:ExtInt.c      **** }
+  93              		.loc 1 77 0
+  94 001c 1EFF2FE1 		bx	lr
+  95              	.L14:
+  96              		.align	2
+  97              	.L13:
+  98 0020 00000000 		.word	irq0_int
+  99              	.LFE3:
+ 135              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 ExtInt.c
+/var/tmp//cc5TAMJD.s:14     .fastrun:00000000 irq0_int
+/var/tmp//cc5TAMJD.s:23     .fastrun:00000000 $a
+/var/tmp//cc5TAMJD.s:66     .fastrun:00000068 $d
+/var/tmp//cc5TAMJD.s:73     .text:00000000 init_extint
+/var/tmp//cc5TAMJD.s:81     .text:00000000 $a
+/var/tmp//cc5TAMJD.s:98     .text:00000020 $d
+
+UNDEFINED SYMBOLS
+pPIO

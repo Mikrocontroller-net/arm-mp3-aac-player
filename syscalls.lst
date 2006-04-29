@@ -1,0 +1,407 @@
+   1              		.code	16
+   2              		.file	"syscalls.c"
+  10              	.Ltext0:
+  11              		.align	2
+  12              		.global	_close_r
+  13              		.code 16
+  14              		.thumb_func
+  16              	_close_r:
+  17              	.LFB4:
+  18              		.file 1 "syscalls.c"
+   1:syscalls.c    **** /***********************************************************************/
+   2:syscalls.c    **** /*                                                                     */
+   3:syscalls.c    **** /*  SYSCALLS.C:  System Calls                                          */
+   4:syscalls.c    **** /*  most of this is from newlib-lpc and a Keil-demo                    */
+   5:syscalls.c    **** /*                                                                     */
+   6:syscalls.c    **** /*  These are "reentrant functions" as needed by                       */
+   7:syscalls.c    **** /*  the WinARM-newlib-config, see newlib-manual.                       */
+   8:syscalls.c    **** /*  Collected and modified by Martin Thomas                            */
+   9:syscalls.c    **** /*                                                                     */
+  10:syscalls.c    **** /***********************************************************************/
+  11:syscalls.c    **** 
+  12:syscalls.c    **** /* adapted for the SAM7 "serial.h" mthomas 10/2005 */
+  13:syscalls.c    **** 
+  14:syscalls.c    **** #include <stdlib.h>
+  15:syscalls.c    **** #include <reent.h>
+  16:syscalls.c    **** #include <sys/stat.h>
+  17:syscalls.c    **** #include "serial.h"
+  18:syscalls.c    **** 
+  19:syscalls.c    **** 
+  20:syscalls.c    **** _ssize_t _read_r(
+  21:syscalls.c    ****     struct _reent *r, 
+  22:syscalls.c    ****     int file, 
+  23:syscalls.c    ****     void *ptr, 
+  24:syscalls.c    ****     size_t len)
+  25:syscalls.c    **** {
+  26:syscalls.c    **** 	char c;
+  27:syscalls.c    **** 	int  i;
+  28:syscalls.c    **** 	unsigned char *p;
+  29:syscalls.c    **** 	
+  30:syscalls.c    **** 	p = (unsigned char*)ptr;
+  31:syscalls.c    **** 	
+  32:syscalls.c    **** 	for (i = 0; i < len; i++) {
+  33:syscalls.c    **** 		// c = uart0Getch();
+  34:syscalls.c    **** 		// c = uart0GetchW();
+  35:syscalls.c    **** 		while ( !uart0_kbhit() ) ;
+  36:syscalls.c    **** 		c = (char) uart0_getc();
+  37:syscalls.c    **** 		if (c == 0x0D) {
+  38:syscalls.c    **** 			*p='\0';
+  39:syscalls.c    **** 			break;
+  40:syscalls.c    **** 		}
+  41:syscalls.c    **** 		*p++ = c;
+  42:syscalls.c    **** 		uart0_putc(c);
+  43:syscalls.c    **** 	}
+  44:syscalls.c    **** 	return len - i;
+  45:syscalls.c    **** }
+  46:syscalls.c    **** 
+  47:syscalls.c    **** 
+  48:syscalls.c    **** _ssize_t _write_r (
+  49:syscalls.c    ****     struct _reent *r, 
+  50:syscalls.c    ****     int file, 
+  51:syscalls.c    ****     const void *ptr, 
+  52:syscalls.c    ****     size_t len)
+  53:syscalls.c    **** {
+  54:syscalls.c    **** 	int i;
+  55:syscalls.c    **** 	const unsigned char *p;
+  56:syscalls.c    **** 	
+  57:syscalls.c    **** 	p = (const unsigned char*) ptr;
+  58:syscalls.c    **** 	
+  59:syscalls.c    **** 	for (i = 0; i < len; i++) {
+  60:syscalls.c    **** 		if (*p == '\n' ) uart0_putc('\r');
+  61:syscalls.c    **** 		uart0_putc(*p++);
+  62:syscalls.c    **** 	}
+  63:syscalls.c    **** 	
+  64:syscalls.c    **** 	return len;
+  65:syscalls.c    **** }
+  66:syscalls.c    **** 
+  67:syscalls.c    **** 
+  68:syscalls.c    **** int _close_r(
+  69:syscalls.c    ****     struct _reent *r, 
+  70:syscalls.c    ****     int file)
+  71:syscalls.c    **** {
+  19              		.loc 1 71 0
+  20              	.LVL0:
+  72:syscalls.c    **** 	return 0;
+  73:syscalls.c    **** }
+  21              		.loc 1 73 0
+  22 0000 0020     		mov	r0, #0
+  23              	.LVL1:
+  24              		.loc 1 71 0
+  25              		@ lr needed for prologue
+  26              		.loc 1 73 0
+  27              		@ sp needed for prologue
+  28 0002 7047     		bx	lr
+  29              	.LFE4:
+  31              		.align	2
+  32              		.global	_lseek_r
+  33              		.code 16
+  34              		.thumb_func
+  36              	_lseek_r:
+  37              	.LFB5:
+  74:syscalls.c    **** 
+  75:syscalls.c    **** 
+  76:syscalls.c    **** _off_t _lseek_r(
+  77:syscalls.c    ****     struct _reent *r, 
+  78:syscalls.c    ****     int file, 
+  79:syscalls.c    ****     _off_t ptr, 
+  80:syscalls.c    ****     int dir)
+  81:syscalls.c    **** {
+  38              		.loc 1 81 0
+  39              	.LVL2:
+  82:syscalls.c    **** 	return (_off_t)0;	/*  Always indicate we are at file beginning.  */
+  83:syscalls.c    **** }
+  40              		.loc 1 83 0
+  41 0004 0020     		mov	r0, #0
+  42              	.LVL3:
+  43              		.loc 1 81 0
+  44              		@ lr needed for prologue
+  45              		.loc 1 83 0
+  46              		@ sp needed for prologue
+  47 0006 7047     		bx	lr
+  48              	.LFE5:
+  50              		.align	2
+  51              		.global	_fstat_r
+  52              		.code 16
+  53              		.thumb_func
+  55              	_fstat_r:
+  56              	.LFB6:
+  84:syscalls.c    **** 
+  85:syscalls.c    **** 
+  86:syscalls.c    **** int _fstat_r(
+  87:syscalls.c    ****     struct _reent *r, 
+  88:syscalls.c    ****     int file, 
+  89:syscalls.c    ****     struct stat *st)
+  90:syscalls.c    **** {
+  57              		.loc 1 90 0
+  58              	.LVL4:
+  91:syscalls.c    **** 	/*  Always set as character device.				*/
+  92:syscalls.c    **** 	st->st_mode = S_IFCHR;
+  59              		.loc 1 92 0
+  60 0008 8023     		mov	r3, #128
+  61 000a 9B01     		lsl	r3, r3, #6
+  93:syscalls.c    **** 	/* assigned to strong type with implicit 	*/
+  94:syscalls.c    **** 	/* signed/unsigned conversion.  Required by 	*/
+  95:syscalls.c    **** 	/* newlib.					*/
+  96:syscalls.c    **** 
+  97:syscalls.c    **** 	return 0;
+  98:syscalls.c    **** }
+  62              		.loc 1 98 0
+  63 000c 0020     		mov	r0, #0
+  64              	.LVL5:
+  65              		.loc 1 90 0
+  66              		@ lr needed for prologue
+  67              		.loc 1 92 0
+  68 000e 5360     		str	r3, [r2, #4]
+  69              		.loc 1 98 0
+  70              		@ sp needed for prologue
+  71 0010 7047     		bx	lr
+  72              	.LFE6:
+  74 0012 0000     		.align	2
+  75              		.global	isatty
+  76              		.code 16
+  77              		.thumb_func
+  79              	isatty:
+  80              	.LFB7:
+  99:syscalls.c    **** 
+ 100:syscalls.c    **** 
+ 101:syscalls.c    **** int isatty(int file); /* avoid warning */
+ 102:syscalls.c    **** 
+ 103:syscalls.c    **** int isatty(int file)
+ 104:syscalls.c    **** {
+  81              		.loc 1 104 0
+  82              	.LVL6:
+ 105:syscalls.c    **** 	return 1;
+ 106:syscalls.c    **** }
+  83              		.loc 1 106 0
+  84 0014 0120     		mov	r0, #1
+  85              	.LVL7:
+  86              		.loc 1 104 0
+  87              		@ lr needed for prologue
+  88              		.loc 1 106 0
+  89              		@ sp needed for prologue
+  90 0016 7047     		bx	lr
+  91              	.LFE7:
+  93              		.align	2
+  94              		.global	_sbrk_r
+  95              		.code 16
+  96              		.thumb_func
+  98              	_sbrk_r:
+  99              	.LFB8:
+ 107:syscalls.c    **** 
+ 108:syscalls.c    **** 
+ 109:syscalls.c    **** #if 0
+ 110:syscalls.c    **** static void _exit (int n) {
+ 111:syscalls.c    **** label:  goto label; /* endless loop */
+ 112:syscalls.c    **** }
+ 113:syscalls.c    **** #endif 
+ 114:syscalls.c    **** 
+ 115:syscalls.c    **** 
+ 116:syscalls.c    **** /* "malloc clue function" from newlib-lpc/Keil-Demo/"generic" */
+ 117:syscalls.c    **** 
+ 118:syscalls.c    **** /**** Locally used variables. ****/
+ 119:syscalls.c    **** // mt: "cleaner": extern char* end;
+ 120:syscalls.c    **** extern char end[];              /*  end is set in the linker command 	*/
+ 121:syscalls.c    **** 				/* file and is the end of statically 	*/
+ 122:syscalls.c    **** 				/* allocated data (thus start of heap).	*/
+ 123:syscalls.c    **** 
+ 124:syscalls.c    **** static char *heap_ptr;		/* Points to current end of the heap.	*/
+ 125:syscalls.c    **** 
+ 126:syscalls.c    **** /************************** _sbrk_r *************************************
+ 127:syscalls.c    ****  * Support function. Adjusts end of heap to provide more memory to
+ 128:syscalls.c    ****  * memory allocator. Simple and dumb with no sanity checks.
+ 129:syscalls.c    **** 
+ 130:syscalls.c    ****  *  struct _reent *r -- re-entrancy structure, used by newlib to
+ 131:syscalls.c    ****  *                      support multiple threads of operation.
+ 132:syscalls.c    ****  *  ptrdiff_t nbytes -- number of bytes to add.
+ 133:syscalls.c    ****  *                      Returns pointer to start of new heap area.
+ 134:syscalls.c    ****  *
+ 135:syscalls.c    ****  *  Note:  This implementation is not thread safe (despite taking a
+ 136:syscalls.c    ****  *         _reent structure as a parameter).
+ 137:syscalls.c    ****  *         Since _s_r is not used in the current implementation, 
+ 138:syscalls.c    ****  *         the following messages must be suppressed.
+ 139:syscalls.c    ****  */
+ 140:syscalls.c    **** void * _sbrk_r(
+ 141:syscalls.c    ****     struct _reent *_s_r, 
+ 142:syscalls.c    ****     ptrdiff_t nbytes)
+ 143:syscalls.c    **** {
+ 100              		.loc 1 143 0
+ 101              	.LVL8:
+ 144:syscalls.c    **** 	char  *base;		/*  errno should be set to  ENOMEM on error  */
+ 145:syscalls.c    **** 
+ 146:syscalls.c    **** 	if (!heap_ptr) {	/*  Initialize if first time through.  */
+ 102              		.loc 1 146 0
+ 103 0018 044A     		ldr	r2, .L13
+ 104 001a 1368     		ldr	r3, [r2]
+ 105              		.loc 1 143 0
+ 106              		@ lr needed for prologue
+ 107              		.loc 1 146 0
+ 108 001c 002B     		cmp	r3, #0
+ 109 001e 01D1     		bne	.L10
+ 147:syscalls.c    **** 		heap_ptr = end;
+ 110              		.loc 1 147 0
+ 111 0020 034B     		ldr	r3, .L13+4
+ 112 0022 1360     		str	r3, [r2]
+ 113              	.L10:
+ 148:syscalls.c    **** 	}
+ 149:syscalls.c    **** 	base = heap_ptr;	/*  Point to end of heap.  */
+ 114              		.loc 1 149 0
+ 115 0024 1068     		ldr	r0, [r2]
+ 116              	.LVL9:
+ 117              	.LVL10:
+ 150:syscalls.c    **** 	heap_ptr += nbytes;	/*  Increase heap.  */
+ 118              		.loc 1 150 0
+ 119 0026 4318     		add	r3, r0, r1
+ 120 0028 1360     		str	r3, [r2]
+ 151:syscalls.c    **** 	
+ 152:syscalls.c    **** 	return base;		/*  Return pointer to start of new heap area.  */
+ 153:syscalls.c    **** }
+ 121              		.loc 1 153 0
+ 122              		@ sp needed for prologue
+ 123 002a 7047     		bx	lr
+ 124              	.L14:
+ 125              		.align	2
+ 126              	.L13:
+ 127 002c 00000000 		.word	heap_ptr
+ 128 0030 00000000 		.word	end
+ 129              	.LFE8:
+ 131              		.align	2
+ 132              		.global	_write_r
+ 133              		.code 16
+ 134              		.thumb_func
+ 136              	_write_r:
+ 137              	.LFB3:
+ 138              		.loc 1 53 0
+ 139 0034 70B5     		push	{r4, r5, r6, lr}
+ 140              	.LCFI0:
+ 141              	.LVL11:
+ 142              		.loc 1 53 0
+ 143 0036 151C     		mov	r5, r2
+ 144 0038 1E1C     		mov	r6, r3
+ 145              		.loc 1 57 0
+ 146 003a 0024     		mov	r4, #0
+ 147              	.LVL12:
+ 148 003c 09E0     		b	.L16
+ 149              	.LVL13:
+ 150              	.L17:
+ 151              		.loc 1 60 0
+ 152 003e 635D     		ldrb	r3, [r4, r5]
+ 153 0040 0A2B     		cmp	r3, #10
+ 154 0042 02D1     		bne	.L18
+ 155 0044 0D20     		mov	r0, #13
+ 156              	.LVL14:
+ 157 0046 FFF7FEFF 		bl	uart0_putc
+ 158              	.LVL15:
+ 159              	.L18:
+ 160              		.loc 1 61 0
+ 161 004a 605D     		ldrb	r0, [r4, r5]
+ 162              	.LVL16:
+ 163 004c FFF7FEFF 		bl	uart0_putc
+ 164              	.LVL17:
+ 165              		.loc 1 59 0
+ 166 0050 0134     		add	r4, r4, #1
+ 167              	.LVL18:
+ 168              	.L16:
+ 169 0052 B442     		cmp	r4, r6
+ 170 0054 F3D1     		bne	.L17
+ 171              		.loc 1 65 0
+ 172 0056 201C     		mov	r0, r4
+ 173              	.LVL19:
+ 174              		@ sp needed for prologue
+ 175              	.LVL20:
+ 176              	.LVL21:
+ 177              	.LVL22:
+ 178 0058 70BC     		pop	{r4, r5, r6}
+ 179 005a 02BC     		pop	{r1}
+ 180 005c 0847     		bx	r1
+ 181              	.LFE3:
+ 183 005e 0000     		.align	2
+ 184              		.global	_read_r
+ 185              		.code 16
+ 186              		.thumb_func
+ 188              	_read_r:
+ 189              	.LFB2:
+ 190              		.loc 1 25 0
+ 191 0060 F0B5     		push	{r4, r5, r6, r7, lr}
+ 192              	.LCFI1:
+ 193              	.LVL23:
+ 194              		.loc 1 25 0
+ 195 0062 161C     		mov	r6, r2
+ 196 0064 1F1C     		mov	r7, r3
+ 197              		.loc 1 30 0
+ 198 0066 0024     		mov	r4, #0
+ 199              	.LVL24:
+ 200 0068 10E0     		b	.L23
+ 201              	.LVL25:
+ 202              	.L30:
+ 203              		.loc 1 38 0
+ 204 006a 0023     		mov	r3, #0
+ 205 006c 2B70     		strb	r3, [r5]
+ 206 006e 10E0     		b	.L28
+ 207              	.LVL26:
+ 208              	.L31:
+ 209              		.loc 1 35 0
+ 210 0070 FFF7FEFF 		bl	uart0_kbhit
+ 211              	.LVL27:
+ 212 0074 0028     		cmp	r0, #0
+ 213 0076 FBD0     		beq	.L31
+ 214              		.loc 1 36 0
+ 215 0078 FFF7FEFF 		bl	uart0_getc
+ 216 007c 0006     		lsl	r0, r0, #24
+ 217 007e 000E     		lsr	r0, r0, #24
+ 218              	.LVL28:
+ 219              		.loc 1 37 0
+ 220 0080 0D28     		cmp	r0, #13
+ 221 0082 F2D0     		beq	.L30
+ 222              		.loc 1 41 0
+ 223 0084 A055     		strb	r0, [r4, r6]
+ 224              		.loc 1 42 0
+ 225 0086 FFF7FEFF 		bl	uart0_putc
+ 226              	.LVL29:
+ 227              		.loc 1 32 0
+ 228 008a 0134     		add	r4, r4, #1
+ 229              	.LVL30:
+ 230              	.L23:
+ 231              		.loc 1 25 0
+ 232 008c 3519     		add	r5, r6, r4
+ 233              		.loc 1 32 0
+ 234 008e BC42     		cmp	r4, r7
+ 235 0090 EED1     		bne	.L31
+ 236              	.LVL31:
+ 237              	.L28:
+ 238 0092 381B     		sub	r0, r7, r4
+ 239              	.LVL32:
+ 240              		.loc 1 45 0
+ 241              		@ sp needed for prologue
+ 242              	.LVL33:
+ 243              	.LVL34:
+ 244              	.LVL35:
+ 245              	.LVL36:
+ 246 0094 F0BC     		pop	{r4, r5, r6, r7}
+ 247 0096 02BC     		pop	{r1}
+ 248 0098 0847     		bx	r1
+ 249              	.LFE2:
+ 251              		.bss
+ 252              		.align	2
+ 253              	heap_ptr:
+ 254 0000 00000000 		.space	4
+ 360              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 syscalls.c
+/var/tmp//ccFZZas4.s:1      .text:00000000 $t
+/var/tmp//ccFZZas4.s:16     .text:00000000 _close_r
+/var/tmp//ccFZZas4.s:36     .text:00000004 _lseek_r
+/var/tmp//ccFZZas4.s:55     .text:00000008 _fstat_r
+/var/tmp//ccFZZas4.s:79     .text:00000014 isatty
+/var/tmp//ccFZZas4.s:98     .text:00000018 _sbrk_r
+/var/tmp//ccFZZas4.s:127    .text:0000002c $d
+/var/tmp//ccFZZas4.s:253    .bss:00000000 heap_ptr
+/var/tmp//ccFZZas4.s:136    .text:00000034 _write_r
+/var/tmp//ccFZZas4.s:133    .text:00000034 $t
+/var/tmp//ccFZZas4.s:188    .text:00000060 _read_r
+                             .bss:00000000 $d
+
+UNDEFINED SYMBOLS
+end
+uart0_putc
+uart0_kbhit
+uart0_getc
