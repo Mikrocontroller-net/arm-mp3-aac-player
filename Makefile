@@ -401,6 +401,9 @@ program: $(TARGET).bin
 	$(CC) $(THUMB) $(ALL_CFLAGS) $(AOBJARM) $(AOBJ) $(COBJARM) $(COBJ) $(CPPOBJ) $(CPPOBJARM) --output $@ $(LDFLAGS)
 #	$(CPP) $(THUMB) $(ALL_CFLAGS) $(AOBJARM) $(AOBJ) $(COBJARM) $(COBJ) $(CPPOBJ) $(CPPOBJARM) --output $@ $(LDFLAGS)
 
+efsl/libefsl.a :
+	make -C efsl
+
 # Compile: create object files from C source files. ARM/Thumb
 $(COBJ) : %.o : %.c
 	@echo
