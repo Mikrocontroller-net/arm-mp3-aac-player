@@ -98,21 +98,19 @@ void play_wav(void)
 	rprintf("\nWAV-File opened.\n");
 
 	fill_buffer(0);
-	fill_buffer(1);
 	set_first_dma((short *)buf[0], 1024);
-	set_next_dma((short *)buf[1], 1024);
 	
 	// enable DMA transfer
 	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
 	assert(*AT91C_SSC_PTSR == AT91C_PDC_TXTEN);
 		
 	while(1) {
+		fill_buffer(1);
+		set_next_dma((short *)buf[1], 1024);
 		while(!dma_endtx());
 		fill_buffer(0);
-	set_next_dma((short *)buf[0], 1024);
+		set_next_dma((short *)buf[0], 1024);
 		while(!dma_endtx());
-		fill_buffer(1);
-	set_next_dma((short *)buf[1], 1024);
 	}
 
 	file_fclose( &filer );
