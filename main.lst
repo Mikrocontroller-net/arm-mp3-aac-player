@@ -296,65 +296,66 @@
  125:main.c        **** 	signed char res;
  126:main.c        **** 	int c, flag = 0;
  127:main.c        **** 	
- 128:main.c        **** 	AT91PS_PMC  pPMC  = AT91C_BASE_PMC;
- 129:main.c        **** 	AT91PS_PIO  pPIOA = AT91C_BASE_PIOA;
- 130:main.c        **** 	AT91PS_RSTC pRSTC = AT91C_BASE_RSTC;
- 131:main.c        **** 	
- 132:main.c        **** 	// Enable the clock for PIO and UART0
- 133:main.c        **** 	pPMC->PMC_PCER = ( ( 1 << AT91C_ID_PIOA ) | ( 1 << AT91C_ID_US0 ) ); // n.b. IDs are just bit-numb
- 101              		.loc 1 133 0
- 102 0002 D04B     		ldr	r3, .L61
- 134:main.c        **** 	
- 135:main.c        **** 	// Configure the PIO Lines corresponding to LED1 to LED4
- 136:main.c        **** 	pPIOA->PIO_PER = LED_MASK; // pins controlled by PIO (GPIO)
- 103              		.loc 1 136 0
- 104 0004 D04D     		ldr	r5, .L61+4
- 105              		.loc 1 133 0
+ 128:main.c        **** 	
+ 129:main.c        **** 	AT91PS_PMC  pPMC  = AT91C_BASE_PMC;
+ 130:main.c        **** 	AT91PS_PIO  pPIOA = AT91C_BASE_PIOA;
+ 131:main.c        **** 	AT91PS_RSTC pRSTC = AT91C_BASE_RSTC;
+ 132:main.c        **** 	
+ 133:main.c        **** 	// Enable the clock for PIO and UART0
+ 134:main.c        **** 	pPMC->PMC_PCER = ( ( 1 << AT91C_ID_PIOA ) | ( 1 << AT91C_ID_US0 ) ); // n.b. IDs are just bit-numb
+ 101              		.loc 1 134 0
+ 102 0002 D24B     		ldr	r3, .L61
+ 135:main.c        **** 	
+ 136:main.c        **** 	// Configure the PIO Lines corresponding to LED1 to LED4
+ 137:main.c        **** 	pPIOA->PIO_PER = LED_MASK; // pins controlled by PIO (GPIO)
+ 103              		.loc 1 137 0
+ 104 0004 D24D     		ldr	r5, .L61+4
+ 105              		.loc 1 134 0
  106 0006 4422     		mov	r2, #68
  107 0008 1A61     		str	r2, [r3, #16]
- 108              		.loc 1 136 0
+ 108              		.loc 1 137 0
  109 000a 0F23     		mov	r3, #15
- 137:main.c        **** 	pPIOA->PIO_OER = LED_MASK; // pins outputs
- 138:main.c        **** 	
- 139:main.c        **** 	// Turn off the LEDs. Low Active: set bits to turn off 
- 140:main.c        **** 	pPIOA->PIO_SODR = LED_MASK;
- 141:main.c        **** 	
- 142:main.c        **** 	// enable reset-key on demo-board 
- 143:main.c        **** 	pRSTC->RSTC_RMR = (0xA5000000 | AT91C_RSTC_URSTEN);
- 110              		.loc 1 143 0
- 111 000c CF4A     		ldr	r2, .L61+8
- 112              		.loc 1 136 0
+ 138:main.c        **** 	pPIOA->PIO_OER = LED_MASK; // pins outputs
+ 139:main.c        **** 	
+ 140:main.c        **** 	// Turn off the LEDs. Low Active: set bits to turn off 
+ 141:main.c        **** 	pPIOA->PIO_SODR = LED_MASK;
+ 142:main.c        **** 	
+ 143:main.c        **** 	// enable reset-key on demo-board 
+ 144:main.c        **** 	pRSTC->RSTC_RMR = (0xA5000000 | AT91C_RSTC_URSTEN);
+ 110              		.loc 1 144 0
+ 111 000c D14A     		ldr	r2, .L61+8
+ 112              		.loc 1 137 0
  113 000e 2B60     		str	r3, [r5]
- 114              		.loc 1 137 0
+ 114              		.loc 1 138 0
  115 0010 2B61     		str	r3, [r5, #16]
- 116              		.loc 1 140 0
+ 116              		.loc 1 141 0
  117 0012 2B63     		str	r3, [r5, #48]
- 118              		.loc 1 143 0
- 119 0014 CE4B     		ldr	r3, .L61+12
+ 118              		.loc 1 144 0
+ 119 0014 D04B     		ldr	r3, .L61+12
  120              		.loc 1 124 0
  121 0016 83B0     		sub	sp, sp, #12
  122              	.LCFI1:
- 123              		.loc 1 143 0
+ 123              		.loc 1 144 0
  124 0018 9A60     		str	r2, [r3, #8]
- 144:main.c        **** 
- 145:main.c        **** 	systime_init();
- 125              		.loc 1 145 0
+ 145:main.c        **** 
+ 146:main.c        **** 	systime_init();
+ 125              		.loc 1 146 0
  126 001a FFF7FEFF 		bl	systime_init
- 146:main.c        **** 
- 147:main.c        **** 	uart0_init();
- 127              		.loc 1 147 0
+ 147:main.c        **** 
+ 148:main.c        **** 	uart0_init();
+ 127              		.loc 1 148 0
  128 001e FFF7FEFF 		bl	uart0_init
- 148:main.c        **** 	uart0_prints("\n\nAT91SAM7 Filesystem-Demo (P:AT91SAM7S64 L:efsl)\n");
- 129              		.loc 1 148 0
- 130 0022 CC48     		ldr	r0, .L61+16
+ 149:main.c        **** 	uart0_prints("\n\nAT91SAM7 Filesystem-Demo (P:AT91SAM7S64 L:efsl)\n");
+ 129              		.loc 1 149 0
+ 130 0022 CE48     		ldr	r0, .L61+16
  131 0024 FFF7FEFF 		bl	uart0_prints
- 149:main.c        **** 	uart0_prints("efsl AT91-Interface and this Demo-Application\n");
- 132              		.loc 1 149 0
- 133 0028 CB48     		ldr	r0, .L61+20
+ 150:main.c        **** 	uart0_prints("efsl AT91-Interface and this Demo-Application\n");
+ 132              		.loc 1 150 0
+ 133 0028 CD48     		ldr	r0, .L61+20
  134 002a FFF7FEFF 		bl	uart0_prints
- 150:main.c        **** 	uart0_prints("done by Martin Thomas, Kaiserslautern, Germany\n\n");
- 135              		.loc 1 150 0
- 136 002e CB48     		ldr	r0, .L61+24
+ 151:main.c        **** 	uart0_prints("done by Martin Thomas, Kaiserslautern, Germany\n\n");
+ 135              		.loc 1 151 0
+ 136 002e CD48     		ldr	r0, .L61+24
  137 0030 FFF7FEFF 		bl	uart0_prints
  138              	.LBB20:
  139              	.LBB21:
@@ -362,30 +363,30 @@
  141 0034 0126     		mov	r6, #1
  142              	.LBE21:
  143              	.LBE20:
- 151:main.c        **** 	
- 152:main.c        **** 	/* init efsl debug-output */
- 153:main.c        **** 	efsl_debug_devopen_arm(uart0_putc);
- 144              		.loc 1 153 0
- 145 0036 CA48     		ldr	r0, .L61+28
+ 152:main.c        **** 	
+ 153:main.c        **** 	/* init efsl debug-output */
+ 154:main.c        **** 	efsl_debug_devopen_arm(uart0_putc);
+ 144              		.loc 1 154 0
+ 145 0036 CC48     		ldr	r0, .L61+28
  146 0038 FFF7FEFF 		bl	efsl_debug_devopen_arm
- 154:main.c        **** 	
- 155:main.c        **** 	led1(1);
- 156:main.c        **** 	
- 157:main.c        **** 	rprintf("CARD init...");
- 147              		.loc 1 157 0
- 148 003c C948     		ldr	r0, .L61+32
+ 155:main.c        **** 	
+ 156:main.c        **** 	led1(1);
+ 157:main.c        **** 	
+ 158:main.c        **** 	rprintf("CARD init...");
+ 147              		.loc 1 158 0
+ 148 003c CB48     		ldr	r0, .L61+32
  149              	.LBB22:
  150              	.LBB23:
  151              		.loc 1 34 0
  152 003e 6E63     		str	r6, [r5, #52]
  153              	.LBE23:
  154              	.LBE22:
- 155              		.loc 1 157 0
+ 155              		.loc 1 158 0
  156 0040 FFF7FEFF 		bl	efsl_debug_printf_arm
- 158:main.c        **** 
- 159:main.c        **** 	if ( ( res = efs_init( &efs, 0 ) ) != 0 ) {
- 157              		.loc 1 159 0
- 158 0044 C84C     		ldr	r4, .L61+36
+ 159:main.c        **** 
+ 160:main.c        **** 	if ( ( res = efs_init( &efs, 0 ) ) != 0 ) {
+ 157              		.loc 1 160 0
+ 158 0044 CA4C     		ldr	r4, .L61+36
  159 0046 0021     		mov	r1, #0
  160 0048 201C     		mov	r0, r4
  161 004a FFF7FEFF 		bl	efs_init
@@ -393,679 +394,684 @@
  163 0050 010E     		lsr	r1, r0, #24
  164              	.LVL0:
  165 0052 0029     		cmp	r1, #0
- 166 0054 05D0     		beq	.L2
- 160:main.c        **** 		rprintf("failed with %i\n",res);
- 167              		.loc 1 160 0
+ 166 0054 09D0     		beq	.L2
+ 161:main.c        **** 		rprintf("failed with %i\n",res);
+ 167              		.loc 1 161 0
  168 0056 0906     		lsl	r1, r1, #24
  169              	.LVL1:
- 170 0058 C448     		ldr	r0, .L61+40
+ 170 0058 C648     		ldr	r0, .L61+40
  171 005a 0916     		asr	r1, r1, #24
  172 005c FFF7FEFF 		bl	efsl_debug_printf_arm
- 173 0060 A8E0     		b	.L4
- 174              	.LVL2:
- 175              	.L2:
- 161:main.c        **** 	}
- 162:main.c        **** 	else {
- 163:main.c        **** 		rprintf("ok\n");
- 176              		.loc 1 163 0
- 177 0062 C348     		ldr	r0, .L61+44
- 178 0064 FFF7FEFF 		bl	efsl_debug_printf_arm
- 179              	.LVL3:
- 180              	.LBB24:
- 181              	.LBB25:
- 182              		.loc 1 35 0
- 183 0068 2E63     		str	r6, [r5, #48]
- 184              	.LBE25:
- 185              	.LBE24:
- 164:main.c        **** 		
- 165:main.c        **** 		led1(0);
+ 173              	.L4:
+ 162:main.c        **** 		while(1) { res = efs_init( &efs, 0 ); }
+ 174              		.loc 1 162 0
+ 175 0060 0021     		mov	r1, #0
+ 176 0062 C348     		ldr	r0, .L61+36
+ 177 0064 FFF7FEFF 		bl	efs_init
+ 178 0068 FAE7     		b	.L4
+ 179              	.LVL2:
+ 180              	.L2:
+ 163:main.c        **** 	}
+ 164:main.c        **** 	else {
+ 165:main.c        **** 		rprintf("ok\n");
+ 181              		.loc 1 165 0
+ 182 006a C348     		ldr	r0, .L61+44
+ 183 006c FFF7FEFF 		bl	efsl_debug_printf_arm
+ 184              	.LVL3:
+ 185              	.LBB24:
+ 186              	.LBB25:
+ 187              		.loc 1 35 0
+ 188 0070 2E63     		str	r6, [r5, #48]
+ 189              	.LBE25:
+ 190              	.LBE24:
  166:main.c        **** 		
- 167:main.c        **** 		rprintf("\nDirectory of 'root':\n");
- 186              		.loc 1 167 0
- 187 006a C248     		ldr	r0, .L61+48
- 188 006c FFF7FEFF 		bl	efsl_debug_printf_arm
- 168:main.c        **** 		ls_openDir( &list, &(efs.myFs) , "/");
- 189              		.loc 1 168 0
- 190 0070 C14B     		ldr	r3, .L61+52
- 191 0072 C24A     		ldr	r2, .L61+56
- 192 0074 E118     		add	r1, r4, r3
- 193 0076 C248     		ldr	r0, .L61+60
- 194 0078 FFF7FEFF 		bl	ls_openDir
- 195 007c 06E0     		b	.L5
- 196              	.L6:
- 169:main.c        **** 		while ( ls_getNext( &list ) == 0 ) {
- 170:main.c        **** 			list.currentEntry.FileName[LIST_MAXLENFILENAME-1] = '\0';
- 171:main.c        **** 			rprintf( "%s ( %li bytes )\n" ,
- 197              		.loc 1 171 0
- 198 007e 211C     		mov	r1, r4
- 199              		.loc 1 170 0
- 200 0080 E074     		strb	r0, [r4, #19]
- 201              		.loc 1 171 0
- 202 0082 0831     		add	r1, r1, #8
- 203 0084 BF48     		ldr	r0, .L61+64
- 204 0086 6269     		ldr	r2, [r4, #20]
- 205 0088 FFF7FEFF 		bl	efsl_debug_printf_arm
- 206              	.L5:
- 207              		.loc 1 169 0
- 208 008c BC4C     		ldr	r4, .L61+60
- 209 008e 201C     		mov	r0, r4
- 210 0090 FFF7FEFF 		bl	ls_getNext
- 211 0094 0006     		lsl	r0, r0, #24
- 212 0096 000E     		lsr	r0, r0, #24
- 213 0098 0028     		cmp	r0, #0
- 214 009a F0D0     		beq	.L6
- 215              	.LBB26:
- 216              	.LBB27:
- 217              		.loc 1 34 0
- 218 009c AA4B     		ldr	r3, .L61+4
- 219              	.LBE27:
- 220              	.LBE26:
- 172:main.c        **** 				list.currentEntry.FileName,
- 173:main.c        **** 				list.currentEntry.FileSize ) ;
- 174:main.c        **** 		}
- 175:main.c        **** 
- 176:main.c        **** #if 1
+ 167:main.c        **** 		led1(0);
+ 168:main.c        **** 		
+ 169:main.c        **** 		rprintf("\nDirectory of 'root':\n");
+ 191              		.loc 1 169 0
+ 192 0072 C248     		ldr	r0, .L61+48
+ 193 0074 FFF7FEFF 		bl	efsl_debug_printf_arm
+ 170:main.c        **** 		ls_openDir( &list, &(efs.myFs) , "/");
+ 194              		.loc 1 170 0
+ 195 0078 C14B     		ldr	r3, .L61+52
+ 196 007a C24A     		ldr	r2, .L61+56
+ 197 007c E118     		add	r1, r4, r3
+ 198 007e C248     		ldr	r0, .L61+60
+ 199 0080 FFF7FEFF 		bl	ls_openDir
+ 200 0084 06E0     		b	.L5
+ 201              	.L6:
+ 171:main.c        **** 		while ( ls_getNext( &list ) == 0 ) {
+ 172:main.c        **** 			list.currentEntry.FileName[LIST_MAXLENFILENAME-1] = '\0';
+ 173:main.c        **** 			rprintf( "%s ( %li bytes )\n" ,
+ 202              		.loc 1 173 0
+ 203 0086 211C     		mov	r1, r4
+ 204              		.loc 1 172 0
+ 205 0088 E074     		strb	r0, [r4, #19]
+ 206              		.loc 1 173 0
+ 207 008a 0831     		add	r1, r1, #8
+ 208 008c BF48     		ldr	r0, .L61+64
+ 209 008e 6269     		ldr	r2, [r4, #20]
+ 210 0090 FFF7FEFF 		bl	efsl_debug_printf_arm
+ 211              	.L5:
+ 212              		.loc 1 171 0
+ 213 0094 BC4C     		ldr	r4, .L61+60
+ 214 0096 201C     		mov	r0, r4
+ 215 0098 FFF7FEFF 		bl	ls_getNext
+ 216 009c 0006     		lsl	r0, r0, #24
+ 217 009e 000E     		lsr	r0, r0, #24
+ 218 00a0 0028     		cmp	r0, #0
+ 219 00a2 F0D0     		beq	.L6
+ 220              	.LBB26:
+ 221              	.LBB27:
+ 222              		.loc 1 34 0
+ 223 00a4 AA4B     		ldr	r3, .L61+4
+ 224              	.LBE27:
+ 225              	.LBE26:
+ 174:main.c        **** 				list.currentEntry.FileName,
+ 175:main.c        **** 				list.currentEntry.FileSize ) ;
+ 176:main.c        **** 		}
  177:main.c        **** 
- 178:main.c        **** 		led1(1);
- 179:main.c        **** 		
- 180:main.c        **** 		if ( file_fopen( &filer, &efs.myFs , LogFileName , 'r' ) == 0 ) {
- 221              		.loc 1 180 0
- 222 009e BA4C     		ldr	r4, .L61+68
- 223              	.LBB28:
- 224              	.LBB29:
- 225              		.loc 1 34 0
- 226 00a0 0122     		mov	r2, #1
- 227 00a2 5A63     		str	r2, [r3, #52]
- 228              	.LBE29:
- 229              	.LBE28:
- 230              		.loc 1 180 0
- 231 00a4 B948     		ldr	r0, .L61+72
- 232 00a6 BA49     		ldr	r1, .L61+76
- 233 00a8 221C     		mov	r2, r4
- 234 00aa 7223     		mov	r3, #114
- 235 00ac FFF7FEFF 		bl	file_fopen
- 236 00b0 0006     		lsl	r0, r0, #24
- 237 00b2 0028     		cmp	r0, #0
- 238 00b4 1DD1     		bne	.L8
- 181:main.c        **** 			rprintf("\nFile %s open. Content:\n", LogFileName);
- 239              		.loc 1 181 0
- 240 00b6 B748     		ldr	r0, .L61+80
- 241 00b8 211C     		mov	r1, r4
- 242 00ba FFF7FEFF 		bl	efsl_debug_printf_arm
- 243 00be 04E0     		b	.L10
- 244              	.L11:
- 182:main.c        **** 			while ( ( e = file_read( &filer, 512, buf ) ) != 0 ) {
- 183:main.c        **** 				buf[e]='\0';
- 245              		.loc 1 183 0
- 246 00c0 0023     		mov	r3, #0
- 247 00c2 2354     		strb	r3, [r4, r0]
- 184:main.c        **** 				uart0_puts((char*)buf);
- 248              		.loc 1 184 0
- 249 00c4 201C     		mov	r0, r4
- 250 00c6 FFF7FEFF 		bl	uart0_puts
- 251              	.L10:
- 252              		.loc 1 182 0
- 253 00ca B04D     		ldr	r5, .L61+72
- 254 00cc B24C     		ldr	r4, .L61+84
- 255 00ce 8021     		mov	r1, #128
- 256 00d0 281C     		mov	r0, r5
- 257 00d2 8900     		lsl	r1, r1, #2
- 258 00d4 221C     		mov	r2, r4
- 259 00d6 FFF7FEFF 		bl	file_read
- 260 00da B04B     		ldr	r3, .L61+88
- 261 00dc 0004     		lsl	r0, r0, #16
- 262 00de 000C     		lsr	r0, r0, #16
- 263 00e0 1880     		strh	r0, [r3]
- 264 00e2 0028     		cmp	r0, #0
- 265 00e4 ECD1     		bne	.L11
- 185:main.c        **** 			}
- 186:main.c        **** 			rprintf("\n");
- 266              		.loc 1 186 0
- 267 00e6 AE48     		ldr	r0, .L61+92
- 268 00e8 FFF7FEFF 		bl	efsl_debug_printf_arm
- 187:main.c        **** 			file_fclose( &filer );
- 269              		.loc 1 187 0
- 270 00ec 281C     		mov	r0, r5
- 271 00ee FFF7FEFF 		bl	file_fclose
- 272              	.L8:
- 273              	.LBB30:
- 274              	.LBB31:
- 275              		.loc 1 35 0
- 276 00f2 954B     		ldr	r3, .L61+4
- 277              	.LBE31:
- 278              	.LBE30:
- 188:main.c        **** 		}
- 189:main.c        **** 		
- 190:main.c        **** 		led1(0);
+ 178:main.c        **** #if 1
+ 179:main.c        **** 
+ 180:main.c        **** 		led1(1);
+ 181:main.c        **** 		
+ 182:main.c        **** 		if ( file_fopen( &filer, &efs.myFs , LogFileName , 'r' ) == 0 ) {
+ 226              		.loc 1 182 0
+ 227 00a6 BA4C     		ldr	r4, .L61+68
+ 228              	.LBB28:
+ 229              	.LBB29:
+ 230              		.loc 1 34 0
+ 231 00a8 0122     		mov	r2, #1
+ 232 00aa 5A63     		str	r2, [r3, #52]
+ 233              	.LBE29:
+ 234              	.LBE28:
+ 235              		.loc 1 182 0
+ 236 00ac B948     		ldr	r0, .L61+72
+ 237 00ae BA49     		ldr	r1, .L61+76
+ 238 00b0 221C     		mov	r2, r4
+ 239 00b2 7223     		mov	r3, #114
+ 240 00b4 FFF7FEFF 		bl	file_fopen
+ 241 00b8 0006     		lsl	r0, r0, #24
+ 242 00ba 0028     		cmp	r0, #0
+ 243 00bc 1DD1     		bne	.L8
+ 183:main.c        **** 			rprintf("\nFile %s open. Content:\n", LogFileName);
+ 244              		.loc 1 183 0
+ 245 00be B748     		ldr	r0, .L61+80
+ 246 00c0 211C     		mov	r1, r4
+ 247 00c2 FFF7FEFF 		bl	efsl_debug_printf_arm
+ 248 00c6 04E0     		b	.L10
+ 249              	.L11:
+ 184:main.c        **** 			while ( ( e = file_read( &filer, 512, buf ) ) != 0 ) {
+ 185:main.c        **** 				buf[e]='\0';
+ 250              		.loc 1 185 0
+ 251 00c8 0023     		mov	r3, #0
+ 252 00ca 2354     		strb	r3, [r4, r0]
+ 186:main.c        **** 				uart0_puts((char*)buf);
+ 253              		.loc 1 186 0
+ 254 00cc 201C     		mov	r0, r4
+ 255 00ce FFF7FEFF 		bl	uart0_puts
+ 256              	.L10:
+ 257              		.loc 1 184 0
+ 258 00d2 B04D     		ldr	r5, .L61+72
+ 259 00d4 B24C     		ldr	r4, .L61+84
+ 260 00d6 8021     		mov	r1, #128
+ 261 00d8 281C     		mov	r0, r5
+ 262 00da 8900     		lsl	r1, r1, #2
+ 263 00dc 221C     		mov	r2, r4
+ 264 00de FFF7FEFF 		bl	file_read
+ 265 00e2 B04B     		ldr	r3, .L61+88
+ 266 00e4 0004     		lsl	r0, r0, #16
+ 267 00e6 000C     		lsr	r0, r0, #16
+ 268 00e8 1880     		strh	r0, [r3]
+ 269 00ea 0028     		cmp	r0, #0
+ 270 00ec ECD1     		bne	.L11
+ 187:main.c        **** 			}
+ 188:main.c        **** 			rprintf("\n");
+ 271              		.loc 1 188 0
+ 272 00ee AE48     		ldr	r0, .L61+92
+ 273 00f0 FFF7FEFF 		bl	efsl_debug_printf_arm
+ 189:main.c        **** 			file_fclose( &filer );
+ 274              		.loc 1 189 0
+ 275 00f4 281C     		mov	r0, r5
+ 276 00f6 FFF7FEFF 		bl	file_fclose
+ 277              	.L8:
+ 278              	.LBB30:
+ 279              	.LBB31:
+ 280              		.loc 1 35 0
+ 281 00fa 954B     		ldr	r3, .L61+4
+ 282              	.LBE31:
+ 283              	.LBE30:
+ 190:main.c        **** 		}
  191:main.c        **** 		
- 192:main.c        **** 		if ( file_fopen( &filew, &efs.myFs , LogFileName , 'a' ) == 0 ) {
- 279              		.loc 1 192 0
- 280 00f4 AB4D     		ldr	r5, .L61+96
- 281 00f6 A44E     		ldr	r6, .L61+68
- 282              	.LBB32:
- 283              	.LBB33:
- 284              		.loc 1 35 0
- 285 00f8 0122     		mov	r2, #1
- 286 00fa 1A63     		str	r2, [r3, #48]
- 287              	.LBE33:
- 288              	.LBE32:
- 289              		.loc 1 192 0
- 290 00fc A449     		ldr	r1, .L61+76
- 291 00fe 281C     		mov	r0, r5
- 292 0100 321C     		mov	r2, r6
- 293 0102 6123     		mov	r3, #97
- 294 0104 FFF7FEFF 		bl	file_fopen
- 295 0108 0006     		lsl	r0, r0, #24
- 296 010a 0028     		cmp	r0, #0
- 297 010c 21D1     		bne	.L13
- 193:main.c        **** 			rprintf("\nFile %s open for append. Appending...", LogFileName);
- 298              		.loc 1 193 0
- 299 010e A648     		ldr	r0, .L61+100
- 300 0110 311C     		mov	r1, r6
- 301 0112 FFF7FEFF 		bl	efsl_debug_printf_arm
- 194:main.c        **** 			strcpy((char*)buf, "Martin hat's angehaengt\r\n");
- 302              		.loc 1 194 0
- 303 0116 A04C     		ldr	r4, .L61+84
- 304 0118 A449     		ldr	r1, .L61+104
- 305 011a 201C     		mov	r0, r4
- 306 011c FFF7FEFF 		bl	strcpy
- 195:main.c        **** 			if ( file_write( &filew, strlen((char*)buf), buf ) == strlen((char*)buf) ) {
- 307              		.loc 1 195 0
- 308 0120 201C     		mov	r0, r4
- 309 0122 FFF7FEFF 		bl	strlen
- 310 0126 221C     		mov	r2, r4
- 311 0128 011C     		mov	r1, r0
- 312 012a 281C     		mov	r0, r5
- 313 012c FFF7FEFF 		bl	file_write
- 314 0130 051C     		mov	r5, r0
- 315 0132 201C     		mov	r0, r4
- 316 0134 FFF7FEFF 		bl	strlen
- 317 0138 8542     		cmp	r5, r0
- 318 013a 03D1     		bne	.L15
- 196:main.c        **** 				rprintf("ok\n");
- 319              		.loc 1 196 0
- 320 013c 8C48     		ldr	r0, .L61+44
- 321 013e FFF7FEFF 		bl	efsl_debug_printf_arm
- 322 0142 03E0     		b	.L17
- 323              	.L15:
- 197:main.c        **** 			}
- 198:main.c        **** 			else {
- 199:main.c        **** 				rprintf("failed\n", LogFileName);
- 324              		.loc 1 199 0
- 325 0144 9A48     		ldr	r0, .L61+108
- 326 0146 311C     		mov	r1, r6
- 327 0148 FFF7FEFF 		bl	efsl_debug_printf_arm
- 328              	.L17:
- 200:main.c        **** 			}
- 201:main.c        **** 			file_fclose( &filew );
+ 192:main.c        **** 		led1(0);
+ 193:main.c        **** 		
+ 194:main.c        **** 		if ( file_fopen( &filew, &efs.myFs , LogFileName , 'a' ) == 0 ) {
+ 284              		.loc 1 194 0
+ 285 00fc AB4D     		ldr	r5, .L61+96
+ 286 00fe A44E     		ldr	r6, .L61+68
+ 287              	.LBB32:
+ 288              	.LBB33:
+ 289              		.loc 1 35 0
+ 290 0100 0122     		mov	r2, #1
+ 291 0102 1A63     		str	r2, [r3, #48]
+ 292              	.LBE33:
+ 293              	.LBE32:
+ 294              		.loc 1 194 0
+ 295 0104 A449     		ldr	r1, .L61+76
+ 296 0106 281C     		mov	r0, r5
+ 297 0108 321C     		mov	r2, r6
+ 298 010a 6123     		mov	r3, #97
+ 299 010c FFF7FEFF 		bl	file_fopen
+ 300 0110 0006     		lsl	r0, r0, #24
+ 301 0112 0028     		cmp	r0, #0
+ 302 0114 21D1     		bne	.L13
+ 195:main.c        **** 			rprintf("\nFile %s open for append. Appending...", LogFileName);
+ 303              		.loc 1 195 0
+ 304 0116 A648     		ldr	r0, .L61+100
+ 305 0118 311C     		mov	r1, r6
+ 306 011a FFF7FEFF 		bl	efsl_debug_printf_arm
+ 196:main.c        **** 			strcpy((char*)buf, "Martin hat's angehaengt\r\n");
+ 307              		.loc 1 196 0
+ 308 011e A04C     		ldr	r4, .L61+84
+ 309 0120 A449     		ldr	r1, .L61+104
+ 310 0122 201C     		mov	r0, r4
+ 311 0124 FFF7FEFF 		bl	strcpy
+ 197:main.c        **** 			if ( file_write( &filew, strlen((char*)buf), buf ) == strlen((char*)buf) ) {
+ 312              		.loc 1 197 0
+ 313 0128 201C     		mov	r0, r4
+ 314 012a FFF7FEFF 		bl	strlen
+ 315 012e 221C     		mov	r2, r4
+ 316 0130 011C     		mov	r1, r0
+ 317 0132 281C     		mov	r0, r5
+ 318 0134 FFF7FEFF 		bl	file_write
+ 319 0138 051C     		mov	r5, r0
+ 320 013a 201C     		mov	r0, r4
+ 321 013c FFF7FEFF 		bl	strlen
+ 322 0140 8542     		cmp	r5, r0
+ 323 0142 03D1     		bne	.L15
+ 198:main.c        **** 				rprintf("ok\n");
+ 324              		.loc 1 198 0
+ 325 0144 8C48     		ldr	r0, .L61+44
+ 326 0146 FFF7FEFF 		bl	efsl_debug_printf_arm
+ 327 014a 03E0     		b	.L17
+ 328              	.L15:
+ 199:main.c        **** 			}
+ 200:main.c        **** 			else {
+ 201:main.c        **** 				rprintf("failed\n", LogFileName);
  329              		.loc 1 201 0
- 330 014c 9548     		ldr	r0, .L61+96
- 331 014e FFF7FEFF 		bl	file_fclose
- 332              	.L13:
- 333              	.LBB34:
- 334              	.LBB35:
- 335              		.loc 1 34 0
- 336 0152 7D4B     		ldr	r3, .L61+4
- 337              	.LBE35:
- 338              	.LBE34:
- 202:main.c        **** 		}
- 203:main.c        **** 		
- 204:main.c        **** 		led1(1);
+ 330 014c 9A48     		ldr	r0, .L61+108
+ 331 014e 311C     		mov	r1, r6
+ 332 0150 FFF7FEFF 		bl	efsl_debug_printf_arm
+ 333              	.L17:
+ 202:main.c        **** 			}
+ 203:main.c        **** 			file_fclose( &filew );
+ 334              		.loc 1 203 0
+ 335 0154 9548     		ldr	r0, .L61+96
+ 336 0156 FFF7FEFF 		bl	file_fclose
+ 337              	.L13:
+ 338              	.LBB34:
+ 339              	.LBB35:
+ 340              		.loc 1 34 0
+ 341 015a 7D4B     		ldr	r3, .L61+4
+ 342              	.LBE35:
+ 343              	.LBE34:
+ 204:main.c        **** 		}
  205:main.c        **** 		
- 206:main.c        **** 		if ( file_fopen( &filer, &efs.myFs , LogFileName , 'r' ) == 0 ) {
- 339              		.loc 1 206 0
- 340 0154 8C4C     		ldr	r4, .L61+68
- 341              	.LBB36:
- 342              	.LBB37:
- 343              		.loc 1 34 0
- 344 0156 0122     		mov	r2, #1
- 345 0158 5A63     		str	r2, [r3, #52]
- 346              	.LBE37:
- 347              	.LBE36:
- 348              		.loc 1 206 0
- 349 015a 8C48     		ldr	r0, .L61+72
- 350 015c 8C49     		ldr	r1, .L61+76
- 351 015e 221C     		mov	r2, r4
- 352 0160 7223     		mov	r3, #114
- 353 0162 FFF7FEFF 		bl	file_fopen
- 354 0166 0006     		lsl	r0, r0, #24
- 355 0168 0028     		cmp	r0, #0
- 356 016a 1DD1     		bne	.L18
- 207:main.c        **** 			rprintf("\nFile %s open. Content:\n", LogFileName);
- 357              		.loc 1 207 0
- 358 016c 8948     		ldr	r0, .L61+80
- 359 016e 211C     		mov	r1, r4
- 360 0170 FFF7FEFF 		bl	efsl_debug_printf_arm
- 361 0174 04E0     		b	.L20
- 362              	.L21:
- 208:main.c        **** 			while ( ( e = file_read( &filer, 512, buf ) ) != 0 ) {
- 209:main.c        **** 				buf[e]='\0';
- 363              		.loc 1 209 0
- 364 0176 0023     		mov	r3, #0
- 365 0178 2354     		strb	r3, [r4, r0]
- 210:main.c        **** 				uart0_puts((char*)buf);
- 366              		.loc 1 210 0
- 367 017a 201C     		mov	r0, r4
- 368 017c FFF7FEFF 		bl	uart0_puts
- 369              	.L20:
- 370              		.loc 1 208 0
- 371 0180 824D     		ldr	r5, .L61+72
- 372 0182 854C     		ldr	r4, .L61+84
- 373 0184 8021     		mov	r1, #128
- 374 0186 281C     		mov	r0, r5
- 375 0188 8900     		lsl	r1, r1, #2
- 376 018a 221C     		mov	r2, r4
- 377 018c FFF7FEFF 		bl	file_read
- 378 0190 824B     		ldr	r3, .L61+88
- 379 0192 0004     		lsl	r0, r0, #16
- 380 0194 000C     		lsr	r0, r0, #16
- 381 0196 1880     		strh	r0, [r3]
- 382 0198 0028     		cmp	r0, #0
- 383 019a ECD1     		bne	.L21
- 211:main.c        **** 			}
- 212:main.c        **** 			rprintf("\n");
- 384              		.loc 1 212 0
- 385 019c 8048     		ldr	r0, .L61+92
- 386 019e FFF7FEFF 		bl	efsl_debug_printf_arm
- 213:main.c        **** 			file_fclose( &filer );
- 387              		.loc 1 213 0
- 388 01a2 281C     		mov	r0, r5
- 389 01a4 FFF7FEFF 		bl	file_fclose
- 390              	.L18:
- 391              	.LBB38:
- 392              	.LBB39:
- 393              		.loc 1 35 0
- 394 01a8 674A     		ldr	r2, .L61+4
- 395 01aa 0123     		mov	r3, #1
- 396 01ac 1363     		str	r3, [r2, #48]
- 397              	.LBE39:
- 398              	.LBE38:
- 214:main.c        **** 		}
- 215:main.c        **** 
- 216:main.c        **** #endif
- 217:main.c        **** 		
- 218:main.c        **** 		led1(0);
+ 206:main.c        **** 		led1(1);
+ 207:main.c        **** 		
+ 208:main.c        **** 		if ( file_fopen( &filer, &efs.myFs , LogFileName , 'r' ) == 0 ) {
+ 344              		.loc 1 208 0
+ 345 015c 8C4C     		ldr	r4, .L61+68
+ 346              	.LBB36:
+ 347              	.LBB37:
+ 348              		.loc 1 34 0
+ 349 015e 0122     		mov	r2, #1
+ 350 0160 5A63     		str	r2, [r3, #52]
+ 351              	.LBE37:
+ 352              	.LBE36:
+ 353              		.loc 1 208 0
+ 354 0162 8C48     		ldr	r0, .L61+72
+ 355 0164 8C49     		ldr	r1, .L61+76
+ 356 0166 221C     		mov	r2, r4
+ 357 0168 7223     		mov	r3, #114
+ 358 016a FFF7FEFF 		bl	file_fopen
+ 359 016e 0006     		lsl	r0, r0, #24
+ 360 0170 0028     		cmp	r0, #0
+ 361 0172 1DD1     		bne	.L18
+ 209:main.c        **** 			rprintf("\nFile %s open. Content:\n", LogFileName);
+ 362              		.loc 1 209 0
+ 363 0174 8948     		ldr	r0, .L61+80
+ 364 0176 211C     		mov	r1, r4
+ 365 0178 FFF7FEFF 		bl	efsl_debug_printf_arm
+ 366 017c 04E0     		b	.L20
+ 367              	.L21:
+ 210:main.c        **** 			while ( ( e = file_read( &filer, 512, buf ) ) != 0 ) {
+ 211:main.c        **** 				buf[e]='\0';
+ 368              		.loc 1 211 0
+ 369 017e 0023     		mov	r3, #0
+ 370 0180 2354     		strb	r3, [r4, r0]
+ 212:main.c        **** 				uart0_puts((char*)buf);
+ 371              		.loc 1 212 0
+ 372 0182 201C     		mov	r0, r4
+ 373 0184 FFF7FEFF 		bl	uart0_puts
+ 374              	.L20:
+ 375              		.loc 1 210 0
+ 376 0188 824D     		ldr	r5, .L61+72
+ 377 018a 854C     		ldr	r4, .L61+84
+ 378 018c 8021     		mov	r1, #128
+ 379 018e 281C     		mov	r0, r5
+ 380 0190 8900     		lsl	r1, r1, #2
+ 381 0192 221C     		mov	r2, r4
+ 382 0194 FFF7FEFF 		bl	file_read
+ 383 0198 824B     		ldr	r3, .L61+88
+ 384 019a 0004     		lsl	r0, r0, #16
+ 385 019c 000C     		lsr	r0, r0, #16
+ 386 019e 1880     		strh	r0, [r3]
+ 387 01a0 0028     		cmp	r0, #0
+ 388 01a2 ECD1     		bne	.L21
+ 213:main.c        **** 			}
+ 214:main.c        **** 			rprintf("\n");
+ 389              		.loc 1 214 0
+ 390 01a4 8048     		ldr	r0, .L61+92
+ 391 01a6 FFF7FEFF 		bl	efsl_debug_printf_arm
+ 215:main.c        **** 			file_fclose( &filer );
+ 392              		.loc 1 215 0
+ 393 01aa 281C     		mov	r0, r5
+ 394 01ac FFF7FEFF 		bl	file_fclose
+ 395              	.L18:
+ 396              	.LBB38:
+ 397              	.LBB39:
+ 398              		.loc 1 35 0
+ 399 01b0 674B     		ldr	r3, .L61+4
+ 400 01b2 0122     		mov	r2, #1
+ 401 01b4 1A63     		str	r2, [r3, #48]
+ 402              	.LBE39:
+ 403              	.LBE38:
+ 216:main.c        **** 		}
+ 217:main.c        **** 
+ 218:main.c        **** #endif
  219:main.c        **** 		
- 220:main.c        **** 		fs_umount( &efs.myFs ) ;
- 399              		.loc 1 220 0
- 400 01ae 7848     		ldr	r0, .L61+76
- 401 01b0 FFF7FEFF 		bl	fs_umount
- 402              	.L4:
- 221:main.c        **** 	}
- 222:main.c        **** 	
- 223:main.c        **** 	rprintf("\nHit B to start the benchmark\n");
- 403              		.loc 1 223 0
- 404 01b4 7F48     		ldr	r0, .L61+112
- 405 01b6 FFF7FEFF 		bl	efsl_debug_printf_arm
- 406              	.LVL4:
- 407              	.L56:
- 408 01ba 0020     		mov	r0, #0
- 409 01bc 0090     		str	r0, [sp]
- 410              	.L60:
+ 220:main.c        **** 		led1(0);
+ 221:main.c        **** 		
+ 222:main.c        **** 		fs_umount( &efs.myFs ) ;
+ 404              		.loc 1 222 0
+ 405 01b6 7848     		ldr	r0, .L61+76
+ 406 01b8 FFF7FEFF 		bl	fs_umount
+ 223:main.c        **** 	}
  224:main.c        **** 	
- 225:main.c        **** 	for (;;) {
+ 225:main.c        **** 	rprintf("\nHit B to start the benchmark\n");
+ 407              		.loc 1 225 0
+ 408 01bc 7F48     		ldr	r0, .L61+112
+ 409 01be FFF7FEFF 		bl	efsl_debug_printf_arm
+ 410              	.LVL4:
+ 411              	.L56:
+ 412 01c2 0020     		mov	r0, #0
+ 413 01c4 0090     		str	r0, [sp]
+ 414              	.L60:
  226:main.c        **** 	
- 227:main.c        **** 		if ( uart0_kbhit() ) {
- 411              		.loc 1 227 0
- 412 01be FFF7FEFF 		bl	uart0_kbhit
- 413 01c2 0028     		cmp	r0, #0
- 414 01c4 FBD0     		beq	.L60
- 228:main.c        **** 			c = uart0_getc();
- 415              		.loc 1 228 0
- 416 01c6 FFF7FEFF 		bl	uart0_getc
- 417 01ca 011C     		mov	r1, r0
- 418              	.LVL5:
- 229:main.c        **** 			if ( c == 'B' ) {
- 419              		.loc 1 229 0
- 420 01cc 4228     		cmp	r0, #66
- 421 01ce 00D0     		beq	.LCB356
- 422 01d0 9DE0     		b	.L25	@long jump
- 423              	.LCB356:
- 424              	.LVL6:
- 425              	.LBB40:
- 426              	.LBB41:
- 427              		.loc 1 51 0
- 428 01d2 794B     		ldr	r3, .L61+116
- 429              	.LBE41:
- 430              		.loc 1 56 0
- 431 01d4 644D     		ldr	r5, .L61+36
- 432              	.LBB42:
- 433              		.loc 1 51 0
- 434 01d6 01AC     		add	r4, sp, #4
- 435              	.LVL7:
- 436 01d8 221C     		mov	r2, r4
- 437 01da 03CB     		ldmia	r3!, {r0, r1}
- 438 01dc 03C2     		stmia	r2!, {r0, r1}
- 439              	.LVL8:
- 440              	.LBE42:
- 441              		.loc 1 56 0
- 442 01de 0021     		mov	r1, #0
- 443 01e0 281C     		mov	r0, r5
- 444 01e2 FFF7FEFF 		bl	efs_init
- 445 01e6 0006     		lsl	r0, r0, #24
- 446 01e8 010E     		lsr	r1, r0, #24
- 447              	.LVL9:
- 448              	.LBB43:
- 449 01ea 0029     		cmp	r1, #0
- 450 01ec 03D0     		beq	.L27
- 451              		.loc 1 57 0
- 452 01ee 0906     		lsl	r1, r1, #24
- 453              	.LVL10:
- 454 01f0 7248     		ldr	r0, .L61+120
- 455 01f2 0916     		asr	r1, r1, #24
- 456 01f4 8EE0     		b	.L57
- 457              	.LVL11:
- 458              	.L27:
- 459              		.loc 1 61 0
- 460 01f6 6049     		ldr	r1, .L61+52
- 461              	.LVL12:
- 462 01f8 6D18     		add	r5, r5, r1
- 463 01fa 281C     		mov	r0, r5
- 464 01fc 211C     		mov	r1, r4
- 465 01fe FFF7FEFF 		bl	rmfile
- 466              	.LBE43:
- 467              		.loc 1 63 0
- 468 0202 6848     		ldr	r0, .L61+96
- 469 0204 291C     		mov	r1, r5
- 470 0206 221C     		mov	r2, r4
- 471 0208 7723     		mov	r3, #119
- 472 020a FFF7FEFF 		bl	file_fopen
- 473 020e 0006     		lsl	r0, r0, #24
- 474              	.LBB44:
- 475 0210 0028     		cmp	r0, #0
- 476 0212 4AD1     		bne	.L59
- 477              		.loc 1 69 0
- 478 0214 211C     		mov	r1, r4
- 479 0216 6A48     		ldr	r0, .L61+124
- 480 0218 6422     		mov	r2, #100
- 481 021a FFF7FEFF 		bl	efsl_debug_printf_arm
- 482              	.LBE44:
- 483              		.loc 1 74 0
- 484 021e FFF7FEFF 		bl	systime_get
- 485 0222 0027     		mov	r7, #0
- 486 0224 041C     		mov	r4, r0
- 487              	.LVL13:
- 488 0226 0026     		mov	r6, #0
- 489              	.LVL14:
- 490              	.L32:
- 491              		.loc 1 77 0
- 492 0228 5E48     		ldr	r0, .L61+96
- 493 022a 5B4A     		ldr	r2, .L61+84
- 494 022c 6421     		mov	r1, #100
- 495 022e FFF7FEFF 		bl	file_write
- 496              	.LBB45:
- 497 0232 6428     		cmp	r0, #100
- 498 0234 01D0     		beq	.L33
- 499 0236 0126     		mov	r6, #1
- 500 0238 00E0     		b	.L35
- 501              	.L33:
- 502              		.loc 1 81 0
- 503 023a 6437     		add	r7, r7, #100
- 504              	.L35:
- 505              	.LBE45:
- 506              		.loc 1 83 0
- 507 023c FFF7FEFF 		bl	systime_get
- 508              	.LBB46:
- 509              		.loc 1 84 0
- 510 0240 604B     		ldr	r3, .L61+128
- 511 0242 001B     		sub	r0, r0, r4
- 512 0244 9842     		cmp	r0, r3
- 513 0246 02D8     		bhi	.L36
- 514 0248 002E     		cmp	r6, #0
- 515 024a 71D1     		bne	.L54
- 516 024c ECE7     		b	.L32
- 517              	.L36:
- 518              		.loc 1 86 0
- 519 024e 5548     		ldr	r0, .L61+96
- 520 0250 FFF7FEFF 		bl	file_fclose
- 521              		.loc 1 87 0
- 522 0254 4E48     		ldr	r0, .L61+76
- 523 0256 FFF7FEFF 		bl	fs_flushFs
- 524              	.LBE46:
- 525              		.loc 1 89 0
- 526 025a FFF7FEFF 		bl	systime_get
- 527              	.LBB47:
- 528 025e 051B     		sub	r5, r0, r4
- 529              	.LVL15:
- 530              		.loc 1 90 0
- 531 0260 002E     		cmp	r6, #0
- 532 0262 02D0     		beq	.L39
- 533              	.L40:
- 534 0264 5848     		ldr	r0, .L61+132
- 535 0266 FFF7FEFF 		bl	efsl_debug_printf_arm
- 536              	.L39:
- 537              		.loc 1 91 0
- 538 026a 291C     		mov	r1, r5
- 539 026c 381C     		mov	r0, r7
- 540 026e FFF7FEFF 		bl	__udivsi3
- 541 0272 4301     		lsl	r3, r0, #5
- 542 0274 1B1A     		sub	r3, r3, r0
- 543 0276 9B00     		lsl	r3, r3, #2
- 544 0278 544C     		ldr	r4, .L61+136
- 545              	.LVL16:
- 546 027a 1B18     		add	r3, r3, r0
- 547 027c DB00     		lsl	r3, r3, #3
- 548 027e 9B0A     		lsr	r3, r3, #10
- 549 0280 201C     		mov	r0, r4
- 550 0282 2A1C     		mov	r2, r5
- 551 0284 391C     		mov	r1, r7
- 552              		.loc 1 95 0
- 553 0286 01AC     		add	r4, sp, #4
- 554              		.loc 1 91 0
- 555 0288 FFF7FEFF 		bl	efsl_debug_printf_arm
+ 227:main.c        **** 	for (;;) {
+ 228:main.c        **** 	
+ 229:main.c        **** 		if ( uart0_kbhit() ) {
+ 415              		.loc 1 229 0
+ 416 01c6 FFF7FEFF 		bl	uart0_kbhit
+ 417 01ca 0028     		cmp	r0, #0
+ 418 01cc FBD0     		beq	.L60
+ 230:main.c        **** 			c = uart0_getc();
+ 419              		.loc 1 230 0
+ 420 01ce FFF7FEFF 		bl	uart0_getc
+ 421 01d2 011C     		mov	r1, r0
+ 422              	.LVL5:
+ 231:main.c        **** 			if ( c == 'B' ) {
+ 423              		.loc 1 231 0
+ 424 01d4 4228     		cmp	r0, #66
+ 425 01d6 00D0     		beq	.LCB362
+ 426 01d8 9DE0     		b	.L25	@long jump
+ 427              	.LCB362:
+ 428              	.LVL6:
+ 429              	.LBB40:
+ 430              	.LBB41:
+ 431              		.loc 1 51 0
+ 432 01da 794B     		ldr	r3, .L61+116
+ 433              	.LBE41:
+ 434              		.loc 1 56 0
+ 435 01dc 644D     		ldr	r5, .L61+36
+ 436              	.LBB42:
+ 437              		.loc 1 51 0
+ 438 01de 01AC     		add	r4, sp, #4
+ 439              	.LVL7:
+ 440 01e0 221C     		mov	r2, r4
+ 441 01e2 03CB     		ldmia	r3!, {r0, r1}
+ 442 01e4 03C2     		stmia	r2!, {r0, r1}
+ 443              	.LVL8:
+ 444              	.LBE42:
+ 445              		.loc 1 56 0
+ 446 01e6 0021     		mov	r1, #0
+ 447 01e8 281C     		mov	r0, r5
+ 448 01ea FFF7FEFF 		bl	efs_init
+ 449 01ee 0006     		lsl	r0, r0, #24
+ 450 01f0 010E     		lsr	r1, r0, #24
+ 451              	.LVL9:
+ 452              	.LBB43:
+ 453 01f2 0029     		cmp	r1, #0
+ 454 01f4 03D0     		beq	.L27
+ 455              		.loc 1 57 0
+ 456 01f6 0906     		lsl	r1, r1, #24
+ 457              	.LVL10:
+ 458 01f8 7248     		ldr	r0, .L61+120
+ 459 01fa 0916     		asr	r1, r1, #24
+ 460 01fc 8EE0     		b	.L57
+ 461              	.LVL11:
+ 462              	.L27:
+ 463              		.loc 1 61 0
+ 464 01fe 6049     		ldr	r1, .L61+52
+ 465              	.LVL12:
+ 466 0200 6D18     		add	r5, r5, r1
+ 467 0202 281C     		mov	r0, r5
+ 468 0204 211C     		mov	r1, r4
+ 469 0206 FFF7FEFF 		bl	rmfile
+ 470              	.LBE43:
+ 471              		.loc 1 63 0
+ 472 020a 6848     		ldr	r0, .L61+96
+ 473 020c 291C     		mov	r1, r5
+ 474 020e 221C     		mov	r2, r4
+ 475 0210 7723     		mov	r3, #119
+ 476 0212 FFF7FEFF 		bl	file_fopen
+ 477 0216 0006     		lsl	r0, r0, #24
+ 478              	.LBB44:
+ 479 0218 0028     		cmp	r0, #0
+ 480 021a 4AD1     		bne	.L59
+ 481              		.loc 1 69 0
+ 482 021c 211C     		mov	r1, r4
+ 483 021e 6A48     		ldr	r0, .L61+124
+ 484 0220 6422     		mov	r2, #100
+ 485 0222 FFF7FEFF 		bl	efsl_debug_printf_arm
+ 486              	.LBE44:
+ 487              		.loc 1 74 0
+ 488 0226 FFF7FEFF 		bl	systime_get
+ 489 022a 0027     		mov	r7, #0
+ 490 022c 041C     		mov	r4, r0
+ 491              	.LVL13:
+ 492 022e 0026     		mov	r6, #0
+ 493              	.LVL14:
+ 494              	.L32:
+ 495              		.loc 1 77 0
+ 496 0230 5E48     		ldr	r0, .L61+96
+ 497 0232 5B4A     		ldr	r2, .L61+84
+ 498 0234 6421     		mov	r1, #100
+ 499 0236 FFF7FEFF 		bl	file_write
+ 500              	.LBB45:
+ 501 023a 6428     		cmp	r0, #100
+ 502 023c 01D0     		beq	.L33
+ 503 023e 0126     		mov	r6, #1
+ 504 0240 00E0     		b	.L35
+ 505              	.L33:
+ 506              		.loc 1 81 0
+ 507 0242 6437     		add	r7, r7, #100
+ 508              	.L35:
+ 509              	.LBE45:
+ 510              		.loc 1 83 0
+ 511 0244 FFF7FEFF 		bl	systime_get
+ 512              	.LBB46:
+ 513              		.loc 1 84 0
+ 514 0248 604B     		ldr	r3, .L61+128
+ 515 024a 001B     		sub	r0, r0, r4
+ 516 024c 9842     		cmp	r0, r3
+ 517 024e 02D8     		bhi	.L36
+ 518 0250 002E     		cmp	r6, #0
+ 519 0252 71D1     		bne	.L54
+ 520 0254 ECE7     		b	.L32
+ 521              	.L36:
+ 522              		.loc 1 86 0
+ 523 0256 5548     		ldr	r0, .L61+96
+ 524 0258 FFF7FEFF 		bl	file_fclose
+ 525              		.loc 1 87 0
+ 526 025c 4E48     		ldr	r0, .L61+76
+ 527 025e FFF7FEFF 		bl	fs_flushFs
+ 528              	.LBE46:
+ 529              		.loc 1 89 0
+ 530 0262 FFF7FEFF 		bl	systime_get
+ 531              	.LBB47:
+ 532 0266 051B     		sub	r5, r0, r4
+ 533              	.LVL15:
+ 534              		.loc 1 90 0
+ 535 0268 002E     		cmp	r6, #0
+ 536 026a 02D0     		beq	.L39
+ 537              	.L40:
+ 538 026c 5848     		ldr	r0, .L61+132
+ 539 026e FFF7FEFF 		bl	efsl_debug_printf_arm
+ 540              	.L39:
+ 541              		.loc 1 91 0
+ 542 0272 291C     		mov	r1, r5
+ 543 0274 381C     		mov	r0, r7
+ 544 0276 FFF7FEFF 		bl	__udivsi3
+ 545 027a 4301     		lsl	r3, r0, #5
+ 546 027c 1B1A     		sub	r3, r3, r0
+ 547 027e 9B00     		lsl	r3, r3, #2
+ 548 0280 544C     		ldr	r4, .L61+136
+ 549              	.LVL16:
+ 550 0282 1B18     		add	r3, r3, r0
+ 551 0284 DB00     		lsl	r3, r3, #3
+ 552 0286 9B0A     		lsr	r3, r3, #10
+ 553 0288 201C     		mov	r0, r4
+ 554 028a 2A1C     		mov	r2, r5
+ 555 028c 391C     		mov	r1, r7
  556              		.loc 1 95 0
- 557 028c 5048     		ldr	r0, .L61+140
- 558 028e 211C     		mov	r1, r4
- 559 0290 6422     		mov	r2, #100
- 560 0292 FFF7FEFF 		bl	efsl_debug_printf_arm
- 561              	.LBE47:
- 562              		.loc 1 98 0
- 563 0296 3E4D     		ldr	r5, .L61+76
- 564              	.LVL17:
- 565 0298 3C48     		ldr	r0, .L61+72
- 566 029a 291C     		mov	r1, r5
- 567 029c 221C     		mov	r2, r4
- 568 029e 7223     		mov	r3, #114
- 569 02a0 FFF7FEFF 		bl	file_fopen
- 570 02a4 0006     		lsl	r0, r0, #24
- 571              	.LBB48:
- 572 02a6 0028     		cmp	r0, #0
- 573 02a8 05D0     		beq	.L41
- 574              	.LVL18:
- 575              	.L59:
- 576              		.loc 1 99 0
- 577 02aa 4A48     		ldr	r0, .L61+144
- 578 02ac 211C     		mov	r1, r4
- 579 02ae FFF7FEFF 		bl	efsl_debug_printf_arm
- 580              		.loc 1 100 0
- 581 02b2 281C     		mov	r0, r5
- 582 02b4 28E0     		b	.L58
- 583              	.LVL19:
- 584              	.L41:
- 585              	.LBE48:
- 586              		.loc 1 106 0
- 587 02b6 FFF7FEFF 		bl	systime_get
- 588 02ba 0026     		mov	r6, #0
- 589              	.LVL20:
- 590 02bc 051C     		mov	r5, r0
- 591              	.LVL21:
- 592 02be 00E0     		b	.L43
- 593              	.L44:
- 594              	.LBB49:
- 595              		.loc 1 109 0
- 596 02c0 3618     		add	r6, r6, r0
- 597              	.L43:
- 598              	.LBE49:
- 599              		.loc 1 108 0
- 600 02c2 324C     		ldr	r4, .L61+72
- 601 02c4 344A     		ldr	r2, .L61+84
- 602 02c6 201C     		mov	r0, r4
- 603 02c8 6421     		mov	r1, #100
- 604 02ca FFF7FEFF 		bl	file_read
- 605              	.LBB50:
- 606 02ce 334B     		ldr	r3, .L61+88
- 607 02d0 0004     		lsl	r0, r0, #16
- 608 02d2 000C     		lsr	r0, r0, #16
- 609 02d4 1880     		strh	r0, [r3]
- 610 02d6 0028     		cmp	r0, #0
- 611 02d8 F2D1     		bne	.L44
- 612              		.loc 1 112 0
- 613 02da 201C     		mov	r0, r4
- 614 02dc FFF7FEFF 		bl	file_fclose
- 615              	.LBE50:
- 616              		.loc 1 114 0
- 617 02e0 FFF7FEFF 		bl	systime_get
- 618              	.LBB51:
- 619 02e4 441B     		sub	r4, r0, r5
- 620              	.LVL22:
- 621              		.loc 1 115 0
- 622 02e6 211C     		mov	r1, r4
- 623 02e8 301C     		mov	r0, r6
- 624 02ea FFF7FEFF 		bl	__udivsi3
- 625 02ee 4301     		lsl	r3, r0, #5
- 626 02f0 1B1A     		sub	r3, r3, r0
- 627 02f2 9B00     		lsl	r3, r3, #2
- 628 02f4 384D     		ldr	r5, .L61+148
- 629              	.LVL23:
- 630 02f6 1B18     		add	r3, r3, r0
- 631 02f8 DB00     		lsl	r3, r3, #3
- 632 02fa 281C     		mov	r0, r5
- 633 02fc 9B0A     		lsr	r3, r3, #10
- 634 02fe 311C     		mov	r1, r6
- 635 0300 221C     		mov	r2, r4
- 636 0302 FFF7FEFF 		bl	efsl_debug_printf_arm
- 637              		.loc 1 119 0
- 638 0306 2248     		ldr	r0, .L61+76
- 639              	.LVL24:
- 640              	.L58:
- 641 0308 FFF7FEFF 		bl	fs_umount
- 642 030c 04E0     		b	.L29
- 643              	.LVL25:
- 644              	.L25:
- 645              	.LBE51:
- 646              	.LBE40:
- 230:main.c        **** 				benchmark();
- 231:main.c        **** 			}
- 232:main.c        **** 			else {
- 233:main.c        **** 				rprintf("\nYou pressed the \"%c\" key\n", (char)c);
- 647              		.loc 1 233 0
- 648 030e 0906     		lsl	r1, r1, #24
- 649 0310 3248     		ldr	r0, .L61+152
- 650              	.LVL26:
- 651 0312 090E     		lsr	r1, r1, #24
- 652              	.L57:
- 653 0314 FFF7FEFF 		bl	efsl_debug_printf_arm
- 654              	.L29:
- 234:main.c        **** 			}
- 235:main.c        **** 			if ( flag ) {
- 655              		.loc 1 235 0
- 656 0318 009B     		ldr	r3, [sp]
- 657 031a 002B     		cmp	r3, #0
- 658 031c 03D0     		beq	.L46
- 659              	.LBB52:
- 660              	.LBB53:
- 661              		.loc 1 35 0
- 662 031e 0A4B     		ldr	r3, .L61+4
- 663 0320 0122     		mov	r2, #1
- 664 0322 1A63     		str	r2, [r3, #48]
- 665 0324 49E7     		b	.L56
- 666              	.L46:
- 667              	.LBE53:
- 668              	.LBE52:
- 669              	.LBB54:
- 670              	.LBB55:
- 671              		.loc 1 34 0
- 672 0326 084B     		ldr	r3, .L61+4
- 673 0328 0122     		mov	r2, #1
- 674 032a 5A63     		str	r2, [r3, #52]
- 675 032c 0092     		str	r2, [sp]
- 676 032e 46E7     		b	.L60
- 677              	.LVL27:
- 678              	.L54:
- 679              	.LBE55:
- 680              	.LBE54:
- 681              	.LBB56:
- 682              	.LBB57:
- 683              		.loc 1 86 0
- 684 0330 1C48     		ldr	r0, .L61+96
- 685 0332 FFF7FEFF 		bl	file_fclose
- 686              		.loc 1 87 0
- 687 0336 1648     		ldr	r0, .L61+76
- 688 0338 FFF7FEFF 		bl	fs_flushFs
- 689              	.LBE57:
- 690              		.loc 1 89 0
- 691 033c FFF7FEFF 		bl	systime_get
- 692              	.LBB58:
- 693 0340 051B     		sub	r5, r0, r4
- 694              	.LVL28:
- 695 0342 8FE7     		b	.L40
- 696              	.L62:
- 697              		.align	2
- 698              	.L61:
- 699 0344 00FCFFFF 		.word	-1024
- 700 0348 00F4FFFF 		.word	-3072
- 701 034c 010000A5 		.word	-1526726655
- 702 0350 00FDFFFF 		.word	-768
- 703 0354 00000000 		.word	.LC0
- 704 0358 34000000 		.word	.LC2
- 705 035c 64000000 		.word	.LC4
- 706 0360 00000000 		.word	uart0_putc
- 707 0364 98000000 		.word	.LC7
- 708 0368 00000000 		.word	efs
- 709 036c A8000000 		.word	.LC10
- 710 0370 B8000000 		.word	.LC12
- 711 0374 BC000000 		.word	.LC14
- 712 0378 240D0000 		.word	3364
- 713 037c D4000000 		.word	.LC18
- 714 0380 00000000 		.word	list
- 715 0384 D8000000 		.word	.LC20
- 716 0388 00000000 		.word	LogFileName
- 717 038c 00000000 		.word	filer
- 718 0390 240D0000 		.word	efs+3364
- 719 0394 EC000000 		.word	.LC25
- 720 0398 00000000 		.word	buf
- 721 039c 00000000 		.word	e
- 722 03a0 08010000 		.word	.LC29
- 723 03a4 00000000 		.word	filew
- 724 03a8 0C010000 		.word	.LC32
- 725 03ac 34010000 		.word	.LC34
- 726 03b0 50010000 		.word	.LC36
- 727 03b4 58010000 		.word	.LC38
- 728 03b8 C0020000 		.word	.LC40
- 729 03bc 78010000 		.word	.LC42
- 730 03c0 B0010000 		.word	.LC46
- 731 03c4 87130000 		.word	4999
- 732 03c8 EC010000 		.word	.LC48
- 733 03cc 0C020000 		.word	.LC50
- 734 03d0 3C020000 		.word	.LC52
- 735 03d4 94010000 		.word	.LC44
- 736 03d8 78020000 		.word	.LC54
- 737 03dc A4020000 		.word	.LC56
- 738              	.LBE58:
- 739              	.LBE56:
- 740              	.LFE4:
- 742              		.data
- 743              		.align	2
- 746              	LogFileName:
- 747 0000 6C6F6753 		.ascii	"logSAM_5.txt\000"
- 747      414D5F35 
- 747      2E747874 
- 747      00
- 748              		.comm	efs,3428,4
- 749              		.comm	filer,80,4
- 750              		.comm	filew,80,4
- 751              		.comm	list,52,4
- 752              		.comm	e,2,2
- 753              		.comm	buf,513,1
- 806              	.Letext0:
+ 557 028e 01AC     		add	r4, sp, #4
+ 558              		.loc 1 91 0
+ 559 0290 FFF7FEFF 		bl	efsl_debug_printf_arm
+ 560              		.loc 1 95 0
+ 561 0294 5048     		ldr	r0, .L61+140
+ 562 0296 211C     		mov	r1, r4
+ 563 0298 6422     		mov	r2, #100
+ 564 029a FFF7FEFF 		bl	efsl_debug_printf_arm
+ 565              	.LBE47:
+ 566              		.loc 1 98 0
+ 567 029e 3E4D     		ldr	r5, .L61+76
+ 568              	.LVL17:
+ 569 02a0 3C48     		ldr	r0, .L61+72
+ 570 02a2 291C     		mov	r1, r5
+ 571 02a4 221C     		mov	r2, r4
+ 572 02a6 7223     		mov	r3, #114
+ 573 02a8 FFF7FEFF 		bl	file_fopen
+ 574 02ac 0006     		lsl	r0, r0, #24
+ 575              	.LBB48:
+ 576 02ae 0028     		cmp	r0, #0
+ 577 02b0 05D0     		beq	.L41
+ 578              	.LVL18:
+ 579              	.L59:
+ 580              		.loc 1 99 0
+ 581 02b2 4A48     		ldr	r0, .L61+144
+ 582 02b4 211C     		mov	r1, r4
+ 583 02b6 FFF7FEFF 		bl	efsl_debug_printf_arm
+ 584              		.loc 1 100 0
+ 585 02ba 281C     		mov	r0, r5
+ 586 02bc 28E0     		b	.L58
+ 587              	.LVL19:
+ 588              	.L41:
+ 589              	.LBE48:
+ 590              		.loc 1 106 0
+ 591 02be FFF7FEFF 		bl	systime_get
+ 592 02c2 0026     		mov	r6, #0
+ 593              	.LVL20:
+ 594 02c4 051C     		mov	r5, r0
+ 595              	.LVL21:
+ 596 02c6 00E0     		b	.L43
+ 597              	.L44:
+ 598              	.LBB49:
+ 599              		.loc 1 109 0
+ 600 02c8 3618     		add	r6, r6, r0
+ 601              	.L43:
+ 602              	.LBE49:
+ 603              		.loc 1 108 0
+ 604 02ca 324C     		ldr	r4, .L61+72
+ 605 02cc 344A     		ldr	r2, .L61+84
+ 606 02ce 201C     		mov	r0, r4
+ 607 02d0 6421     		mov	r1, #100
+ 608 02d2 FFF7FEFF 		bl	file_read
+ 609              	.LBB50:
+ 610 02d6 334B     		ldr	r3, .L61+88
+ 611 02d8 0004     		lsl	r0, r0, #16
+ 612 02da 000C     		lsr	r0, r0, #16
+ 613 02dc 1880     		strh	r0, [r3]
+ 614 02de 0028     		cmp	r0, #0
+ 615 02e0 F2D1     		bne	.L44
+ 616              		.loc 1 112 0
+ 617 02e2 201C     		mov	r0, r4
+ 618 02e4 FFF7FEFF 		bl	file_fclose
+ 619              	.LBE50:
+ 620              		.loc 1 114 0
+ 621 02e8 FFF7FEFF 		bl	systime_get
+ 622              	.LBB51:
+ 623 02ec 441B     		sub	r4, r0, r5
+ 624              	.LVL22:
+ 625              		.loc 1 115 0
+ 626 02ee 211C     		mov	r1, r4
+ 627 02f0 301C     		mov	r0, r6
+ 628 02f2 FFF7FEFF 		bl	__udivsi3
+ 629 02f6 4301     		lsl	r3, r0, #5
+ 630 02f8 1B1A     		sub	r3, r3, r0
+ 631 02fa 9B00     		lsl	r3, r3, #2
+ 632 02fc 384D     		ldr	r5, .L61+148
+ 633              	.LVL23:
+ 634 02fe 1B18     		add	r3, r3, r0
+ 635 0300 DB00     		lsl	r3, r3, #3
+ 636 0302 281C     		mov	r0, r5
+ 637 0304 9B0A     		lsr	r3, r3, #10
+ 638 0306 311C     		mov	r1, r6
+ 639 0308 221C     		mov	r2, r4
+ 640 030a FFF7FEFF 		bl	efsl_debug_printf_arm
+ 641              		.loc 1 119 0
+ 642 030e 2248     		ldr	r0, .L61+76
+ 643              	.LVL24:
+ 644              	.L58:
+ 645 0310 FFF7FEFF 		bl	fs_umount
+ 646 0314 04E0     		b	.L29
+ 647              	.LVL25:
+ 648              	.L25:
+ 649              	.LBE51:
+ 650              	.LBE40:
+ 232:main.c        **** 				benchmark();
+ 233:main.c        **** 			}
+ 234:main.c        **** 			else {
+ 235:main.c        **** 				rprintf("\nYou pressed the \"%c\" key\n", (char)c);
+ 651              		.loc 1 235 0
+ 652 0316 0906     		lsl	r1, r1, #24
+ 653 0318 3248     		ldr	r0, .L61+152
+ 654              	.LVL26:
+ 655 031a 090E     		lsr	r1, r1, #24
+ 656              	.L57:
+ 657 031c FFF7FEFF 		bl	efsl_debug_printf_arm
+ 658              	.L29:
+ 236:main.c        **** 			}
+ 237:main.c        **** 			if ( flag ) {
+ 659              		.loc 1 237 0
+ 660 0320 009B     		ldr	r3, [sp]
+ 661 0322 002B     		cmp	r3, #0
+ 662 0324 03D0     		beq	.L46
+ 663              	.LBB52:
+ 664              	.LBB53:
+ 665              		.loc 1 35 0
+ 666 0326 0A4B     		ldr	r3, .L61+4
+ 667 0328 0122     		mov	r2, #1
+ 668 032a 1A63     		str	r2, [r3, #48]
+ 669 032c 49E7     		b	.L56
+ 670              	.L46:
+ 671              	.LBE53:
+ 672              	.LBE52:
+ 673              	.LBB54:
+ 674              	.LBB55:
+ 675              		.loc 1 34 0
+ 676 032e 084B     		ldr	r3, .L61+4
+ 677 0330 0122     		mov	r2, #1
+ 678 0332 5A63     		str	r2, [r3, #52]
+ 679 0334 0092     		str	r2, [sp]
+ 680 0336 46E7     		b	.L60
+ 681              	.LVL27:
+ 682              	.L54:
+ 683              	.LBE55:
+ 684              	.LBE54:
+ 685              	.LBB56:
+ 686              	.LBB57:
+ 687              		.loc 1 86 0
+ 688 0338 1C48     		ldr	r0, .L61+96
+ 689 033a FFF7FEFF 		bl	file_fclose
+ 690              		.loc 1 87 0
+ 691 033e 1648     		ldr	r0, .L61+76
+ 692 0340 FFF7FEFF 		bl	fs_flushFs
+ 693              	.LBE57:
+ 694              		.loc 1 89 0
+ 695 0344 FFF7FEFF 		bl	systime_get
+ 696              	.LBB58:
+ 697 0348 051B     		sub	r5, r0, r4
+ 698              	.LVL28:
+ 699 034a 8FE7     		b	.L40
+ 700              	.L62:
+ 701              		.align	2
+ 702              	.L61:
+ 703 034c 00FCFFFF 		.word	-1024
+ 704 0350 00F4FFFF 		.word	-3072
+ 705 0354 010000A5 		.word	-1526726655
+ 706 0358 00FDFFFF 		.word	-768
+ 707 035c 00000000 		.word	.LC0
+ 708 0360 34000000 		.word	.LC2
+ 709 0364 64000000 		.word	.LC4
+ 710 0368 00000000 		.word	uart0_putc
+ 711 036c 98000000 		.word	.LC7
+ 712 0370 00000000 		.word	efs
+ 713 0374 A8000000 		.word	.LC10
+ 714 0378 B8000000 		.word	.LC12
+ 715 037c BC000000 		.word	.LC14
+ 716 0380 240D0000 		.word	3364
+ 717 0384 D4000000 		.word	.LC18
+ 718 0388 00000000 		.word	list
+ 719 038c D8000000 		.word	.LC20
+ 720 0390 00000000 		.word	LogFileName
+ 721 0394 00000000 		.word	filer
+ 722 0398 240D0000 		.word	efs+3364
+ 723 039c EC000000 		.word	.LC25
+ 724 03a0 00000000 		.word	buf
+ 725 03a4 00000000 		.word	e
+ 726 03a8 08010000 		.word	.LC29
+ 727 03ac 00000000 		.word	filew
+ 728 03b0 0C010000 		.word	.LC32
+ 729 03b4 34010000 		.word	.LC34
+ 730 03b8 50010000 		.word	.LC36
+ 731 03bc 58010000 		.word	.LC38
+ 732 03c0 C0020000 		.word	.LC40
+ 733 03c4 78010000 		.word	.LC42
+ 734 03c8 B0010000 		.word	.LC46
+ 735 03cc 87130000 		.word	4999
+ 736 03d0 EC010000 		.word	.LC48
+ 737 03d4 0C020000 		.word	.LC50
+ 738 03d8 3C020000 		.word	.LC52
+ 739 03dc 94010000 		.word	.LC44
+ 740 03e0 78020000 		.word	.LC54
+ 741 03e4 A4020000 		.word	.LC56
+ 742              	.LBE58:
+ 743              	.LBE56:
+ 744              	.LFE4:
+ 746              		.data
+ 747              		.align	2
+ 750              	LogFileName:
+ 751 0000 6C6F6753 		.ascii	"logSAM_5.txt\000"
+ 751      414D5F35 
+ 751      2E747874 
+ 751      00
+ 752              		.comm	efs,3428,4
+ 753              		.comm	filer,80,4
+ 754              		.comm	filew,80,4
+ 755              		.comm	list,52,4
+ 756              		.comm	e,2,2
+ 757              		.comm	buf,513,1
+ 810              	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 main.c
-/var/tmp//ccycKIgG.s:1      .text:00000000 $t
-/var/tmp//ccycKIgG.s:95     .text:00000000 main
-/var/tmp//ccycKIgG.s:699    .text:00000344 $d
+/var/tmp//ccoRUaS9.s:1      .text:00000000 $t
+/var/tmp//ccoRUaS9.s:95     .text:00000000 main
+/var/tmp//ccoRUaS9.s:703    .text:0000034c $d
                             *COM*:00000d64 efs
                             *COM*:00000034 list
-/var/tmp//ccycKIgG.s:746    .data:00000000 LogFileName
+/var/tmp//ccoRUaS9.s:750    .data:00000000 LogFileName
                             *COM*:00000050 filer
                             *COM*:00000201 buf
                             *COM*:00000002 e

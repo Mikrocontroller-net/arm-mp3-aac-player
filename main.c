@@ -125,6 +125,7 @@ int main(void)
 	signed char res;
 	int c, flag = 0;
 	
+	
 	AT91PS_PMC  pPMC  = AT91C_BASE_PMC;
 	AT91PS_PIO  pPIOA = AT91C_BASE_PIOA;
 	AT91PS_RSTC pRSTC = AT91C_BASE_RSTC;
@@ -158,6 +159,7 @@ int main(void)
 
 	if ( ( res = efs_init( &efs, 0 ) ) != 0 ) {
 		rprintf("failed with %i\n",res);
+		while(1) { res = efs_init( &efs, 0 ); }
 	}
 	else {
 		rprintf("ok\n");

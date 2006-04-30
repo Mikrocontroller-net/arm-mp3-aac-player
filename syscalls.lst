@@ -387,17 +387,17 @@
  360              	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 syscalls.c
-/var/tmp//cc0jYpsv.s:1      .text:00000000 $t
-/var/tmp//cc0jYpsv.s:16     .text:00000000 _close_r
-/var/tmp//cc0jYpsv.s:36     .text:00000004 _lseek_r
-/var/tmp//cc0jYpsv.s:55     .text:00000008 _fstat_r
-/var/tmp//cc0jYpsv.s:79     .text:00000014 isatty
-/var/tmp//cc0jYpsv.s:98     .text:00000018 _sbrk_r
-/var/tmp//cc0jYpsv.s:127    .text:0000002c $d
-/var/tmp//cc0jYpsv.s:253    .bss:00000000 heap_ptr
-/var/tmp//cc0jYpsv.s:136    .text:00000034 _write_r
-/var/tmp//cc0jYpsv.s:133    .text:00000034 $t
-/var/tmp//cc0jYpsv.s:188    .text:00000060 _read_r
+/var/tmp//ccNLOKPl.s:1      .text:00000000 $t
+/var/tmp//ccNLOKPl.s:16     .text:00000000 _close_r
+/var/tmp//ccNLOKPl.s:36     .text:00000004 _lseek_r
+/var/tmp//ccNLOKPl.s:55     .text:00000008 _fstat_r
+/var/tmp//ccNLOKPl.s:79     .text:00000014 isatty
+/var/tmp//ccNLOKPl.s:98     .text:00000018 _sbrk_r
+/var/tmp//ccNLOKPl.s:127    .text:0000002c $d
+/var/tmp//ccNLOKPl.s:253    .bss:00000000 heap_ptr
+/var/tmp//ccNLOKPl.s:136    .text:00000034 _write_r
+/var/tmp//ccNLOKPl.s:133    .text:00000034 $t
+/var/tmp//ccNLOKPl.s:188    .text:00000060 _read_r
                              .bss:00000000 $d
 
 UNDEFINED SYMBOLS

@@ -360,27 +360,27 @@
  381              	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 serial.c
-/var/tmp//ccGFvixM.s:1      .text:00000000 $t
-/var/tmp//ccGFvixM.s:16     .text:00000000 uart0_init
-/var/tmp//ccGFvixM.s:48     .text:00000020 $d
-/var/tmp//ccGFvixM.s:284    .data:00000000 pUSART
-/var/tmp//ccGFvixM.s:57     .text:00000028 uart0_putc
-/var/tmp//ccGFvixM.s:54     .text:00000028 $t
-/var/tmp//ccGFvixM.s:81     .text:00000038 $d
-/var/tmp//ccGFvixM.s:89     .text:0000003c uart0_kbhit
-/var/tmp//ccGFvixM.s:86     .text:0000003c $t
-/var/tmp//ccGFvixM.s:106    .text:00000048 $d
-/var/tmp//ccGFvixM.s:114    .text:0000004c uart0_getc
-/var/tmp//ccGFvixM.s:111    .text:0000004c $t
-/var/tmp//ccGFvixM.s:135    .text:0000005c $d
-/var/tmp//ccGFvixM.s:143    .text:00000060 uart0_puts
-/var/tmp//ccGFvixM.s:140    .text:00000060 $t
-/var/tmp//ccGFvixM.s:185    .text:00000084 $d
-/var/tmp//ccGFvixM.s:193    .text:00000088 uart0_putchar
-/var/tmp//ccGFvixM.s:190    .text:00000088 $t
-/var/tmp//ccGFvixM.s:238    .text:000000ac $d
-/var/tmp//ccGFvixM.s:246    .text:000000b0 uart0_prints
-/var/tmp//ccGFvixM.s:243    .text:000000b0 $t
-/var/tmp//ccGFvixM.s:285    .data:00000000 $d
+/var/tmp//ccHVcHOf.s:1      .text:00000000 $t
+/var/tmp//ccHVcHOf.s:16     .text:00000000 uart0_init
+/var/tmp//ccHVcHOf.s:48     .text:00000020 $d
+/var/tmp//ccHVcHOf.s:284    .data:00000000 pUSART
+/var/tmp//ccHVcHOf.s:57     .text:00000028 uart0_putc
+/var/tmp//ccHVcHOf.s:54     .text:00000028 $t
+/var/tmp//ccHVcHOf.s:81     .text:00000038 $d
+/var/tmp//ccHVcHOf.s:89     .text:0000003c uart0_kbhit
+/var/tmp//ccHVcHOf.s:86     .text:0000003c $t
+/var/tmp//ccHVcHOf.s:106    .text:00000048 $d
+/var/tmp//ccHVcHOf.s:114    .text:0000004c uart0_getc
+/var/tmp//ccHVcHOf.s:111    .text:0000004c $t
+/var/tmp//ccHVcHOf.s:135    .text:0000005c $d
+/var/tmp//ccHVcHOf.s:143    .text:00000060 uart0_puts
+/var/tmp//ccHVcHOf.s:140    .text:00000060 $t
+/var/tmp//ccHVcHOf.s:185    .text:00000084 $d
+/var/tmp//ccHVcHOf.s:193    .text:00000088 uart0_putchar
+/var/tmp//ccHVcHOf.s:190    .text:00000088 $t
+/var/tmp//ccHVcHOf.s:238    .text:000000ac $d
+/var/tmp//ccHVcHOf.s:246    .text:000000b0 uart0_prints
+/var/tmp//ccHVcHOf.s:243    .text:000000b0 $t
+/var/tmp//ccHVcHOf.s:285    .data:00000000 $d
 
 NO UNDEFINED SYMBOLS
