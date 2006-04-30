@@ -1,0 +1,386 @@
+   1              		.code	16
+   2              		.file	"serial.c"
+  10              	.Ltext0:
+  11              		.align	2
+  12              		.global	uart0_init
+  13              		.code 16
+  14              		.thumb_func
+  16              	uart0_init:
+  17              	.LFB2:
+  18              		.file 1 "serial.c"
+   1:serial.c      **** /******************************************************************************/
+   2:serial.c      **** /*                                                                            */
+   3:serial.c      **** /*  SERIAL.C:  Low Level Serial Routines                                      */
+   4:serial.c      **** /*                                                                            */
+   5:serial.c      **** /******************************************************************************/
+   6:serial.c      **** /* 
+   7:serial.c      ****    10/2005 by Martin Thomas <eversmith@heizung-thomas.de>
+   8:serial.c      ****    based on an example-code from Keil GmbH
+   9:serial.c      ****    - modified for the WinARM example 
+  10:serial.c      ****    - changed interface to avoid potential conflicts with "stdio.h"
+  11:serial.c      **** */
+  12:serial.c      **** 
+  13:serial.c      **** // included in board.h: #include <AT91SAM7S64.H> /* AT91SAMT7S64 definitions */
+  14:serial.c      **** #include "Board.h"
+  15:serial.c      **** 
+  16:serial.c      **** #define BR    115200                        /* Baud Rate */
+  17:serial.c      **** 
+  18:serial.c      **** #define BRD  (MCK/16/BR)                    /* Baud Rate Divisor */
+  19:serial.c      **** 
+  20:serial.c      **** 
+  21:serial.c      **** AT91S_USART * pUSART = AT91C_BASE_US0;      /* Global Pointer to USART0 */
+  22:serial.c      **** 
+  23:serial.c      **** 
+  24:serial.c      **** void uart0_init (void) {                   /* Initialize Serial Interface */
+  19              		.loc 1 24 0
+  25:serial.c      **** 
+  26:serial.c      ****   /* mt: n.b: uart0 clock must be enabled to use it */
+  27:serial.c      **** 
+  28:serial.c      ****   *AT91C_PIOA_PDR = AT91C_PA5_RXD0 |        /* Enable RxD0 Pin */
+  20              		.loc 1 28 0
+  21 0000 074B     		ldr	r3, .L3
+  22 0002 6022     		mov	r2, #96
+  23 0004 1A60     		str	r2, [r3]
+  29:serial.c      ****                     AT91C_PA6_TXD0;         /* Enalbe TxD0 Pin */
+  30:serial.c      **** 
+  31:serial.c      ****   pUSART->US_CR = AT91C_US_RSTRX |          /* Reset Receiver      */
+  24              		.loc 1 31 0
+  25 0006 074B     		ldr	r3, .L3+4
+  26 0008 1A68     		ldr	r2, [r3]
+  27 000a AC23     		mov	r3, #172
+  28 000c 1360     		str	r3, [r2]
+  32:serial.c      ****                   AT91C_US_RSTTX |          /* Reset Transmitter   */
+  33:serial.c      ****                   AT91C_US_RXDIS |          /* Receiver Disable    */
+  34:serial.c      ****                   AT91C_US_TXDIS;           /* Transmitter Disable */
+  35:serial.c      **** 
+  36:serial.c      ****   pUSART->US_MR = AT91C_US_USMODE_NORMAL |  /* Normal Mode */
+  29              		.loc 1 36 0
+  30 000e 8C23     		mov	r3, #140
+  31 0010 1B01     		lsl	r3, r3, #4
+  32 0012 5360     		str	r3, [r2, #4]
+  37:serial.c      ****                   AT91C_US_CLKS_CLOCK    |  /* Clock = MCK */
+  38:serial.c      ****                   AT91C_US_CHRL_8_BITS   |  /* 8-bit Data  */
+  39:serial.c      ****                   AT91C_US_PAR_NONE      |  /* No Parity   */
+  40:serial.c      ****                   AT91C_US_NBSTOP_1_BIT;    /* 1 Stop Bit  */
+  41:serial.c      **** 
+  42:serial.c      ****   pUSART->US_BRGR = BRD;                    /* Baud Rate Divisor */
+  33              		.loc 1 42 0
+  34 0014 1A23     		mov	r3, #26
+  35 0016 1362     		str	r3, [r2, #32]
+  43:serial.c      **** 
+  44:serial.c      ****   pUSART->US_CR = AT91C_US_RXEN  |          /* Receiver Enable     */
+  36              		.loc 1 44 0
+  37 0018 5023     		mov	r3, #80
+  38              		.loc 1 24 0
+  39              		@ lr needed for prologue
+  40              		.loc 1 44 0
+  41 001a 1360     		str	r3, [r2]
+  45:serial.c      ****                   AT91C_US_TXEN;            /* Transmitter Enable  */
+  46:serial.c      **** }
+  42              		.loc 1 46 0
+  43              		@ sp needed for prologue
+  44 001c 7047     		bx	lr
+  45              	.L4:
+  46 001e 0000     		.align	2
+  47              	.L3:
+  48 0020 04F4FFFF 		.word	-3068
+  49 0024 00000000 		.word	pUSART
+  50              	.LFE2:
+  52              		.align	2
+  53              		.global	uart0_putc
+  54              		.code 16
+  55              		.thumb_func
+  57              	uart0_putc:
+  58              	.LFB3:
+  47:serial.c      **** 
+  48:serial.c      **** 
+  49:serial.c      **** int uart0_putc(int ch) 
+  50:serial.c      **** {
+  59              		.loc 1 50 0
+  60              	.LVL0:
+  51:serial.c      **** 	while (!(pUSART->US_CSR & AT91C_US_TXRDY));   /* Wait for Empty Tx Buffer */
+  61              		.loc 1 51 0
+  62 0028 034B     		ldr	r3, .L12
+  63 002a 1A68     		ldr	r2, [r3]
+  64              		.loc 1 50 0
+  65              		@ lr needed for prologue
+  66              	.L7:
+  67              		.loc 1 51 0
+  68 002c 5369     		ldr	r3, [r2, #20]
+  69 002e 9907     		lsl	r1, r3, #30
+  70 0030 FCD5     		bpl	.L7
+  52:serial.c      **** 	return (pUSART->US_THR = ch);                 /* Transmit Character */
+  71              		.loc 1 52 0
+  72 0032 D061     		str	r0, [r2, #28]
+  73 0034 D069     		ldr	r0, [r2, #28]
+  74              	.LVL1:
+  53:serial.c      **** }	
+  75              		.loc 1 53 0
+  76              		@ sp needed for prologue
+  77 0036 7047     		bx	lr
+  78              	.L13:
+  79              		.align	2
+  80              	.L12:
+  81 0038 00000000 		.word	pUSART
+  82              	.LFE3:
+  84              		.align	2
+  85              		.global	uart0_kbhit
+  86              		.code 16
+  87              		.thumb_func
+  89              	uart0_kbhit:
+  90              	.LFB7:
+  54:serial.c      **** 
+  55:serial.c      **** int uart0_putchar (int ch) {                      /* Write Character to Serial Port */
+  56:serial.c      **** 
+  57:serial.c      ****   if (ch == '\n')  {                            /* Check for LF */
+  58:serial.c      ****     uart0_putc( '\r' );                         /* Output CR */
+  59:serial.c      ****   }
+  60:serial.c      ****   return uart0_putc( ch );                     /* Transmit Character */
+  61:serial.c      **** }
+  62:serial.c      **** 
+  63:serial.c      **** int uart0_puts ( char* s )
+  64:serial.c      **** {
+  65:serial.c      **** 	int i = 0;
+  66:serial.c      **** 	while ( *s ) {
+  67:serial.c      **** 		uart0_putc( *s++ );
+  68:serial.c      **** 		i++;
+  69:serial.c      **** 	}
+  70:serial.c      **** 	return i;
+  71:serial.c      **** }
+  72:serial.c      **** 
+  73:serial.c      **** int uart0_prints ( char* s )
+  74:serial.c      **** {
+  75:serial.c      **** 	int i = 0;
+  76:serial.c      **** 	while ( *s ) {
+  77:serial.c      **** 		uart0_putchar( *s++ );
+  78:serial.c      **** 		i++;
+  79:serial.c      **** 	}
+  80:serial.c      **** 	return i;
+  81:serial.c      **** }
+  82:serial.c      **** 
+  83:serial.c      **** int uart0_kbhit( void ) /* returns true if character in receive buffer */
+  84:serial.c      **** {
+  91              		.loc 1 84 0
+  85:serial.c      **** 	if ( pUSART->US_CSR & AT91C_US_RXRDY) {
+  92              		.loc 1 85 0
+  93 003c 024B     		ldr	r3, .L16
+  94 003e 1B68     		ldr	r3, [r3]
+  95 0040 5869     		ldr	r0, [r3, #20]
+  96 0042 0123     		mov	r3, #1
+  97 0044 1840     		and	r0, r0, r3
+  98              		.loc 1 84 0
+  99              		@ lr needed for prologue
+  86:serial.c      **** 		return 1;
+  87:serial.c      **** 	}
+  88:serial.c      **** 	else {
+  89:serial.c      **** 		return 0;
+  90:serial.c      **** 	}
+  91:serial.c      **** }
+ 100              		.loc 1 91 0
+ 101              		@ sp needed for prologue
+ 102 0046 7047     		bx	lr
+ 103              	.L17:
+ 104              		.align	2
+ 105              	.L16:
+ 106 0048 00000000 		.word	pUSART
+ 107              	.LFE7:
+ 109              		.align	2
+ 110              		.global	uart0_getc
+ 111              		.code 16
+ 112              		.thumb_func
+ 114              	uart0_getc:
+ 115              	.LFB8:
+  92:serial.c      **** 
+  93:serial.c      **** int uart0_getc ( void )  /* Read Character from Serial Port */
+  94:serial.c      **** {    
+ 116              		.loc 1 94 0
+  95:serial.c      ****   while (!(pUSART->US_CSR & AT91C_US_RXRDY));   /* Wait for Full Rx Buffer */
+ 117              		.loc 1 95 0
+ 118 004c 034B     		ldr	r3, .L25
+ 119 004e 1A68     		ldr	r2, [r3]
+ 120              		.loc 1 94 0
+ 121              		@ lr needed for prologue
+ 122              	.L20:
+ 123              		.loc 1 95 0
+ 124 0050 5369     		ldr	r3, [r2, #20]
+ 125 0052 D907     		lsl	r1, r3, #31
+ 126 0054 FCD5     		bpl	.L20
+  96:serial.c      ****   return (pUSART->US_RHR);                      /* Read Character */
+ 127              		.loc 1 96 0
+ 128 0056 9069     		ldr	r0, [r2, #24]
+  97:serial.c      **** }
+ 129              		.loc 1 97 0
+ 130              		@ sp needed for prologue
+ 131 0058 7047     		bx	lr
+ 132              	.L26:
+ 133 005a 0000     		.align	2
+ 134              	.L25:
+ 135 005c 00000000 		.word	pUSART
+ 136              	.LFE8:
+ 138              		.align	2
+ 139              		.global	uart0_puts
+ 140              		.code 16
+ 141              		.thumb_func
+ 143              	uart0_puts:
+ 144              	.LFB5:
+ 145              		.loc 1 64 0
+ 146 0060 70B5     		push	{r4, r5, r6, lr}
+ 147              	.LCFI0:
+ 148              	.LVL2:
+ 149 0062 084C     		ldr	r4, .L36
+ 150              		.loc 1 64 0
+ 151 0064 051C     		mov	r5, r0
+ 152 0066 0020     		mov	r0, #0
+ 153              	.LVL3:
+ 154 0068 06E0     		b	.L28
+ 155              	.L29:
+ 156              	.LBB4:
+ 157              	.LBB5:
+ 158              		.loc 1 51 0
+ 159 006a 2268     		ldr	r2, [r4]
+ 160              	.L30:
+ 161 006c 5369     		ldr	r3, [r2, #20]
+ 162 006e 9E07     		lsl	r6, r3, #30
+ 163 0070 FCD5     		bpl	.L30
+ 164              		.loc 1 52 0
+ 165 0072 D161     		str	r1, [r2, #28]
+ 166 0074 D369     		ldr	r3, [r2, #28]
+ 167              	.LBE5:
+ 168              	.LBE4:
+ 169              		.loc 1 68 0
+ 170 0076 0130     		add	r0, r0, #1
+ 171              	.L28:
+ 172              		.loc 1 66 0
+ 173 0078 415D     		ldrb	r1, [r0, r5]
+ 174 007a 0029     		cmp	r1, #0
+ 175 007c F5D1     		bne	.L29
+ 176              		.loc 1 71 0
+ 177              		@ sp needed for prologue
+ 178              	.LVL4:
+ 179 007e 70BC     		pop	{r4, r5, r6}
+ 180 0080 02BC     		pop	{r1}
+ 181 0082 0847     		bx	r1
+ 182              	.L37:
+ 183              		.align	2
+ 184              	.L36:
+ 185 0084 00000000 		.word	pUSART
+ 186              	.LFE5:
+ 188              		.align	2
+ 189              		.global	uart0_putchar
+ 190              		.code 16
+ 191              		.thumb_func
+ 193              	uart0_putchar:
+ 194              	.LFB4:
+ 195              		.loc 1 55 0
+ 196              	.LVL5:
+ 197              		@ lr needed for prologue
+ 198              		.loc 1 57 0
+ 199 0088 0A28     		cmp	r0, #10
+ 200 008a 07D1     		bne	.L39
+ 201              	.LBB10:
+ 202              	.LBB11:
+ 203              		.loc 1 51 0
+ 204 008c 074B     		ldr	r3, .L50
+ 205 008e 1A68     		ldr	r2, [r3]
+ 206              	.L41:
+ 207 0090 5369     		ldr	r3, [r2, #20]
+ 208 0092 9907     		lsl	r1, r3, #30
+ 209 0094 FCD5     		bpl	.L41
+ 210              		.loc 1 52 0
+ 211 0096 0D23     		mov	r3, #13
+ 212 0098 D361     		str	r3, [r2, #28]
+ 213 009a D369     		ldr	r3, [r2, #28]
+ 214              	.L39:
+ 215              	.LBE11:
+ 216              	.LBE10:
+ 217              	.LBB12:
+ 218              	.LBB13:
+ 219              		.loc 1 51 0
+ 220 009c 034B     		ldr	r3, .L50
+ 221 009e 1A68     		ldr	r2, [r3]
+ 222              	.L43:
+ 223 00a0 5369     		ldr	r3, [r2, #20]
+ 224 00a2 9907     		lsl	r1, r3, #30
+ 225 00a4 FCD5     		bpl	.L43
+ 226              		.loc 1 52 0
+ 227 00a6 D061     		str	r0, [r2, #28]
+ 228 00a8 D069     		ldr	r0, [r2, #28]
+ 229              	.LVL6:
+ 230              	.LBE13:
+ 231              	.LBE12:
+ 232              		.loc 1 61 0
+ 233              		@ sp needed for prologue
+ 234 00aa 7047     		bx	lr
+ 235              	.L51:
+ 236              		.align	2
+ 237              	.L50:
+ 238 00ac 00000000 		.word	pUSART
+ 239              	.LFE4:
+ 241              		.align	2
+ 242              		.global	uart0_prints
+ 243              		.code 16
+ 244              		.thumb_func
+ 246              	uart0_prints:
+ 247              	.LFB6:
+ 248              		.loc 1 74 0
+ 249 00b0 30B5     		push	{r4, r5, lr}
+ 250              	.LCFI1:
+ 251              	.LVL7:
+ 252              		.loc 1 74 0
+ 253 00b2 051C     		mov	r5, r0
+ 254 00b4 0024     		mov	r4, #0
+ 255              	.LVL8:
+ 256 00b6 02E0     		b	.L53
+ 257              	.LVL9:
+ 258              	.L54:
+ 259              		.loc 1 77 0
+ 260 00b8 FFF7FEFF 		bl	uart0_putchar
+ 261              		.loc 1 78 0
+ 262 00bc 0134     		add	r4, r4, #1
+ 263              	.LVL10:
+ 264              	.L53:
+ 265              		.loc 1 76 0
+ 266 00be 605D     		ldrb	r0, [r4, r5]
+ 267 00c0 0028     		cmp	r0, #0
+ 268 00c2 F9D1     		bne	.L54
+ 269              		.loc 1 81 0
+ 270 00c4 201C     		mov	r0, r4
+ 271              		@ sp needed for prologue
+ 272              	.LVL11:
+ 273              	.LVL12:
+ 274 00c6 30BC     		pop	{r4, r5}
+ 275 00c8 02BC     		pop	{r1}
+ 276 00ca 0847     		bx	r1
+ 277              	.LFE6:
+ 279              		.global	pUSART
+ 280              		.data
+ 281              		.align	2
+ 284              	pUSART:
+ 285 0000 0000FCFF 		.word	-262144
+ 381              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 serial.c
+/var/tmp//ccGFvixM.s:1      .text:00000000 $t
+/var/tmp//ccGFvixM.s:16     .text:00000000 uart0_init
+/var/tmp//ccGFvixM.s:48     .text:00000020 $d
+/var/tmp//ccGFvixM.s:284    .data:00000000 pUSART
+/var/tmp//ccGFvixM.s:57     .text:00000028 uart0_putc
+/var/tmp//ccGFvixM.s:54     .text:00000028 $t
+/var/tmp//ccGFvixM.s:81     .text:00000038 $d
+/var/tmp//ccGFvixM.s:89     .text:0000003c uart0_kbhit
+/var/tmp//ccGFvixM.s:86     .text:0000003c $t
+/var/tmp//ccGFvixM.s:106    .text:00000048 $d
+/var/tmp//ccGFvixM.s:114    .text:0000004c uart0_getc
+/var/tmp//ccGFvixM.s:111    .text:0000004c $t
+/var/tmp//ccGFvixM.s:135    .text:0000005c $d
+/var/tmp//ccGFvixM.s:143    .text:00000060 uart0_puts
+/var/tmp//ccGFvixM.s:140    .text:00000060 $t
+/var/tmp//ccGFvixM.s:185    .text:00000084 $d
+/var/tmp//ccGFvixM.s:193    .text:00000088 uart0_putchar
+/var/tmp//ccGFvixM.s:190    .text:00000088 $t
+/var/tmp//ccGFvixM.s:238    .text:000000ac $d
+/var/tmp//ccGFvixM.s:246    .text:000000b0 uart0_prints
+/var/tmp//ccGFvixM.s:243    .text:000000b0 $t
+/var/tmp//ccGFvixM.s:285    .data:00000000 $d
+
+NO UNDEFINED SYMBOLS
