@@ -4,8 +4,6 @@
 #include "task.h"
 #include "queue.h"
 
-#include <assert.h>
-
 #include "mp3_decoder.h"
 #include "serial/serial.h"
 
@@ -16,8 +14,6 @@
 
 HMP3Decoder hMP3Decoder;
 
-volatile short outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP] __attribute__ ((section (".dmaram")));
-
 /* The decoder task. */
 static portTASK_FUNCTION_PROTO( vMP3DecoderTask, pvParameters );
 
@@ -27,7 +23,13 @@ void vStartMP3DecoderTasks( unsigned portBASE_TYPE uxPriority )
 {
 	/* Initialise the com port then spawn the Rx and Tx tasks. */
 	vTaskSuspendAll();
-	hMP3Decoder = MP3InitDecoder();
+	if (hMP3Decoder = MP3InitDecoder()) {
+		IOSET0 = (1<<10);
+		IOCLR0 = (1<<11);
+	} else {
+		IOSET0 = (1<<10);
+		IOSET0 = (1<<11);
+	}
 	xTaskResumeAll();
 	
 	xTaskCreate( vMP3DecoderTask, ( const signed portCHAR * const ) "MP3", mp3STACK_SIZE, NULL, uxPriority, ( xTaskHandle * ) NULL );
@@ -42,12 +44,13 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
   static int bytesLeft, nRead, err, offset, outOfData, eofReached;
   static int nFrames;
   //static short outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
+	static short outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP] __attribute__ ((section (".dmaram")));
   static unsigned long long time;
 	
 	/* Just to stop compiler warnings. */
 	( void ) pvParameters;
 
-	vPuts("initializing decoder\r\n");
+	vPuts("initializing decoder...");
 
 	/*vTaskSuspendAll();*/
 	//portENTER_CRITICAL();
@@ -55,12 +58,11 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 	//portEXIT_CRITICAL();
 	/*xTaskResumeAll();*/
 	
-	assert (hMP3Decoder != 0);
-	
-	iprintf("outBuf: 0x%x\r\n", outBuf);
-	iprintf("&outBuf[0]: 0x%x\r\n", &outBuf[0]);
-	outBuf[0] = 22;
-	assert(outBuf[0] == 22);
+	if (hMP3Decoder == 0) {
+		vPuts("MP3InitDecoder() failed\r\n");
+	} else {
+		vPuts("MP3InitDecoder() successful\r\n");
+	}
 	
 	vTaskDelay( 1000 );
 
@@ -81,7 +83,6 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 			  break;
 	  	} else {
 	  	  iprintf("Found a frame at offset %i\r\n", offset);
-				//assert(offset == 0);
 			}
 	  	readPtr += offset;
 	  	bytesLeft -= offset;
@@ -115,10 +116,7 @@ static portTASK_FUNCTION( vMP3DecoderTask, pvParameters )
 	  		// no error
 	  		MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
 	  		iprintf("Bitrate: %i\r\n", mp3FrameInfo.bitrate);
-				iprintf("Samples: %i\r\n", mp3FrameInfo.outputSamps);
-				iprintf("Bits per sample: %i\r\n", mp3FrameInfo.bitsPerSample);
 				vPuts("OK\r\n");
-				vTaskDelay( 10000 );
 	  	}
 		}  while (!outOfData);
 

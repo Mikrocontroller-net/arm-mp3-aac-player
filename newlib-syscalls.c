@@ -70,7 +70,7 @@ _ssize_t _write_r (
 	
 	for (i = 0; i < len; i++) {
 		/* if (*p == '\n' ) uart0_putc('\r'); */
-		xSerialPutChar( 0, *p++, 1000 );
+		//xSerialPutChar( 0, *p++, 1000 );
 	}
 	
 	return len;

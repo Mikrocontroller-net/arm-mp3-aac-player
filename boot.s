@@ -2,6 +2,7 @@
 
 	.extern main
 	.extern exit
+	.extern AT91F_LowLevelInit
 
 	.text
 	.code 32
@@ -9,9 +10,9 @@
 
 	.align  0
 
+	.extern __stack_end__
 	.extern __bss_beg__
 	.extern __bss_end__
-	.extern __stack_end__
 	.extern __data_beg__
 	.extern __data_end__
 	.extern __data+beg_src__
@@ -47,7 +48,7 @@ _mainCRTStartup:
 	for system/user, SWI and IRQ modes.   Also each mode is setup with
 	interrupts initially disabled. */
     ldr   r0, .LC6
-    msr   CPSR_c, #MODE_UND|I_BIT|F_BIT /* Undefined Instruction Mode
+    msr   CPSR_c, #MODE_UND|I_BIT|F_BIT /* Undefined Instruction Mode */
     mov   sp, r0
     sub   r0, r0, #UND_STACK_SIZE
     msr   CPSR_c, #MODE_ABT|I_BIT|F_BIT /* Abort Mode */
@@ -68,6 +69,8 @@ _mainCRTStartup:
 	/* We want to start in supervisor mode.  Operation will switch to system
 	mode when the first task starts. */
 	msr   CPSR_c, #MODE_SVC|I_BIT|F_BIT
+
+    bl		AT91F_LowLevelInit
 
 	/* Clear BSS. */
 
@@ -107,7 +110,8 @@ _mainCRTStartup:
 	mov		r0, #0          /* no arguments  */
 	mov		r1, #0          /* no argv either */
 
-	bl		main
+    ldr lr, =main	
+	bx	lr
 
 endless_loop:
 	b               endless_loop
@@ -126,7 +130,7 @@ endless_loop:
 	.LC5:
 	.word   __data_end__
 	.LC6:
-	.word   __stack_end__
+	.word	__stack_end__
 
 
 	/* Setup vector table.  Note that undf, pabt, dabt, fiq just execute
@@ -142,11 +146,11 @@ endless_loop:
 	ldr   pc, _pabt						/* program abort - _pabt	*/
 	ldr   pc, _dabt						/* data abort - _dabt		*/
 	nop									/* reserved					*/
-	ldr   pc, [pc,#-0xFF0]				/* IRQ - read the VIC		*/
+	ldr   pc, [pc,#-0xF20]				/* IRQ - read the AIC		*/
 	ldr   pc, _fiq						/* FIQ - _fiq				*/
 
 _undf:  .word __undf                    /* undefined				*/
-_swi:   .word vPortYieldProcessor       /* SWI						*/
+_swi:   .word swi_handler				/* SWI						*/
 _pabt:  .word __pabt                    /* program abort			*/
 _dabt:  .word __dabt                    /* data abort				*/
 _fiq:   .word __fiq                     /* FIQ						*/

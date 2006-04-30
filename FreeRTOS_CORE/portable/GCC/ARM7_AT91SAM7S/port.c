@@ -1,5 +1,5 @@
 /*
-	FreeRTOS V4.0.1 - Copyright (C) 2003-2006 Richard Barry.
+	FreeRTOS V4.0.1 - copyright (C) 2003-2006 Richard Barry.
 
 	This file is part of the FreeRTOS distribution.
 
@@ -44,16 +44,6 @@
 		
 	+ ulCriticalNesting is now saved as part of the task context, as is 
 	  therefore added to the initial task stack during pxPortInitialiseStack.
-
-	Changes from V3.2.2
-
-	+ Bug fix - The prescale value for the timer setup is now written to T0_PR 
-	  instead of T0_PC.  This bug would have had no effect unless a prescale 
-	  value was actually used.
-
-  Changes:
-
-  + adapted constants to Keil header file
 */
 
 
@@ -63,6 +53,9 @@
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
+
+/* Processor constants. */
+#include "AT91SAM7S64.h"
 
 /* Constants required to setup the task context. */
 #define portINITIAL_SPSR				( ( portSTACK_TYPE ) 0x1f ) /* System mode, ARM mode, interrupts enabled. */
@@ -76,11 +69,13 @@
 #define portINTERRUPT_ON_MATCH		( ( unsigned portLONG ) 0x01 )
 #define portRESET_COUNT_ON_MATCH	( ( unsigned portLONG ) 0x02 )
 
-/* Constants required to setup the VIC for the tick ISR. */
-#define portTIMER_VIC_CHANNEL		( ( unsigned portLONG ) 0x0004 )
-#define portTIMER_VIC_CHANNEL_BIT	( ( unsigned portLONG ) 0x0010 )
-#define portTIMER_VIC_ENABLE		( ( unsigned portLONG ) 0x0020 )
+/* Constants required to setup the PIT. */
+#define portPIT_CLOCK_DIVISOR			( ( unsigned portLONG ) 16 )
+#define portPIT_COUNTER_VALUE			( ( ( configCPU_CLOCK_HZ / portPIT_CLOCK_DIVISOR ) / 1000UL ) * portTICK_RATE_MS )
 
+#define portINT_LEVEL_SENSITIVE  0
+#define portPIT_ENABLE      	( ( unsigned portSHORT ) 0x1 << 24 )
+#define portPIT_INT_ENABLE     	( ( unsigned portSHORT ) 0x1 << 25 )
 /*-----------------------------------------------------------*/
 
 /* Setup the timer to generate the tick interrupts. */
@@ -198,50 +193,28 @@ void vPortEndScheduler( void )
  */
 static void prvSetupTimerInterrupt( void )
 {
-unsigned portLONG ulCompareMatch;
+AT91PS_PITC pxPIT = AT91C_BASE_PITC;
 
-	/* A 1ms tick does not require the use of the timer prescale.  This is
-	defaulted to zero but can be used if necessary. */
-	T0PR = portPRESCALE_VALUE;
+	/* Setup the AIC for PIT interrupts.  The interrupt routine chosen depends
+	on whether the preemptive or cooperative scheduler is being used. */
+	#if configUSE_PREEMPTION == 0
 
-	/* Calculate the match value required for our wanted tick rate. */
-	ulCompareMatch = configCPU_CLOCK_HZ / configTICK_RATE_HZ;
+		extern void ( vNonPreemptiveTick ) ( void );
+		AT91F_AIC_ConfigureIt( AT91C_ID_SYS, AT91C_AIC_PRIOR_HIGHEST, portINT_LEVEL_SENSITIVE, ( void (*)(void) ) vNonPreemptiveTick );
 
-	/* Protect against divide by zero.  Using an if() statement still results
-	in a warning - hence the #if. */
-	#if portPRESCALE_VALUE != 0
-	{
-		ulCompareMatch /= ( portPRESCALE_VALUE + 1 );
-	}
-	#endif
-	T0MR0 = ulCompareMatch;
-
-	/* Generate tick with timer 0 compare match. */
-	T0MCR = portRESET_COUNT_ON_MATCH | portINTERRUPT_ON_MATCH;
-
-	/* Setup the VIC for the timer. */
-	VICIntSelect &= ~( portTIMER_VIC_CHANNEL_BIT );
-	VICIntEnable |= portTIMER_VIC_CHANNEL_BIT;
-	
-	/* The ISR installed depends on whether the preemptive or cooperative
-	scheduler is being used. */
-	#if configUSE_PREEMPTION == 1
-	{
-		extern void ( vPreemptiveTick )( void );
-		VICVectAddr0 = ( portLONG ) vPreemptiveTick;
-	}
 	#else
-	{
-		extern void ( vNonPreemptiveTick )( void );
-		VICVectAddr0 = ( portLONG ) vNonPreemptiveTick;
-	}
+		
+		extern void ( vPreemptiveTick )( void );
+		AT91F_AIC_ConfigureIt( AT91C_ID_SYS, AT91C_AIC_PRIOR_HIGHEST, portINT_LEVEL_SENSITIVE, ( void (*)(void) ) vPreemptiveTick );
+
 	#endif
 
-	VICVectCntl0 = portTIMER_VIC_CHANNEL | portTIMER_VIC_ENABLE;
+	/* Configure the PIT period. */
+	pxPIT->PITC_PIMR = portPIT_ENABLE | portPIT_INT_ENABLE | portPIT_COUNTER_VALUE;
 
-	/* Start the timer - interrupts are disabled when this function is called
-	so it is okay to do this here. */
-	T0TCR = portENABLE_TIMER;
+	/* Enable the interrupt.  Global interrupts are disables at this point so 
+	this is safe. */
+    AT91C_BASE_AIC->AIC_IECR = 0x1 << AT91C_ID_SYS;
 }
 /*-----------------------------------------------------------*/
 
