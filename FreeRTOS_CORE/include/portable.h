@@ -91,10 +91,13 @@
 	#include "..\..\Source\portable\Keil\ARM7\portmacro.h"
 #endif
 
-#ifdef SAM7_GCC
-	#include "../../Source/portable/GCC/ARM7_AT91SAM7S/portmacro.h"
 #endif
 
+#ifdef SAM7_GCC
+	#include "FreeRTOS_CORE/portable/GCC/ARM7_AT91SAM7S/portmacro.h"
+#endif
+
+#if 0
 #ifdef SAM7_IAR
 	#include "..\..\Source\portable\IAR\AtmelSAM7S64\portmacro.h"
 #endif
@@ -147,9 +150,9 @@
     typedef void ( __interrupt __far *pxISR )();
 #endif
 
-#endif
-
 #include "FreeRTOS_CORE/portable/GCC/ARM7_LPC2000/portmacro.h"
+
+#endif
 
 /*
  * Setup the stack of a new task so it is ready to be placed under the

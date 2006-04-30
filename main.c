@@ -1,5 +1,5 @@
 /*
-	FreeRTOS V3.2.3 - Copyright (C) 2003-2005 Richard Barry.
+	FreeRTOS V4.0.1 - copyright (C) 2003-2006 Richard Barry.
 
 	This file is part of the FreeRTOS distribution.
 
@@ -19,192 +19,211 @@
 
 	A special exception to the GPL can be applied should you wish to distribute
 	a combined work that includes FreeRTOS, without being obliged to provide
-	the source code for any proprietary components.  See the licensing section 
+	the source code for any proprietary components.  See the licensing section
 	of http://www.FreeRTOS.org for full details of how and when the exception
 	can be applied.
 
 	***************************************************************************
-	See http://www.FreeRTOS.org for documentation, latest information, license 
-	and contact details.  Please ensure to read the configuration and relevant 
+	See http://www.FreeRTOS.org for documentation, latest information, license
+	and contact details.  Please ensure to read the configuration and relevant
 	port sections of the online documentation.
 	***************************************************************************
 */
 
-//This was ported from the lpc2106 GCC demo. 
+/* 
+	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
+	The processor MUST be in supervisor mode when vTaskStartScheduler is 
+	called.  The demo applications included in the FreeRTOS.org download switch
+	to supervisor mode prior to main being called.  If you are not using one of
+	these demo application projects then ensure Supervisor mode is used.
+*/
 
 
-// Standard includes. 
-#include <stdlib.h>
+/*
+	Changes from V3.2.2
+
+	+ Modified the stack sizes used by some tasks to permit use of the 
+	  command line GCC tools.
+*/
+
+/* Library includes. */
 #include <string.h>
+#include <stdio.h>
 
-// Scheduler includes. 
+/* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
 
-// application includes. 
-#include "serial/serial.h"
-#include "rtc/rtc.h"
-#include "mp3_decoder.h"
+/* Demo application includes. */
+#include "partest.h"
+#include "PollQ.h"
+#include "semtest.h"
+#include "flash.h"
+#include "integer.h"
+#include "BlockQ.h"
 
+/* Hardware specific headers. */
+#include "Board.h"
+#include "AT91SAM7S64.h"
 
-//-----------------------------------------------------------
-// Constants to setup I/O. 
-#define mainTX_ENABLE	( ( unsigned portLONG ) 0x0001 )
-#define mainRX_ENABLE	( ( unsigned portLONG ) 0x0004 )
-#define mainTX1_ENABLE	( ( unsigned portLONG ) 0x10000 )
-#define mainRX1_ENABLE	( ( unsigned portLONG ) 0x40000 )
+/* Priorities/stacks for the various tasks within the demo application. */
+#define mainQUEUE_POLL_PRIORITY		( tskIDLE_PRIORITY + 1 )
+#define mainCHECK_TASK_PRIORITY		( tskIDLE_PRIORITY + 3 )
+#define mainSEM_TEST_PRIORITY		( tskIDLE_PRIORITY + 1 )
+#define mainFLASH_PRIORITY			( tskIDLE_PRIORITY + 2 )
+#define mainBLOCK_Q_PRIORITY		( tskIDLE_PRIORITY + 1 )
 
-// Constants to setup the PLL. 
-#define mainPLL_MUL_4		( ( unsigned portCHAR ) 0x0003 )
-#define mainPLL_MUL_5		( ( unsigned portCHAR ) 0x0004 )
-#define mainPLL_DIV_1		( ( unsigned portCHAR ) 0x0000 )
-#define mainPLL_ENABLE		( ( unsigned portCHAR ) 0x0001 )
-#define mainPLL_CONNECT		( ( unsigned portCHAR ) 0x0003 )
-#define mainPLL_FEED_BYTE1	( ( unsigned portCHAR ) 0xaa )
-#define mainPLL_FEED_BYTE2	( ( unsigned portCHAR ) 0x55 )
-#define mainPLL_LOCK		( ( unsigned portLONG ) 0x0400 )
+/* The rate at which the on board LED will toggle when there is/is not an
+error. */
+#define mainNO_ERROR_FLASH_PERIOD	( ( portTickType ) 3000 / portTICK_RATE_MS  )
+#define mainERROR_FLASH_PERIOD		( ( portTickType ) 500 / portTICK_RATE_MS  )
 
-// Constants to setup the MAM. 
-#define mainMAM_TIM_3		( ( unsigned portCHAR ) 0x03 )
-#define mainMAM_MODE_FULL	( ( unsigned portCHAR ) 0x02 )
-
-// Constants to setup the peripheral bus. 
-#define mainBUS_CLK_FULL	( ( unsigned portCHAR ) 0x01 )
-
-
+/* The LED used by the check task to indicate the system status. */
+#define mainCHECK_LED 				( 0 )
 /*-----------------------------------------------------------*/
 
+/*
+ * Checks that all the demo application tasks are still executing without error
+ * - as described at the top of the file.
+ */
+static portLONG prvCheckOtherTasksAreStillRunning( void );
 
+/*
+ * The task that executes at the highest priority and calls
+ * prvCheckOtherTasksAreStillRunning().  See the description at the top
+ * of the file.
+ */
+static void vErrorChecks( void *pvParameters );
+
+/*
+ * Configure the processor for use with the Atmel demo board.  This is very
+ * minimal as most of the setup is performed in the startup code.
+ */
 static void prvSetupHardware( void );
-void vApplicationIdleHook( void );
-
-
-/*----------------------idle hook----------------------------*/
-void vApplicationIdleHook( void )
-{
-
-	PCON  = 0x1;
-}
-
-
-static portTASK_FUNCTION_PROTO( vTaskTest, pvParameters );
-void vStartTestTasks( unsigned portBASE_TYPE uxPriority);
-
-
-
-void vStartTestTasks( unsigned portBASE_TYPE uxPriority)
-{
-	xTaskCreate( vTaskTest, ( const signed portCHAR * const ) "Test", configMINIMAL_STACK_SIZE, NULL, uxPriority, ( xTaskHandle * ) NULL );
-}
-
-static portTASK_FUNCTION( vTaskTest, pvParameters )
-{
-	( void ) pvParameters;
-
-	for(;;)
-	{
-		IOCLR0 |= (1<<10);
-		IOSET0 |= (1<<11);
-		vTaskDelay(100);
-		IOSET0 |= (1<<10);
-		IOCLR0 |= (1<<11);
-		vSerialPutString(0,"Hello World\n\r",0);
-		vSerialPutString(1,"Hello World\n\r",0);
-
-		//vTaskDelay(100);
-		xWaitRTC_Tick(5000);
-
-
-	}
-}
 
 /*-----------------------------------------------------------*/
-static void prvSetupHardware( void )
-{
-	// Setup and turn on the MAM.  Three cycle access is used due to the fast
-	//PLL used.  It is possible faster overall performance could be obtained by
-	//tuning the MAM and PLL settings. 
-	MAMTIM = mainMAM_TIM_3;
-	MAMCR = mainMAM_MODE_FULL;
 
-	// Setup the peripheral bus to be the same as the PLL output.
-	VPBDIV = mainBUS_CLK_FULL;
-	
-
-	
-	// Setup the PLL to multiply the XTAL input by 5. to get 60 Mhz
-	PLL0CFG = ( mainPLL_MUL_5 | mainPLL_DIV_1 );
-
-	// Activate the PLL by turning it on then feeding the correct sequence of bytes
-	PLL0CON = mainPLL_ENABLE;
-	PLL0FEED = mainPLL_FEED_BYTE1;
-	PLL0FEED = mainPLL_FEED_BYTE2;
-	
-
-	/* Wait for the PLL to lock... */
-	while( !( PLL0STAT & mainPLL_LOCK ) );
-
-	// ...before connecting it using the feed sequence again. 
-	PLL0CON = mainPLL_CONNECT;
-	PLL0FEED = mainPLL_FEED_BYTE1;
-	PLL0FEED = mainPLL_FEED_BYTE2;
-
-
-	// Setup the PLL to multiply the XTAL input by 4.  to get 48 Mhz
-	PLL1CFG = ( mainPLL_MUL_4 | mainPLL_DIV_1 );
-
-	PLL1CON = mainPLL_ENABLE;
-	PLL1FEED = mainPLL_FEED_BYTE1;
-	PLL1FEED = mainPLL_FEED_BYTE2;
-	while( !( PLL1STAT & mainPLL_LOCK ) );
-
-	// ...before connecting it using the feed sequence again. 
-	PLL1CON = mainPLL_CONNECT;
-	PLL1FEED = mainPLL_FEED_BYTE1;
-	PLL1FEED = mainPLL_FEED_BYTE2;
-
-
-	PINSEL0 |= mainTX_ENABLE;
-	PINSEL0 |= mainRX_ENABLE;
-	PINSEL0 |= mainTX1_ENABLE;
-	PINSEL0 |= mainRX1_ENABLE;
-	
-	
-	IODIR0 |= (1<<10);
-	IODIR0 |= (1<<11);
-	//IODIR0 = ~( mainP0_14 + mainJTAG_PORT );
-	IOCLR0 |= (1<<10);
-	IOSET0 |= (1<<11);
-}
-
-
-
-//Starts all the other tasks, then starts the scheduler. 
+/*
+ * Setup hardware then start all the demo application tasks.
+ */
 int main( void )
 {
-	// Setup the hardware for use with the Olimex demo board.
+	/* Setup the ports. */
 	prvSetupHardware();
-	InitRTC();
 
-
-	xSerialPortInitMinimal(0, 115200, 10 );
-	//xSerialPortInitMinimal(1, 115200, 250 );   	
-
-
-	//vStartTestTasks( tskIDLE_PRIORITY + 1 );
-	vStartMP3DecoderTasks( tskIDLE_PRIORITY + 1 );
-
-
-	//NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
-	//The processor MUST be in supervisor mode when vTaskStartScheduler is 
-	//called.  The demo applications included in the FreeRTOS.org download switch
-	//to supervisor mode prior to main being called.  If you are not using one of
-	//these demo application projects then ensure Supervisor mode is used here. 
+	/* Setup the IO required for the LED's. */
+	vParTestInitialise();
 	
+	/* Create the standard demo application tasks. */
+	vStartPolledQueueTasks( mainQUEUE_POLL_PRIORITY );
+	vStartSemaphoreTasks( mainSEM_TEST_PRIORITY );
+	//vStartLEDFlashTasks( mainFLASH_PRIORITY );
+	vStartIntegerMathTasks( tskIDLE_PRIORITY );
+	vStartBlockingQueueTasks( mainBLOCK_Q_PRIORITY );
+
+	/* Start the check task - which is defined in this file. */	
+    xTaskCreate( vErrorChecks, ( signed portCHAR * ) "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
+
+	/* Finally, start the scheduler. 
+
+	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
+	The processor MUST be in supervisor mode when vTaskStartScheduler is 
+	called.  The demo applications included in the FreeRTOS.org download switch
+	to supervisor mode prior to main being called.  If you are not using one of
+	these demo application projects then ensure Supervisor mode is used here. */
 	vTaskStartScheduler();
 
+	/* Should never get here! */
 	return 0;
 }
 /*-----------------------------------------------------------*/
 
+
+static void prvSetupHardware( void )
+{
+	/* When using the JTAG debugger the hardware is not always initialised to
+	the correct default state.  This line just ensures that this does not
+	cause all interrupts to be masked at the start. */
+	AT91C_BASE_AIC->AIC_EOICR = 0;
+	
+	/* Most setup is performed by the low level init function called from the
+	startup asm file.
+
+	Configure the PIO Lines corresponding to LED1 to LED4 to be outputs as
+	well as the UART Tx line. */
+	AT91C_BASE_PIOA->PIO_PER = LED_MASK; // Set in PIO mode
+	AT91C_BASE_PIOA->PIO_OER = LED_MASK; // Configure in Output
+
+
+	/* Enable the peripheral clock. */
+    AT91C_BASE_PMC->PMC_PCER = 1 << AT91C_ID_PIOA;
+}
+/*-----------------------------------------------------------*/
+
+static void vErrorChecks( void *pvParameters )
+{
+portTickType xDelayPeriod = mainNO_ERROR_FLASH_PERIOD;
+portTickType xLastWakeTime;
+
+	/* The parameters are not used. */
+	( void ) pvParameters;
+
+	/* Initialise xLastWakeTime to ensure the first call to vTaskDelayUntil()
+	functions correctly. */
+	xLastWakeTime = xTaskGetTickCount();
+
+	/* Cycle for ever, delaying then checking all the other tasks are still
+	operating without error.  If an error is detected then the delay period
+	is decreased from mainNO_ERROR_FLASH_PERIOD to mainERROR_FLASH_PERIOD so
+	the Check LED flash rate will increase. */
+	for( ;; )
+	{
+		/* Delay until it is time to execute again.  The delay period is
+		shorter following an error. */
+		vTaskDelayUntil( &xLastWakeTime, xDelayPeriod );
+	
+		/* Check all the standard demo application tasks are executing without
+		error.  */
+		if( prvCheckOtherTasksAreStillRunning() != pdPASS )
+		{
+			/* An error has been detected in one of the tasks - flash faster. */
+			xDelayPeriod = mainERROR_FLASH_PERIOD;
+		}
+
+		vParTestToggleLED( mainCHECK_LED );
+	}
+}
+/*-----------------------------------------------------------*/
+
+static portLONG prvCheckOtherTasksAreStillRunning( void )
+{
+portLONG lReturn = ( portLONG ) pdPASS;
+
+	/* Check all the demo tasks (other than the flash tasks) to ensure
+	that they are all still running, and that none of them have detected
+	an error. */
+
+	if( xArePollingQueuesStillRunning() != pdTRUE )
+	{
+		lReturn = ( portLONG ) pdFAIL;
+	}
+
+	if( xAreSemaphoreTasksStillRunning() != pdTRUE )
+	{
+		lReturn = ( portLONG ) pdFAIL;
+	}
+
+	if( xAreIntegerMathsTaskStillRunning() != pdTRUE )
+	{
+		lReturn = ( portLONG ) pdFAIL;
+	}
+
+	if( xAreBlockingQueuesStillRunning() != pdTRUE )
+	{
+		lReturn = ( portLONG ) pdFAIL;
+	}
+
+	return lReturn;
+}
+/*-----------------------------------------------------------*/
 
