@@ -14,6 +14,7 @@
 
 #include "serial.h"
 #include <string.h>
+#include <assert.h>
 
 #include "efs.h"
 #include "ls.h"
@@ -40,90 +41,88 @@ EmbeddedFileSystem efs;
 EmbeddedFile filer, filew;
 DirList list;
 unsigned short e;
-unsigned char buf[513];
+unsigned char buf[2][2048];
 
 static char LogFileName[] = "logSAM_5.txt";
 
-
-static void benchmark()
+int fill_buffer(int i)
 {
-	signed char res;
-	char bmfile[] = "bm2.txt";
-	unsigned long starttime, deltat, bytes;
-	int error;
-	unsigned short l = 100;
-	
-	if ( ( res = efs_init( &efs, 0 ) ) != 0 ) {
-		rprintf("efs_init failed with %i\n",res);
-		return;
-	}
-	
-	rmfile( &efs.myFs, (euint8*)bmfile );
-	
-	if ( file_fopen( &filew, &efs.myFs , bmfile , 'w' ) != 0 ) {
-		rprintf("\nfile_open for %s failed", bmfile);
-		fs_umount( &efs.myFs );
-		return;
-	}
-		
-	rprintf("Write benchmark start - write to file %s (%i bytes/write)\n", 
-		bmfile, l);
-	
-	bytes = 0;
-	error = 0;
-	starttime = systime_get();	// millisec.
-	
-	do { 
-		if ( file_write( &filew, l, buf ) != l ) {
-			error = 1;
-		}
-		else {
-			bytes+=l;
-		}
-		deltat = (unsigned long)(systime_get()-starttime);
-	} while ( ( deltat < 5000UL ) && !error );
-	
-	file_fclose( &filew );
-	fs_flushFs( &(efs.myFs) ); // close & flushing included in time
-	
-	deltat = (unsigned long)(systime_get()-starttime);
-	if ( error ) rprintf("An error occured during write!\n");
-	rprintf("%lu bytes written in %lu ms (%lu KBytes/sec)\n", 
-		bytes, deltat, (unsigned long)(((bytes/deltat)*1000UL)/1024UL) ) ;
+	return file_read( &filer, sizeof(buf[i]), buf[i] );
+}
 
-	
-	rprintf("Read benchmark start - from file %s (in %i bytes blocks)\n", 
-		bmfile, l);
-	
-	if ( file_fopen( &filer, &efs.myFs , bmfile , 'r' ) != 0 ) {
-		rprintf("\nfile_open for %s failed", bmfile);
-		fs_umount( &efs.myFs );
-		return;
-	}
+void set_first_dma(short *buffer, int n)
+{
+	*AT91C_SSC_TPR = buffer;
+	*AT91C_SSC_TCR = n;
+}
 
-	bytes = 0;
-	error = 0;
-	starttime = systime_get();	// millisec.
+void set_next_dma(short *buffer, int n)
+{
+	*AT91C_SSC_TNPR = buffer;
+	*AT91C_SSC_TNCR = n;
+}
+
+int dma_endtx()
+{
+	return *AT91C_SSC_SR & AT91C_SSC_ENDTX;
+}
+
+void play_wav(void)
+{
+	/************  PWM  ***********/
+	/*   PWM0 = MAINCK/4          */
+	*AT91C_PMC_PCER = (1 << AT91C_ID_PWMC); // Enable Clock for PWM controller
+	*AT91C_PWMC_CH0_CPRDR = 2; // channel period = 2
+	*AT91C_PWMC_CH0_CMR = 1; // prescaler = 2
+	*AT91C_PIOA_PDR = AT91C_PA0_PWM0; // enable pin
+	*AT91C_PWMC_CH0_CUPDR = 1;
+	*AT91C_PWMC_ENA = AT91C_PWMC_CHID0; // enable channel 0 output
+
+	/************  SSC  ***********/
+	*AT91C_PMC_PCER = (1 << AT91C_ID_SSC); // Enable Clock for SSC controller
+	*AT91C_SSC_CR = AT91C_SSC_SWRST; // reset
+	*AT91C_SSC_CMR = 16;
+	*AT91C_SSC_TCMR = AT91C_SSC_CKS_DIV | AT91C_SSC_CKO_CONTINOUS |
+	                  AT91C_SSC_START_FALL_RF |
+	                  (1 << 16) |   // STTDLY = 1
+	                  (15 << 24);   // PERIOD = 15
+	*AT91C_PIOA_PDR = AT91C_PA16_TK | AT91C_PA15_TF | AT91C_PA17_TD; // enable pins
+	*AT91C_SSC_TFMR = (15) |        // 16 bit word length
+	                  (1 << 8) |		// DATNB = 1 => 2 words per frame
+	                  (15 << 16) |	// FSLEN = 15
+	                  AT91C_SSC_MSBF | AT91C_SSC_FSOS_NEGATIVE;
+	*AT91C_SSC_CR = AT91C_SSC_TXEN; // enable TX
+	
+	// open WAV
+	assert(file_fopen( &filer, &efs.myFs, "BBC.wav", 'r') == 0 );
+	rprintf("\nWAV-File opened.\n");
+
+	fill_buffer(0);
+	fill_buffer(1);
+	set_first_dma((short *)buf[0], 1024);
+	set_next_dma((short *)buf[1], 1024);
+	
+	// enable DMA transfer
+	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
+	assert(*AT91C_SSC_PTSR == AT91C_PDC_TXTEN);
 		
-	while ( ( e = file_read( &filer, l, buf ) ) != 0 ) {
-		bytes += e;
+	while(1) {
+		while(!dma_endtx());
+		fill_buffer(0);
+	set_next_dma((short *)buf[0], 1024);
+		while(!dma_endtx());
+		fill_buffer(1);
+	set_next_dma((short *)buf[1], 1024);
 	}
 
 	file_fclose( &filer );
-
-	deltat = (unsigned long)(systime_get()-starttime);
-	rprintf("%lu bytes read in %lu ms (%lu KBytes/sec)\n", 
-		bytes, deltat, (unsigned long)(((bytes/deltat)*1000UL)/1024UL) ) ;
-		
-	
-	fs_umount( &efs.myFs ); 
 }
-
 
 int main(void)
 {
 	signed char res;
 	int c, flag = 0;
+	
 	
 	AT91PS_PMC  pPMC  = AT91C_BASE_PMC;
 	AT91PS_PIO  pPIOA = AT91C_BASE_PIOA;
@@ -158,6 +157,7 @@ int main(void)
 
 	if ( ( res = efs_init( &efs, 0 ) ) != 0 ) {
 		rprintf("failed with %i\n",res);
+		while(1) { res = efs_init( &efs, 0 ); }
 	}
 	else {
 		rprintf("ok\n");
@@ -173,47 +173,7 @@ int main(void)
 				list.currentEntry.FileSize ) ;
 		}
 
-#if 1
-
-		led1(1);
-		
-		if ( file_fopen( &filer, &efs.myFs , LogFileName , 'r' ) == 0 ) {
-			rprintf("\nFile %s open. Content:\n", LogFileName);
-			while ( ( e = file_read( &filer, 512, buf ) ) != 0 ) {
-				buf[e]='\0';
-				uart0_puts((char*)buf);
-			}
-			rprintf("\n");
-			file_fclose( &filer );
-		}
-		
-		led1(0);
-		
-		if ( file_fopen( &filew, &efs.myFs , LogFileName , 'a' ) == 0 ) {
-			rprintf("\nFile %s open for append. Appending...", LogFileName);
-			strcpy((char*)buf, "Martin hat's angehaengt\r\n");
-			if ( file_write( &filew, strlen((char*)buf), buf ) == strlen((char*)buf) ) {
-				rprintf("ok\n");
-			}
-			else {
-				rprintf("failed\n", LogFileName);
-			}
-			file_fclose( &filew );
-		}
-		
-		led1(1);
-		
-		if ( file_fopen( &filer, &efs.myFs , LogFileName , 'r' ) == 0 ) {
-			rprintf("\nFile %s open. Content:\n", LogFileName);
-			while ( ( e = file_read( &filer, 512, buf ) ) != 0 ) {
-				buf[e]='\0';
-				uart0_puts((char*)buf);
-			}
-			rprintf("\n");
-			file_fclose( &filer );
-		}
-
-#endif
+		play_wav();
 		
 		led1(0);
 		
@@ -227,7 +187,7 @@ int main(void)
 		if ( uart0_kbhit() ) {
 			c = uart0_getc();
 			if ( c == 'B' ) {
-				benchmark();
+
 			}
 			else {
 				rprintf("\nYou pressed the \"%c\" key\n", (char)c);
