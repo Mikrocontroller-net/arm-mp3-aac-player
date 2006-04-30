@@ -20,6 +20,8 @@
 // define __inline inline
 // #include "lib_AT91SAM7S64.h"
 
+#include "sintable.h"
+
 #include "global.h"
 #include "serial.h"
 #include "Time.h"
@@ -109,17 +111,26 @@ int main (void) {
 	assert(*AT91C_SSC_SR & (1 << 16)); // TX enabled
 	
 	while (1) {                              /* Loop forever */
-		int i;
+		int i=0;
 		
-		for (i = 0; i < 100; i++) { 
+		while (1) {
 			while (!(*AT91C_SSC_SR & AT91C_SSC_TXRDY));
-			*AT91C_SSC_THR = -20000;
+			*AT91C_SSC_THR = sintable[i];
+			while (!(*AT91C_SSC_SR & AT91C_SSC_TXRDY));
+			*AT91C_SSC_THR = sintable[i];
+      
+      i += 2;
+      if (i >= 500) {
+        i = 0;
+      }
 		}
 
+/*
 		for (i = 0; i < 100; i++) { 
 			while (!(*AT91C_SSC_SR & AT91C_SSC_TXRDY));
-			*AT91C_SSC_THR = 20000;
+			*AT91C_SSC_THR = 10000;
 		}
+*/
 
 /*
 		while (!(*AT91C_SSC_SR & AT91C_SSC_TXRDY));
