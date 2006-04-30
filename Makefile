@@ -27,7 +27,7 @@ ifeq ($(USE_THUMB_MODE),YES)
 	THUMB_FLAGS=-mthumb
 endif
 
-LINKER_FLAGS=-Xlinker -o$(PROJECT).elf -Xlinker -M -Xlinker -Map=$(PROJECT).map
+LINKER_FLAGS=-Xlinker -o$(PROJECT).elf -Xlinker -M -Xlinker -Map=$(PROJECT).map -Lefsl -lefsl
 
 
 
@@ -90,7 +90,7 @@ program : $(PROJECT).bin
 	scp $(PROJECT).bin 192.168.0.33:/tmp/main.bin
 	ssh 192.168.0.33 openocd -f at91sam7_wiggler.cfg
 
-$(PROJECT).elf : $(ARM_OBJ) $(ARM_ASM_OBJ) $(THUMB_OBJ) $(CRT0) Makefile
+$(PROJECT).elf : $(ARM_OBJ) $(ARM_ASM_OBJ) $(THUMB_OBJ) $(CRT0) Makefile efsl/libefsl.a
 	$(CC) $(CFLAGS) $(ARM_OBJ) $(ARM_ASM_OBJ) $(THUMB_OBJ) -nostartfiles $(CRT0) $(LINKER_FLAGS)
 	arm-elf-size -A $(PROJECT).elf
 
@@ -103,5 +103,11 @@ $(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile
 $(ARM_ASM_OBJ) : %.o : %.S $(LDSCRIPT) Makefile
 	$(CC) -c $(CFLAGS) $< -o $@
 
+efsl/libefsl.a : FORCE
+	make -C efsl
+
 clean :
 	touch Makefile
+
+FORCE :
+	
