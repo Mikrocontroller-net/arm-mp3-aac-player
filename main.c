@@ -20,6 +20,8 @@
 // define __inline inline
 // #include "lib_AT91SAM7S64.h"
 
+#include "sintable.h"
+
 #include "global.h"
 #include "serial.h"
 #include "Time.h"
@@ -106,55 +108,24 @@ int main (void) {
 	                  AT91C_SSC_MSBF | AT91C_SSC_FSOS_NEGATIVE;
 	*AT91C_SSC_CR = AT91C_SSC_TXEN; // enable TX
 	
-	assert(*AT91C_SSC_SR & (1 << 16)); // TX enabled
+	// first DMA buffer
+	*AT91C_SSC_TPR = sintable;
+	*AT91C_SSC_TCR = sizeof(sintable)/sizeof(sintable[0]);
+	// next DMA buffer
+	*AT91C_SSC_TNPR = sintable;
+	*AT91C_SSC_TNCR = sizeof(sintable)/sizeof(sintable[0]);
+	// enable DMA transfer
+	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
+	
+	assert(*AT91C_SSC_PTSR == AT91C_PDC_TXTEN);
 	
 	while (1) {                              /* Loop forever */
-		int i;
-		
-		for (i = 0; i < 100; i++) { 
-			while (!(*AT91C_SSC_SR & AT91C_SSC_TXRDY));
-			*AT91C_SSC_THR = -20000;
-		}
 
-		for (i = 0; i < 100; i++) { 
-			while (!(*AT91C_SSC_SR & AT91C_SSC_TXRDY));
-			*AT91C_SSC_THR = 20000;
-		}
+		while (!(*AT91C_SSC_SR & AT91C_SSC_ENDTX));
+		// next DMA buffer
+		*AT91C_SSC_TNPR = sintable;
+		*AT91C_SSC_TNCR = sizeof(sintable)/sizeof(sintable[0]);
 
-/*
-		while (!(*AT91C_SSC_SR & AT91C_SSC_TXRDY));
-		*AT91C_SSC_THR = 0x0000;
-
-		while (!(*AT91C_SSC_SR & AT91C_SSC_TXRDY));
-		*AT91C_SSC_THR = 0x0000;
-		
-		while (!(*AT91C_SSC_SR & AT91C_SSC_TXRDY));
-		*AT91C_SSC_THR = 0x0000;*/
-
-#if 0
-		n = pPIO->PIO_PDSR;                   /* Read Pin Data */
-		if ((n & SW1) == 0) {                /* Check if SW1 is pressed */
-		pPIO->PIO_CODR = LED1;                /* Turn On LED1 */
-		iprintf ("Hello World !\n");          /* Print "Hello World !" */
-		wait(100);                            /* Wait 100ms */
-		pPIO->PIO_SODR = LED1;                /* Turn Off LED1 */
-		wait(100);                            /* Wait 100ms */
-		}
-		if (((n & SW3) == 0) && (n & SW4)) {   /* Check if SW3 is pressed */
-			pPIO->PIO_CODR = LED3;              /* Turn On LED3 */
-		}
-		if ((n & SW4) == 0) {                   /* Check if SW4 is pressed */
-			pPIO->PIO_SODR = LED3;               /* Turn Off LED3 */
-		}
-#endif
-
-		/*
-		if ( uart0_kbhit() ) {
-			int c = uart0_getc();
-			iprintf ("You've pressed the \"%c\" key\n", (char)(c));
-
-		}*/
-		
 	} // while
 	
 }
