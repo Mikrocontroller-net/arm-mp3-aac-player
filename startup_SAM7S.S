@@ -65,13 +65,13 @@
 //   </h>
 // </h>
 */
-        .equ    Top_Stack,      0x00204000
+        .equ    Top_Stack,      65000
         .equ    UND_Stack_Size, 0x00000004
         .equ    SVC_Stack_Size, 0x00000100
         .equ    ABT_Stack_Size, 0x00000004
         .equ    FIQ_Stack_Size, 0x00000004
         .equ    IRQ_Stack_Size, 0x00000100
-        .equ    USR_Stack_Size, 0x00000400
+        .equ    USR_Stack_Size, 0x00000F00
 
 
 // Embedded Flash Controller (EFC) definitions

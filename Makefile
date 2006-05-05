@@ -71,7 +71,21 @@ SRC = $(TARGET).c serial.c syscalls.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
-SRCARM = interrupt_utils.c systime.c
+SRCARM = interrupt_utils.c systime.c \
+  mp3/codec/fixpt/real/dqchan.c \
+  mp3/codec/fixpt/real/imdct.c \
+  mp3/codec/fixpt/real/stproc.c \
+  mp3/codec/fixpt/mp3dec.c \
+  mp3/codec/fixpt/mp3tabs.c \
+  mp3/codec/fixpt/real/bitstream.c \
+  mp3/codec/fixpt/real/buffers.c \
+  mp3/codec/fixpt/real/dequant.c \
+  mp3/codec/fixpt/real/huffman.c \
+  mp3/codec/fixpt/real/hufftabs.c \
+  mp3/codec/fixpt/real/scalfact.c \
+  mp3/codec/fixpt/real/subband.c \
+  mp3/codec/fixpt/real/trigtabs.c \
+  mp3/codec/fixpt/real/dct32.c 
 # not needed in this example: 
 #SRCARM += interrupt_utils.c
 
@@ -94,7 +108,7 @@ CPPSRCARM =
 ASRC = 
 
 # List Assembler source files here which must be assembled in ARM-Mode..
-ASRCARM = startup_SAM7S.S
+ASRCARM = startup_SAM7S.S mp3/codec/fixpt/real/arm/asmpoly_gcc.S
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 # 0 = turn off optimization. s = optimize for size.
@@ -125,10 +139,10 @@ EXTRA_LIBDIRS = efsl
 CSTANDARD = -std=gnu99
 
 # Place -D or -U options for C here
-CDEFS =  -D$(RUN_MODE)
+CDEFS =  -D$(RUN_MODE) -DARM
 
 # Place -I options here
-CINCS = -Iefsl/inc -Iefsl/conf
+CINCS = -Iefsl/inc -Iefsl/conf -Imp3/codec/fixpt/pub
 
 # Place -D or -U options for ASM here
 ADEFS =  -D$(RUN_MODE)
@@ -448,6 +462,12 @@ $(AOBJARM) : %.o : %.S
 	@echo $(MSG_ASSEMBLING_ARM) $<
 	$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
+$(TARGET).bin : $(TARGET).elf
+	$(OBJCOPY) $(TARGET).elf -O binary $(TARGET).bin
+
+program : $(TARGET).bin
+	scp $(TARGET).bin 192.168.0.33:/tmp/main.bin
+	ssh 192.168.0.33 openocd -f at91sam7_wiggler.cfg
 
 # Target: clean project.
 clean: begin clean_list finished end

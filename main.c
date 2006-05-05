@@ -1,32 +1,24 @@
-//*----------------------------------------------------------------------------
-//*
-//* AT91SAM7 efsl example (11/2005)
-//* by Martin Thomas, Kaiserslautern, Germany <mthomas@rhrk.uni-kl.de>
-//*
-//* Some code from examples by Atmel and Keil
-//*
-//*----------------------------------------------------------------------------
-
 #include "Board.h"
-//#define _inline inline
-//#include "lib_AT91SAM7S64.h"
 #include "systime.h"
 
 #include "serial.h"
 #include <string.h>
+#include <stdio.h>
 #include <assert.h>
 
 #include "efs.h"
 #include "ls.h"
 #include "mkfs.h"
 #include "interfaces/efsl_dbg_printf_arm.h"
+#include "mp3dec.h"
 
 #define rprintf efsl_debug_printf_arm
 
 #define TCK  1000                           /* Timer Clock  */
 #define PIV  ((MCK/TCK/16)-1)               /* Periodic Interval Value */
 
-
+//#define puts 
+//#define printf 
 
 static void led1(int on)
 {
@@ -42,6 +34,7 @@ EmbeddedFile filer, filew;
 DirList list;
 unsigned short e;
 unsigned char buf[2][2048];
+unsigned char mp3buf[10000];
 
 static char LogFileName[] = "logSAM_5.txt";
 
@@ -94,7 +87,7 @@ void play_wav(void)
 	*AT91C_SSC_CR = AT91C_SSC_TXEN; // enable TX
 	
 	// open WAV
-	assert(file_fopen( &filer, &efs.myFs, "BBC.wav", 'r') == 0 );
+	assert(file_fopen( &filer, &efs.myFs, "test.wav", 'r') == 0 );
 	rprintf("\nWAV-File opened.\n");
 
 	fill_buffer(0);
@@ -112,6 +105,142 @@ void play_wav(void)
 		set_next_dma((short *)buf[0], 1024);
 		while(!dma_endtx());
 	}
+
+	file_fclose( &filer );
+}
+
+void play_mp3(void)
+{
+	
+	MP3FrameInfo mp3FrameInfo;
+	HMP3Decoder hMP3Decoder;
+  const unsigned char *readPtr;
+  int bytesLeft, nRead, err, offset, outOfData, eofReached;
+  int nFrames;
+	short outBuf[2][MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
+  int currentOutBuf;
+	long time;
+	
+	/************  PWM  ***********/
+	/*   PWM0 = MAINCK/4          */
+	*AT91C_PMC_PCER = (1 << AT91C_ID_PWMC); // Enable Clock for PWM controller
+	*AT91C_PWMC_CH0_CPRDR = 2; // channel period = 2
+	*AT91C_PWMC_CH0_CMR = 1; // prescaler = 2
+	*AT91C_PIOA_PDR = AT91C_PA0_PWM0; // enable pin
+	*AT91C_PWMC_CH0_CUPDR = 1;
+	*AT91C_PWMC_ENA = AT91C_PWMC_CHID0; // enable channel 0 output
+
+	/************  SSC  ***********/
+	*AT91C_PMC_PCER = (1 << AT91C_ID_SSC); // Enable Clock for SSC controller
+	*AT91C_SSC_CR = AT91C_SSC_SWRST; // reset
+	*AT91C_SSC_CMR = 16;
+	*AT91C_SSC_TCMR = AT91C_SSC_CKS_DIV | AT91C_SSC_CKO_CONTINOUS |
+	                  AT91C_SSC_START_FALL_RF |
+	                  (1 << 16) |   // STTDLY = 1
+	                  (15 << 24);   // PERIOD = 15
+	*AT91C_PIOA_PDR = AT91C_PA16_TK | AT91C_PA15_TF | AT91C_PA17_TD; // enable pins
+	*AT91C_SSC_TFMR = (15) |        // 16 bit word length
+	                  (1 << 8) |		// DATNB = 1 => 2 words per frame
+	                  (15 << 16) |	// FSLEN = 15
+	                  AT91C_SSC_MSBF | AT91C_SSC_FSOS_NEGATIVE;
+	*AT91C_SSC_CR = AT91C_SSC_TXEN; // enable TX
+	
+	// init decoder
+	assert(hMP3Decoder = MP3InitDecoder());
+			
+	// open MP3
+	assert(file_fopen( &filer, &efs.myFs, "test.mp3", 'r') == 0 );
+	rprintf("\nMP3-File opened.\n");
+
+	file_setpos( &filer, 100000 );
+	// fill input buffer
+	file_read( &filer, sizeof(mp3buf), mp3buf );
+	rprintf("buffer filled.\n");
+
+	readPtr = mp3buf;
+	offset = 0;
+	bytesLeft = sizeof mp3buf;
+	nFrames = 0;
+	outOfData = 0;
+	
+	currentOutBuf = 0;
+	set_first_dma(outBuf[currentOutBuf], 1024);
+	currentOutBuf = 1;
+	set_next_dma(outBuf[currentOutBuf], 1024);
+	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
+	
+	do {
+	  offset = MP3FindSyncWord(readPtr, bytesLeft);
+	  if (offset < 0) {
+		  puts("Error: MP3FindSyncWord returned 0\r");
+		  outOfData = 1;
+		  break;
+  	} else {
+  	  printf("Found a frame at offset %i\r\n", offset);
+  	}
+  	readPtr += offset;
+  	bytesLeft -= offset;
+	
+	
+  	puts("beginning decoding");
+		time = systime_get();
+  	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf, 0);
+		time = systime_get() - time;
+  	nFrames++;
+  	printf("decoding finished, elapsed time: %i ms\n", time);
+			
+  	if (err) {
+  		/* error occurred */
+  		switch (err) {
+  		case ERR_MP3_INDATA_UNDERFLOW:
+  			puts("ERR_MP3_INDATA_UNDERFLOW\r");
+  			outOfData = 1;
+  			break;
+  		case ERR_MP3_MAINDATA_UNDERFLOW:
+  			/* do nothing - next call to decode will provide more mainData */
+  			puts("ERR_MP3_MAINDATA_UNDERFLOW\r");
+  			break;
+  		case ERR_MP3_FREE_BITRATE_SYNC:
+  		default:
+  			puts("unknown error\r");
+  			outOfData = 1;
+  			break;
+  		}
+  	} else {
+  		/* no error */
+  		MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
+  		printf("Bitrate: %i\r\n", mp3FrameInfo.bitrate);
+			if (currentOutBuf == 1) {
+				currentOutBuf = 0;
+			} else {
+				currentOutBuf = 1;
+			}
+			while(!dma_endtx());
+			set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
+			printf("%i samples", mp3FrameInfo.outputSamps);
+  	}
+	}  while (!outOfData);
+	
+  puts("Out of data.\r");
+  printf("Decoded frames: %i\r\n", nFrames);
+	
+#if 0
+	fill_buffer(0);
+	set_first_dma((short *)buf[0], 1024);
+	
+	// enable DMA transfer
+	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
+	assert(*AT91C_SSC_PTSR == AT91C_PDC_TXTEN);
+	
+	while(1) {
+		fill_buffer(1);
+		set_next_dma((short *)buf[1], 1024);
+		while(!dma_endtx());
+		fill_buffer(0);
+		set_next_dma((short *)buf[0], 1024);
+		while(!dma_endtx());
+	}
+#endif
 
 	file_fclose( &filer );
 }
@@ -171,23 +300,19 @@ int main(void)
 				list.currentEntry.FileSize ) ;
 		}
 
-		play_wav();
-		
-		led1(0);
-		
-		fs_umount( &efs.myFs ) ;
 	}
 	
-	rprintf("\nHit B to start the benchmark\n");
+	rprintf("\nHit w to play wav, m to play mp3\n");
 	
 	for (;;) {
 	
 		if ( uart0_kbhit() ) {
 			c = uart0_getc();
-			if ( c == 'B' ) {
-
-			}
-			else {
+			if ( c == 'w' ) {
+				play_wav();
+			} else if( c == 'm' ) {
+				play_mp3();
+			}	else {
 				rprintf("\nYou pressed the \"%c\" key\n", (char)c);
 			}
 			if ( flag ) {
@@ -200,6 +325,8 @@ int main(void)
 			}
 		}
 	}
+
+	fs_umount( &efs.myFs ) ;		
 
 	return 0; /* never reached */
 }
