@@ -159,6 +159,10 @@ void play_mp3(void)
 	file_read( &filer, sizeof(mp3buf), mp3buf );
 	rprintf("buffer filled.\n");
 
+	// open output file
+	//assert(file_fopen( &filew, &efs.myFs, "out.raw", 'w') == 0 );
+	//rprintf("\nOutput file opened.\n");
+
 	readPtr = mp3data;
 	offset = 0;
 	bytesLeft = sizeof mp3data;
@@ -188,7 +192,9 @@ void play_mp3(void)
 	
 		currentOutBuf = !currentOutBuf;
 		printf("switched to output buffer %i\n", currentOutBuf);
-	
+		// wait for buffer
+		while(!dma_endtx());
+
   	puts("beginning decoding");
 		time = systime_get();
   	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf[currentOutBuf], 0);
@@ -219,6 +225,7 @@ void play_mp3(void)
   		printf("Bitrate: %i\r\n", mp3FrameInfo.bitrate);
 			printf("%i samples\n", mp3FrameInfo.outputSamps);			
 			
+			
 			// make sure there is no data underflow to the SSC
 			// (TXBUFE is set when both current and next buffer are empty)
 			if (*AT91C_SSC_SR & AT91C_SSC_TXBUFE) {
@@ -227,19 +234,22 @@ void play_mp3(void)
 			
 			printf("Words remaining in first DMA buffer: %i\n", *AT91C_SSC_TCR);
 			printf("Words remaining in next DMA buffer: %i\n", *AT91C_SSC_TNCR);
-			while(!dma_endtx());
 			//while(*AT91C_SSC_TNCR != 0);
 			if (*AT91C_SSC_TCR == 0) {
 				//underrun?
 				set_first_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
-				rprintf("Output buffer has run empty.\n");
+				rprintf("Output buffer has run empty, filling first buffer.\n");
 			} else {
 				set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
 			}
+			
+			
+			//rprintf("Wrote %i bytes\n", file_write(&filew, mp3FrameInfo.outputSamps * 2, outBuf[currentOutBuf]));
   	}
 	}  while (!outOfData);
 	
-  puts("Out of data.");
+	//file_fclose(&filew);
+
   rprintf("Decoded frames: %i\r\n", nFrames);
 	
 #if 0
@@ -261,6 +271,7 @@ void play_mp3(void)
 #endif
 
 	file_fclose( &filer );
+	fs_flushFs( &(efs.myFs) );
 }
 
 int main(void)
