@@ -40,9 +40,9 @@ void  NACKEDFUNC ATTR systime_isr(void) {        /* System Interrupt Handler */
 	
 	if (pPIT->PITC_PISR & AT91C_PITC_PITS) {  /* Check PIT Interrupt */
 		systime_value++;                       /* Increment Time Tick */
-		if ((systime_value % 500) == 0) {     /* 500ms Elapsed ? */
-			*AT91C_PIOA_ODSR ^= LED4;          /* Toggle LED4 */
-		}
+		//if ((systime_value % 500) == 0) {     /* 500ms Elapsed ? */
+		//	*AT91C_PIOA_ODSR ^= LED4;          /* Toggle LED4 */
+		//}
 		*AT91C_AIC_EOICR = pPIT->PITC_PIVR;    /* Ack & End of Interrupt */
 	} 
 	else {

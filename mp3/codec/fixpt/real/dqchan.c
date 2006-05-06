@@ -50,12 +50,12 @@ typedef int ARRAY3[3];	/* for short-block reordering */
 static const char preTab[22] = { 0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,2,2,3,3,3,2,0 };
 
 /* pow(2,-i/4) for i=0..3, Q31 format */
-static const int pow14[4] = { 
+int pow14[4] = { 
 	0x7fffffff, 0x6ba27e65, 0x5a82799a, 0x4c1bf829
 };
 
 /* pow(2,-i/4) * pow(j,4/3) for i=0..3 j=0..15, Q25 format */
-static const int pow43_14[4][16] = {
+int pow43_14[4][16] = {
 {	0x00000000, 0x10000000, 0x285145f3, 0x453a5cdb, /* Q28 */
 	0x0cb2ff53, 0x111989d6, 0x15ce31c8, 0x1ac7f203, 
 	0x20000000, 0x257106b9, 0x2b16b4a3, 0x30ed74b4, 
@@ -78,7 +78,7 @@ static const int pow43_14[4][16] = {
 };
 
 /* pow(j,4/3) for j=16..63, Q23 format */
-static const int pow43[] = {
+int pow43[] = {
 	0x1428a2fa, 0x15db1bd6, 0x1796302c, 0x19598d85, 
 	0x1b24e8bb, 0x1cf7fcfa, 0x1ed28af2, 0x20b4582a, 
 	0x229d2e6e, 0x248cdb55, 0x26832fda, 0x28800000, 
@@ -104,13 +104,13 @@ static const int pow43[] = {
  * Relative error < 1E-7
  * Coefs are scaled by 4, 2, 1, 0.5, 0.25
  */
-static const int poly43lo[5] = { 0x29a0bda9, 0xb02e4828, 0x5957aa1b, 0x236c498d, 0xff581859 };
-static const int poly43hi[5] = { 0x10852163, 0xd333f6a4, 0x46e9408b, 0x27c2cef0, 0xfef577b4 };
+int poly43lo[5] = { 0x29a0bda9, 0xb02e4828, 0x5957aa1b, 0x236c498d, 0xff581859 };
+int poly43hi[5] = { 0x10852163, 0xd333f6a4, 0x46e9408b, 0x27c2cef0, 0xfef577b4 };
 
 /* pow(2, i*4/3) as exp and frac */
-static const int pow2exp[8]  = { 14, 13, 11, 10, 9, 7, 6, 5 };
+int pow2exp[8]  = { 14, 13, 11, 10, 9, 7, 6, 5 };
 
-static const int pow2frac[8] = {
+int pow2frac[8] = {
 	0x6597fa94, 0x50a28be6, 0x7fffffff, 0x6597fa94, 
 	0x50a28be6, 0x7fffffff, 0x6597fa94, 0x50a28be6
 };
@@ -129,7 +129,7 @@ static const int pow2frac[8] = {
  *
  * Return:      bitwise-OR of the unsigned outputs (for guard bit calculations)
  **************************************************************************************/
-static int DequantBlock(int *inbuf, int *outbuf, int num, int scale)
+__attribute__ ((section (".data"))) static int DequantBlock(int *inbuf, int *outbuf, int num, int scale)
 {
 	int tab4[4];
 	int scalef, scalei, shift;
@@ -241,7 +241,7 @@ static int DequantBlock(int *inbuf, int *outbuf, int num, int scale)
  *
  * Notes:       dequantized samples in Q(DQ_FRACBITS_OUT) format 
  **************************************************************************************/
-int DequantChannel(int *sampleBuf, int *workBuf, int *nonZeroBound, FrameHeader *fh, SideInfoSub *sis, 
+__attribute__ ((section (".data"))) int DequantChannel(int *sampleBuf, int *workBuf, int *nonZeroBound, FrameHeader *fh, SideInfoSub *sis, 
 					ScaleFactorInfoSub *sfis, CriticalBandInfo *cbi)
 {
 	int i, j, w, cb;

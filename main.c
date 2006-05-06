@@ -12,13 +12,15 @@
 #include "interfaces/efsl_dbg_printf_arm.h"
 #include "mp3dec.h"
 
+#include "mp3data.h"
+
 #define rprintf efsl_debug_printf_arm
 
 #define TCK  1000                           /* Timer Clock  */
 #define PIV  ((MCK/TCK/16)-1)               /* Periodic Interval Value */
 
-//#define puts 
-//#define printf 
+#define puts 
+#define printf 
 
 static void led1(int on)
 {
@@ -34,7 +36,7 @@ EmbeddedFile filer, filew;
 DirList list;
 unsigned short e;
 unsigned char buf[2][2048];
-unsigned char mp3buf[10000];
+unsigned char mp3buf[2000];
 
 static char LogFileName[] = "logSAM_5.txt";
 
@@ -152,21 +154,24 @@ void play_mp3(void)
 	assert(file_fopen( &filer, &efs.myFs, "test.mp3", 'r') == 0 );
 	rprintf("\nMP3-File opened.\n");
 
-	file_setpos( &filer, 100000 );
+	file_setpos( &filer, 1000000 );
 	// fill input buffer
 	file_read( &filer, sizeof(mp3buf), mp3buf );
 	rprintf("buffer filled.\n");
 
-	readPtr = mp3buf;
+	readPtr = mp3data;
 	offset = 0;
-	bytesLeft = sizeof mp3buf;
+	bytesLeft = sizeof mp3data;
+	
+	printf("%i bytes left\n", bytesLeft);
+	
 	nFrames = 0;
 	outOfData = 0;
 	
 	currentOutBuf = 0;
-	set_first_dma(outBuf[currentOutBuf], 1024);
+	set_first_dma((unsigned short *)outBuf[currentOutBuf], 4000);
 	currentOutBuf = 1;
-	set_next_dma(outBuf[currentOutBuf], 1024);
+	set_next_dma((unsigned short *)outBuf[currentOutBuf], 4000);
 	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
 	
 	do {
@@ -181,10 +186,12 @@ void play_mp3(void)
   	readPtr += offset;
   	bytesLeft -= offset;
 	
+		currentOutBuf = !currentOutBuf;
+		printf("switched to output buffer %i\n", currentOutBuf);
 	
   	puts("beginning decoding");
 		time = systime_get();
-  	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf, 0);
+  	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf[currentOutBuf], 0);
 		time = systime_get() - time;
   	nFrames++;
   	printf("decoding finished, elapsed time: %i ms\n", time);
@@ -203,26 +210,37 @@ void play_mp3(void)
   		case ERR_MP3_FREE_BITRATE_SYNC:
   		default:
   			puts("unknown error\r");
-  			outOfData = 1;
+  			//outOfData = 1;
   			break;
   		}
   	} else {
   		/* no error */
   		MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
   		printf("Bitrate: %i\r\n", mp3FrameInfo.bitrate);
-			if (currentOutBuf == 1) {
-				currentOutBuf = 0;
-			} else {
-				currentOutBuf = 1;
+			printf("%i samples\n", mp3FrameInfo.outputSamps);			
+			
+			// make sure there is no data underflow to the SSC
+			// (TXBUFE is set when both current and next buffer are empty)
+			if (*AT91C_SSC_SR & AT91C_SSC_TXBUFE) {
+				rprintf("Output buffer has run empty.\n");
 			}
+			
+			printf("Words remaining in first DMA buffer: %i\n", *AT91C_SSC_TCR);
+			printf("Words remaining in next DMA buffer: %i\n", *AT91C_SSC_TNCR);
 			while(!dma_endtx());
-			set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
-			printf("%i samples", mp3FrameInfo.outputSamps);
+			//while(*AT91C_SSC_TNCR != 0);
+			if (*AT91C_SSC_TCR == 0) {
+				//underrun?
+				set_first_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
+				rprintf("Output buffer has run empty.\n");
+			} else {
+				set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
+			}
   	}
 	}  while (!outOfData);
 	
-  puts("Out of data.\r");
-  printf("Decoded frames: %i\r\n", nFrames);
+  puts("Out of data.");
+  rprintf("Decoded frames: %i\r\n", nFrames);
 	
 #if 0
 	fill_buffer(0);

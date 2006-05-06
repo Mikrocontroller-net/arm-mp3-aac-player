@@ -267,7 +267,7 @@ void IntensityProcMPEG2(int x[MAX_NCHAN][MAX_NSAMP], int nSamps, FrameHeader *fh
 						CriticalBandInfo *cbi, ScaleFactorJS *sfjs, int midSideFlag, int mixFlag, int mOut[2]);
 
 /* dct32.c */
-void FDCT32(int *x, int *d, int offset, int oddBlock, int gb);
+void FDCT32(int *x, int *d, int offset, int oddBlock, int gb) __attribute__ ((section (".data")));
 
 /* hufftabs.c */
 extern const HuffTabLookup huffTabLookup[HUFF_PAIRTABS];
@@ -292,12 +292,12 @@ void PolyphaseStereo(short *pcm, int *vbuf, const int *coefBase);
 #endif
 
 /* trigtabs.c */
-extern const int imdctWin[4][36];
-extern const int ISFMpeg1[2][7];
-extern const int ISFMpeg2[2][2][16];
-extern const int ISFIIP[2][2];
-extern const int csa[8][2];
-extern const int coef32[31];
-extern const int polyCoef[264];
+extern int imdctWin[4][36];
+extern int ISFMpeg1[2][7];
+extern int ISFMpeg2[2][2][16];
+extern int ISFIIP[2][2];
+extern int csa[8][2];
+extern int coef32[31];
+extern int polyCoef[264];
 
 #endif	/* _CODER_H */

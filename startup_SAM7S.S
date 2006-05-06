@@ -65,7 +65,7 @@
 //   </h>
 // </h>
 */
-        .equ    Top_Stack,      65000
+        .equ    Top_Stack,      65536
         .equ    UND_Stack_Size, 0x00000004
         .equ    SVC_Stack_Size, 0x00000100
         .equ    ABT_Stack_Size, 0x00000004

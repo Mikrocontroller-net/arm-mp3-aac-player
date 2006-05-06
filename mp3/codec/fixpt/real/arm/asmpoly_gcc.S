@@ -33,6 +33,8 @@
 @ *  
 @ * ***** END LICENSE BLOCK ***** */ 
 
+.data
+
 	.GLOBAL xmp3_PolyphaseStereo
 xmp3_PolyphaseStereo:
 	STMFD    r13!,{r4-r11,r14}
