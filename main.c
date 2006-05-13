@@ -36,7 +36,7 @@ EmbeddedFile filer, filew;
 DirList list;
 unsigned short e;
 unsigned char buf[2][2048];
-unsigned char mp3buf[1000];
+unsigned char mp3buf[1024];
 
 static char LogFileName[] = "logSAM_5.txt";
 
@@ -121,7 +121,8 @@ void play_mp3(void)
   int nFrames;
 	short outBuf[2][MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
   int currentOutBuf;
-	long time;
+	unsigned long time;
+	unsigned long ssc_status;
 	
 	/************  PWM  ***********/
 	/*   PWM0 = MAINCK/4          */
@@ -135,7 +136,8 @@ void play_mp3(void)
 	/************  SSC  ***********/
 	*AT91C_PMC_PCER = (1 << AT91C_ID_SSC); // Enable Clock for SSC controller
 	*AT91C_SSC_CR = AT91C_SSC_SWRST; // reset
-	*AT91C_SSC_CMR = 16;
+	//*AT91C_SSC_CMR = 16;
+	*AT91C_SSC_CMR = 32; // slow for testing
 	*AT91C_SSC_TCMR = AT91C_SSC_CKS_DIV | AT91C_SSC_CKO_CONTINOUS |
 	                  AT91C_SSC_START_FALL_RF |
 	                  (1 << 16) |   // STTDLY = 1
@@ -154,7 +156,7 @@ void play_mp3(void)
 	assert(file_fopen( &filer, &efs.myFs, "07TAKE~1.MP3", 'r') == 0 );
 	rprintf("\nMP3-File opened.\n");
 
-	file_setpos( &filer, 500000 );
+	file_setpos( &filer, 800000 );
 	// fill input buffer
 	time = systime_get();
 	file_read( &filer, sizeof(mp3buf), mp3buf );
@@ -180,6 +182,8 @@ void play_mp3(void)
 	set_next_dma((unsigned short *)outBuf[currentOutBuf], 4000);
 	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
 	
+	time = systime_get();
+	
 	do {
 	  offset = MP3FindSyncWord(readPtr, bytesLeft);
 	  if (offset < 0) {
@@ -195,17 +199,14 @@ void play_mp3(void)
 		
 		printf("bytesLeftBefore: %i", bytesLeftBefore);
 		
-			currentOutBuf = !currentOutBuf;
+		currentOutBuf = !currentOutBuf;
 		printf("switched to output buffer %i\n", currentOutBuf);
 		// wait for buffer
 		while(!dma_endtx());
 
   	puts("beginning decoding");
-		time = systime_get();
   	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf[currentOutBuf], 0);
-		time = systime_get() - time;
   	nFrames++;
-  	printf("decoding finished, elapsed time: %i ms\n", time);
 			
   	if (err) {
   		/* error occurred */
@@ -247,24 +248,23 @@ void play_mp3(void)
   		printf("Bitrate: %i\r\n", mp3FrameInfo.bitrate);
 			printf("%i samples\n", mp3FrameInfo.outputSamps);			
 			
-			
-			// make sure there is no data underflow to the SSC
-			// (TXBUFE is set when both current and next buffer are empty)
-			if (*AT91C_SSC_SR & AT91C_SSC_TXBUFE) {
-				rprintf("Output buffer has run empty.\n");
-			}
-			
 			printf("Words remaining in first DMA buffer: %i\n", *AT91C_SSC_TCR);
 			printf("Words remaining in next DMA buffer: %i\n", *AT91C_SSC_TNCR);
-			//while(*AT91C_SSC_TNCR != 0);
-			if (*AT91C_SSC_TCR == 0) {
-				//underrun?
-				set_first_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
-				rprintf("Output buffer has run empty, filling first buffer.\n");
-			} else {
-				set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
-			}
 			
+			while(1) {
+				if(*AT91C_SSC_SR & AT91C_SSC_TXBUFE) {
+					// underrun
+					set_first_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
+					//rprintf("Output buffer has run empty, filling first buffer.\n");
+					break;
+				}
+				if(*AT91C_SSC_SR & AT91C_SSC_ENDTX)
+				{
+					set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
+					//rprintf("filling next buffer.\n");
+					break;
+				}
+			}
 			
 			//rprintf("Wrote %i bytes\n", file_write(&filew, mp3FrameInfo.outputSamps * 2, outBuf[currentOutBuf]));
   	}
