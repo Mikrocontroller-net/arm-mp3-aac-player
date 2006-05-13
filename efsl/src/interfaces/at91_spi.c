@@ -116,7 +116,7 @@ esint8 if_initInterface(hwInterface* file, eint8* opts)
 	}
 	DBG((TXT("Card Capacity is %lu Bytes (%lu Sectors)\n"), sc, file->sectorCount));
 	
-	if_spiSetSpeed(10);
+	if_spiSetSpeed(0); // max. speed
 	// if_spiSetSpeed(100); /* debug - slower */
 	
 	return(0);
