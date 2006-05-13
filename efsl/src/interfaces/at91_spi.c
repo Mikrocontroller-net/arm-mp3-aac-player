@@ -116,7 +116,7 @@ esint8 if_initInterface(hwInterface* file, eint8* opts)
 	}
 	DBG((TXT("Card Capacity is %lu Bytes (%lu Sectors)\n"), sc, file->sectorCount));
 	
-	//if_spiSetSpeed(50);
+	if_spiSetSpeed(10);
 	// if_spiSetSpeed(100); /* debug - slower */
 	
 	return(0);
@@ -169,8 +169,8 @@ void if_spiInit(hwInterface *iface)
 	
 	*/
 	//pSPI->SPI_CSR[SPI_CSR_NUM] = AT91C_SPI_CPOL | AT91C_SPI_BITS_8 | AT91C_SPI_NCPHA;
-	pSPI->SPI_CSR[SPI_CSR_NUM] = AT91C_SPI_BITS_8 | AT91C_SPI_NCPHA; 
-	//pSPI->SPI_CSR[SPI_CSR_NUM] = AT91C_SPI_CPOL | AT91C_SPI_BITS_8; // ok according to martin
+	//pSPI->SPI_CSR[SPI_CSR_NUM] = AT91C_SPI_BITS_8 | AT91C_SPI_NCPHA; 
+	pSPI->SPI_CSR[SPI_CSR_NUM] = AT91C_SPI_CPOL | AT91C_SPI_BITS_8; // ok
 	//pSPI->SPI_CSR[SPI_CSR_NUM] = AT91C_SPI_BITS_8;
 	
 	// slow during init
@@ -186,10 +186,6 @@ void if_spiInit(hwInterface *iface)
 	pSPI->SPI_PTCR = AT91C_PDC_TXTEN | AT91C_PDC_RXTEN;
 #endif
   
-
-	// slow for initialization
-	if_spiSetSpeed(SPI_SCBR_MIN);
-
 	/* Send 20 spi commands with card not selected */
 	for(i=0;i<21;i++)
 		if_spiSend(iface,0xFF);
