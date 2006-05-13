@@ -12,7 +12,7 @@
 #include "interfaces/efsl_dbg_printf_arm.h"
 #include "mp3dec.h"
 
-#include "mp3data.h"
+//#include "mp3data.h"
 
 #define rprintf efsl_debug_printf_arm
 
@@ -36,7 +36,7 @@ EmbeddedFile filer, filew;
 DirList list;
 unsigned short e;
 unsigned char buf[2][2048];
-unsigned char mp3buf[2000];
+unsigned char mp3buf[1000];
 
 static char LogFileName[] = "logSAM_5.txt";
 
@@ -89,7 +89,7 @@ void play_wav(void)
 	*AT91C_SSC_CR = AT91C_SSC_TXEN; // enable TX
 	
 	// open WAV
-	assert(file_fopen( &filer, &efs.myFs, "test.wav", 'r') == 0 );
+	assert(file_fopen( &filer, &efs.myFs, "KILLIN~1.WAV", 'r') == 0 );
 	rprintf("\nWAV-File opened.\n");
 
 	fill_buffer(0);
@@ -116,8 +116,8 @@ void play_mp3(void)
 	
 	MP3FrameInfo mp3FrameInfo;
 	HMP3Decoder hMP3Decoder;
-  const unsigned char *readPtr;
-  int bytesLeft, nRead, err, offset, outOfData, eofReached;
+  unsigned char *readPtr;
+  int bytesLeft, bytesLeftBefore, nRead, err, offset, outOfData, eofReached;
   int nFrames;
 	short outBuf[2][MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
   int currentOutBuf;
@@ -151,21 +151,23 @@ void play_mp3(void)
 	assert(hMP3Decoder = MP3InitDecoder());
 			
 	// open MP3
-	assert(file_fopen( &filer, &efs.myFs, "test.mp3", 'r') == 0 );
+	assert(file_fopen( &filer, &efs.myFs, "07TAKE~1.MP3", 'r') == 0 );
 	rprintf("\nMP3-File opened.\n");
 
-	file_setpos( &filer, 1000000 );
+	file_setpos( &filer, 500000 );
 	// fill input buffer
+	time = systime_get();
 	file_read( &filer, sizeof(mp3buf), mp3buf );
-	rprintf("buffer filled.\n");
+	time = systime_get() - time;
+	rprintf("buffer filled (took %i ms).\n", time);
 
 	// open output file
 	//assert(file_fopen( &filew, &efs.myFs, "out.raw", 'w') == 0 );
 	//rprintf("\nOutput file opened.\n");
 
-	readPtr = mp3data;
+	readPtr = mp3buf;
 	offset = 0;
-	bytesLeft = sizeof mp3data;
+	bytesLeft = sizeof mp3buf;
 	
 	printf("%i bytes left\n", bytesLeft);
 	
@@ -189,8 +191,11 @@ void play_mp3(void)
   	}
   	readPtr += offset;
   	bytesLeft -= offset;
-	
-		currentOutBuf = !currentOutBuf;
+		bytesLeftBefore = bytesLeft;
+		
+		printf("bytesLeftBefore: %i", bytesLeftBefore);
+		
+			currentOutBuf = !currentOutBuf;
 		printf("switched to output buffer %i\n", currentOutBuf);
 		// wait for buffer
 		while(!dma_endtx());
@@ -207,16 +212,33 @@ void play_mp3(void)
   		switch (err) {
   		case ERR_MP3_INDATA_UNDERFLOW:
   			puts("ERR_MP3_INDATA_UNDERFLOW\r");
-  			outOfData = 1;
+  			//outOfData = 1;
+				// try to read more data
+				// seek backwards to reread partial frame at end of current buffer
+				filer.FilePtr -= bytesLeftBefore;
+				if (file_read( &filer, sizeof(mp3buf), mp3buf ) == sizeof(mp3buf)) {
+					
+					// use the same output buffer again => switch buffer because it will be switched
+					// back at the start of the loop
+					// (TODO: deuglyfy)
+					currentOutBuf = !currentOutBuf;
+
+					readPtr = mp3buf;
+					offset = 0;
+					bytesLeft = sizeof mp3buf;
+				} else {
+					rprintf("can't read more data\n");
+					outOfData = 1;
+				}
   			break;
   		case ERR_MP3_MAINDATA_UNDERFLOW:
   			/* do nothing - next call to decode will provide more mainData */
-  			puts("ERR_MP3_MAINDATA_UNDERFLOW\r");
+  			puts("ERR_MP3_MAINDATA_UNDERFLOW");
   			break;
   		case ERR_MP3_FREE_BITRATE_SYNC:
   		default:
-  			puts("unknown error\r");
-  			//outOfData = 1;
+  			rprintf("unknown error: %i\n", err);
+  			outOfData = 1;
   			break;
   		}
   	} else {
@@ -246,11 +268,11 @@ void play_mp3(void)
 			
 			//rprintf("Wrote %i bytes\n", file_write(&filew, mp3FrameInfo.outputSamps * 2, outBuf[currentOutBuf]));
   	}
-	}  while (!outOfData);
+	} while (!outOfData);
 	
 	//file_fclose(&filew);
 
-  rprintf("Decoded frames: %i\r\n", nFrames);
+  rprintf("Decoded frames: %i\nBytes left: %i\n", nFrames, bytesLeft);
 	
 #if 0
 	fill_buffer(0);

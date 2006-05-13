@@ -81,7 +81,7 @@
 
 #define COS4_0  0x5a82799a	/* Q31 */
 
-static int dcttab[48] = {
+static const int dcttab[48] = {
 	/* first pass */
 	COS0_0, COS0_15, COS1_0,	/* 31, 27, 31 */
 	COS0_1, COS0_14, COS1_1,	/* 31, 29, 31 */
@@ -140,7 +140,7 @@ static int dcttab[48] = {
  *                enough registers)
  **************************************************************************************/
 // about 1ms faster
-__attribute__ ((section (".data"))) void FDCT32(int *buf, int *dest, int offset, int oddBlock, int gb)
+/* __attribute__ ((section (".data"))) */ void FDCT32(int *buf, int *dest, int offset, int oddBlock, int gb)
 {
     int i, s, tmp, es;
     int *cptr = dcttab;

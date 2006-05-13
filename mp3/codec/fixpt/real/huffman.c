@@ -376,8 +376,8 @@ static int DecodeHuffmanQuads(int *vwxy, int nVals, int tabIdx, int bitsLeft, un
  *              -1 if null input pointers, huffBlockBits < 0, or decoder runs 
  *                out of bits prematurely (invalid bitstream)
  **************************************************************************************/
-// about 1ms faster per frame
-__attribute__ ((section (".data"))) int DecodeHuffman(MP3DecInfo *mp3DecInfo, unsigned char *buf, int *bitOffset, int huffBlockBits, int gr, int ch)
+// .data about 1ms faster per frame
+int DecodeHuffman(MP3DecInfo *mp3DecInfo, unsigned char *buf, int *bitOffset, int huffBlockBits, int gr, int ch)
 {
 	int r1Start, r2Start, rEnd[4];	/* region boundaries */
 	int i, w, bitsUsed, bitsLeft;
