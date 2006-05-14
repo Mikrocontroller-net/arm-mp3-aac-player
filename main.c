@@ -156,7 +156,7 @@ void play_mp3(void)
 	assert(hMP3Decoder = MP3InitDecoder());
 	
 	// open MP3
-	assert(file_fopen( &filer, &efs.myFs, "05THEK~1.MP3", 'r') == 0 );
+	assert(file_fopen( &filer, &efs.myFs, "07TAKE~1.MP3", 'r') == 0 );
 	rprintf("\nMP3-File opened.\n");
 
 	file_setpos( &filer, 1100000 );
@@ -204,7 +204,7 @@ void play_mp3(void)
 		bytesLeftBefore = bytesLeft;
 		
 		if (bytesLeft < 512) {
-			rprintf("not much left, reading more data\n");
+			//rprintf("not much left, reading more data\n");
 			filer.FilePtr -= bytesLeftBefore;
 			if (file_read( &filer, sizeof(mp3buf), mp3buf ) == sizeof(mp3buf)) {
 				readPtr = mp3buf;
@@ -223,8 +223,10 @@ void play_mp3(void)
 		printf("switched to output buffer %i\n", currentOutBuf);
 		//rprintf("read and decoded 1 frame (took %ld ms).\n", systime_get() - t);
 		//t = systime_get();
-		// wait for buffer
-		while(!dma_endtx()) rprintf(".\n");
+		// if second buffer is still not empty, wait until transmission is complete
+		if (*AT91C_SSC_TNCR != 0) {
+			while(!dma_endtx());
+		}
 		
 		puts("beginning decoding");
 		err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf[currentOutBuf], 0);
@@ -274,11 +276,11 @@ void play_mp3(void)
 			printf("Words remaining in first DMA buffer: %i\n", *AT91C_SSC_TCR);
 			printf("Words remaining in next DMA buffer: %i\n", *AT91C_SSC_TNCR);
 			
-			if(*AT91C_SSC_SR & AT91C_SSC_TXBUFE) {
+			if(*AT91C_SSC_TNCR == 0 && *AT91C_SSC_TCR == 0) {
 				// underrun
 				set_first_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
 				rprintf("Output buffer has run empty, filling first buffer.\n");
-			} else if(*AT91C_SSC_SR & AT91C_SSC_ENDTX) {
+			} else if(*AT91C_SSC_TNCR == 0) {
 				set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
 				rprintf("filling next buffer.\n");
 			}
