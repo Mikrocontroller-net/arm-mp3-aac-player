@@ -111,16 +111,20 @@ void play_wav(void)
 	file_fclose( &filer );
 }
 
-void play_mp3(void)
+void read_data(int bytesLeft)
 {
 	
+}
+
+void play_mp3(void)
+{
 	MP3FrameInfo mp3FrameInfo;
 	HMP3Decoder hMP3Decoder;
-  unsigned char *readPtr;
-  int bytesLeft, bytesLeftBefore, nRead, err, offset, outOfData, eofReached;
-  int nFrames;
+	unsigned char *readPtr;
+	int bytesLeft, bytesLeftBefore, nRead, err, offset, outOfData, eofReached;
+	int nFrames;
 	short outBuf[2][MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
-  int currentOutBuf;
+	int currentOutBuf;
 	long t;
 	
 	/************  PWM  ***********/
@@ -150,12 +154,12 @@ void play_mp3(void)
 	
 	// init decoder
 	assert(hMP3Decoder = MP3InitDecoder());
-			
+	
 	// open MP3
-	assert(file_fopen( &filer, &efs.myFs, "07TAKE~1.MP3", 'r') == 0 );
+	assert(file_fopen( &filer, &efs.myFs, "05THEK~1.MP3", 'r') == 0 );
 	rprintf("\nMP3-File opened.\n");
 
-	file_setpos( &filer, 800000 );
+	file_setpos( &filer, 1100000 );
 	// fill input buffer
 	file_read( &filer, sizeof(mp3buf), mp3buf );
 
@@ -179,20 +183,28 @@ void play_mp3(void)
 	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
 	
 	do {
-	  offset = MP3FindSyncWord(readPtr, bytesLeft);
-	  if (offset < 0) {
-		  puts("Error: MP3FindSyncWord returned 0\r");
-		  outOfData = 1;
-		  break;
-  	} else {
-  	  printf("Found a frame at offset %i\r\n", offset);
-  	}
-  	readPtr += offset;
-  	bytesLeft -= offset;
+		offset = MP3FindSyncWord(readPtr, bytesLeft);
+		if (offset < 0) {
+			rprintf("Error: MP3FindSyncWord returned <0\n");
+			// read more data
+			if (file_read( &filer, sizeof(mp3buf), mp3buf ) == sizeof(mp3buf)) {
+				readPtr = mp3buf;
+				offset = 0;
+				bytesLeft = sizeof mp3buf;
+				continue;
+			} else {
+				rprintf("can't read more data\n");
+				outOfData = 1;
+			}
+  		} else {
+  	  		printf("Found a frame at offset %i\n", offset);
+  		}
+		readPtr += offset;
+		bytesLeft -= offset;
 		bytesLeftBefore = bytesLeft;
 		
 		if (bytesLeft < 512) {
-			//rprintf("not much left, reading more data\n");
+			rprintf("not much left, reading more data\n");
 			filer.FilePtr -= bytesLeftBefore;
 			if (file_read( &filer, sizeof(mp3buf), mp3buf ) == sizeof(mp3buf)) {
 				readPtr = mp3buf;
@@ -212,20 +224,18 @@ void play_mp3(void)
 		//rprintf("read and decoded 1 frame (took %ld ms).\n", systime_get() - t);
 		//t = systime_get();
 		// wait for buffer
-		while(!dma_endtx());
+		while(!dma_endtx()) rprintf(".\n");
 		
-		
-
-  	puts("beginning decoding");
-  	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf[currentOutBuf], 0);
-  	nFrames++;
+		puts("beginning decoding");
+		err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf[currentOutBuf], 0);
+		nFrames++;
 			
-  	if (err) {
-  		/* error occurred */
-  		switch (err) {
-  		case ERR_MP3_INDATA_UNDERFLOW:
-  			puts("ERR_MP3_INDATA_UNDERFLOW\r");
-  			//outOfData = 1;
+		if (err) {
+  			/* error occurred */
+			switch (err) {
+ 		 	case ERR_MP3_INDATA_UNDERFLOW:
+				puts("ERR_MP3_INDATA_UNDERFLOW\r");
+				//outOfData = 1;
 				// try to read more data
 				// seek backwards to reread partial frame at end of current buffer
 				filer.FilePtr -= bytesLeftBefore;
@@ -244,21 +254,21 @@ void play_mp3(void)
 					rprintf("can't read more data\n");
 					outOfData = 1;
 				}
-  			break;
-  		case ERR_MP3_MAINDATA_UNDERFLOW:
-  			/* do nothing - next call to decode will provide more mainData */
-  			puts("ERR_MP3_MAINDATA_UNDERFLOW");
-  			break;
-  		case ERR_MP3_FREE_BITRATE_SYNC:
-  		default:
-  			rprintf("unknown error: %i\n", err);
-  			outOfData = 1;
-  			break;
-  		}
-  	} else {
-  		/* no error */
-  		MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
-  		printf("Bitrate: %i\r\n", mp3FrameInfo.bitrate);
+				break;
+  			case ERR_MP3_MAINDATA_UNDERFLOW:
+  				/* do nothing - next call to decode will provide more mainData */
+  				puts("ERR_MP3_MAINDATA_UNDERFLOW");
+  				break;
+  			case ERR_MP3_FREE_BITRATE_SYNC:
+  			default:
+  				rprintf("unknown error: %i\n", err);
+  				// TODO: advance data pointer
+  				break;
+  			}
+		} else {
+			/* no error */
+			MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
+			printf("Bitrate: %i\r\n", mp3FrameInfo.bitrate);
 			printf("%i samples\n", mp3FrameInfo.outputSamps);			
 			
 			printf("Words remaining in first DMA buffer: %i\n", *AT91C_SSC_TCR);
@@ -267,38 +277,20 @@ void play_mp3(void)
 			if(*AT91C_SSC_SR & AT91C_SSC_TXBUFE) {
 				// underrun
 				set_first_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
-				//rprintf("Output buffer has run empty, filling first buffer.\n");
+				rprintf("Output buffer has run empty, filling first buffer.\n");
 			} else if(*AT91C_SSC_SR & AT91C_SSC_ENDTX) {
 				set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
-				//rprintf("filling next buffer.\n");
+				rprintf("filling next buffer.\n");
 			}
 			
 			//rprintf("Wrote %i bytes\n", file_write(&filew, mp3FrameInfo.outputSamps * 2, outBuf[currentOutBuf]));
-  	}
+		}
 	} while (!outOfData);
 	
 	//file_fclose(&filew);
 
-  rprintf("Decoded frames: %i\nBytes left: %i\n", nFrames, bytesLeft);
+	rprintf("Decoded frames: %i\nBytes left: %i\n", nFrames, bytesLeft);
 	
-#if 0
-	fill_buffer(0);
-	set_first_dma((short *)buf[0], 1024);
-	
-	// enable DMA transfer
-	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
-	assert(*AT91C_SSC_PTSR == AT91C_PDC_TXTEN);
-	
-	while(1) {
-		fill_buffer(1);
-		set_next_dma((short *)buf[1], 1024);
-		while(!dma_endtx());
-		fill_buffer(0);
-		set_next_dma((short *)buf[0], 1024);
-		while(!dma_endtx());
-	}
-#endif
-
 	file_fclose( &filer );
 	fs_flushFs( &(efs.myFs) );
 }
