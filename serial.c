@@ -13,7 +13,7 @@
 // included in board.h: #include <AT91SAM7S64.H> /* AT91SAMT7S64 definitions */
 #include "Board.h"
 
-#define BR    115200                        /* Baud Rate */
+#define BR    230400                        /* Baud Rate */
 
 #define BRD  (MCK/16/BR)                    /* Baud Rate Divisor */
 
