@@ -67,7 +67,10 @@ TARGET = main
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
-SRC = serial.c syscalls.c $(TARGET).c 
+SRC = serial.c syscalls.c $(TARGET).c \
+  mp3/codec/fixpt/real/huffman.c \
+  mp3/codec/fixpt/real/buffers.c \
+  mp3/codec/fixpt/mp3dec.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
@@ -75,17 +78,14 @@ SRCARM = interrupt_utils.c systime.c \
   mp3/codec/fixpt/real/dqchan.c \
   mp3/codec/fixpt/real/imdct.c \
   mp3/codec/fixpt/real/stproc.c \
-  mp3/codec/fixpt/mp3dec.c \
   mp3/codec/fixpt/mp3tabs.c \
   mp3/codec/fixpt/real/bitstream.c \
-  mp3/codec/fixpt/real/buffers.c \
   mp3/codec/fixpt/real/dequant.c \
   mp3/codec/fixpt/real/hufftabs.c \
   mp3/codec/fixpt/real/scalfact.c \
   mp3/codec/fixpt/real/subband.c \
   mp3/codec/fixpt/real/trigtabs.c \
-  mp3/codec/fixpt/real/dct32.c \
-  mp3/codec/fixpt/real/huffman.c 
+  mp3/codec/fixpt/real/dct32.c
 # not needed in this example: 
 #SRCARM += interrupt_utils.c
 

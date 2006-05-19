@@ -36,7 +36,7 @@ EmbeddedFile filer, filew;
 DirList list;
 unsigned short e;
 unsigned char buf[2][2048];
-unsigned char mp3buf[1024];
+unsigned char mp3buf[2024];
 
 static char LogFileName[] = "logSAM_5.txt";
 
@@ -159,7 +159,7 @@ void play_mp3(void)
 	assert(file_fopen( &filer, &efs.myFs, "07TAKE~1.MP3", 'r') == 0 );
 	rprintf("\nMP3-File opened.\n");
 
-	file_setpos( &filer, 1100000 );
+	//file_setpos( &filer, 500000 );
 	// fill input buffer
 	file_read( &filer, sizeof(mp3buf), mp3buf );
 
@@ -176,10 +176,10 @@ void play_mp3(void)
 	nFrames = 0;
 	outOfData = 0;
 	
-	currentOutBuf = 0;
-	set_first_dma((unsigned short *)outBuf[currentOutBuf], 4000);
-	currentOutBuf = 1;
-	set_next_dma((unsigned short *)outBuf[currentOutBuf], 4000);
+	//currentOutBuf = 0;
+	//set_first_dma((unsigned short *)outBuf[currentOutBuf], 4000);
+	//currentOutBuf = 1;
+	//set_next_dma((unsigned short *)outBuf[currentOutBuf], 4000);
 	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
 	
 	do {
@@ -217,7 +217,7 @@ void play_mp3(void)
 			continue;
 		}
 		
-		printf("bytesLeftBefore: %i", bytesLeftBefore);
+		printf("bytesLeftBefore: %i\n", bytesLeftBefore);
 		
 		currentOutBuf = !currentOutBuf;
 		printf("switched to output buffer %i\n", currentOutBuf);
@@ -240,7 +240,8 @@ void play_mp3(void)
 				//outOfData = 1;
 				// try to read more data
 				// seek backwards to reread partial frame at end of current buffer
-				filer.FilePtr -= bytesLeftBefore;
+				// TODO: find out why it doesn't work if the following line is uncommented
+				//filer.FilePtr -= bytesLeftBefore;
 				if (file_read( &filer, sizeof(mp3buf), mp3buf ) == sizeof(mp3buf)) {
 					
 					// use the same output buffer again => switch buffer because it will be switched
@@ -256,6 +257,7 @@ void play_mp3(void)
 					rprintf("can't read more data\n");
 					outOfData = 1;
 				}
+				continue;
 				break;
   			case ERR_MP3_MAINDATA_UNDERFLOW:
   				/* do nothing - next call to decode will provide more mainData */
@@ -264,7 +266,14 @@ void play_mp3(void)
   			case ERR_MP3_FREE_BITRATE_SYNC:
   			default:
   				rprintf("unknown error: %i\n", err);
-  				// TODO: advance data pointer
+  				// advance data pointer
+  				if (bytesLeft > 0) {
+  					bytesLeft --;
+  					readPtr ++;
+  				} else {
+  					// TODO
+  					while(1);
+  				}
   				break;
   			}
 		} else {
@@ -279,10 +288,10 @@ void play_mp3(void)
 			if(*AT91C_SSC_TNCR == 0 && *AT91C_SSC_TCR == 0) {
 				// underrun
 				set_first_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
-				rprintf("Output buffer has run empty, filling first buffer.\n");
+				rprintf("ffb!.\n");
 			} else if(*AT91C_SSC_TNCR == 0) {
 				set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
-				rprintf("filling next buffer.\n");
+				rprintf("fnb\n");
 			}
 			
 			//rprintf("Wrote %i bytes\n", file_write(&filew, mp3FrameInfo.outputSamps * 2, outBuf[currentOutBuf]));

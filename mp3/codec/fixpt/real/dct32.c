@@ -140,7 +140,7 @@ static const int dcttab[48] = {
  *                enough registers)
  **************************************************************************************/
 // about 1ms faster
-/* __attribute__ ((section (".data"))) */ void FDCT32(int *buf, int *dest, int offset, int oddBlock, int gb)
+__attribute__ ((section (".data"))) void FDCT32(int *buf, int *dest, int offset, int oddBlock, int gb)
 {
     int i, s, tmp, es;
     int *cptr = dcttab;
