@@ -44,7 +44,7 @@ void mp3_process(EmbeddedFile *mp3file)
 			offset = 0;
 			bytesLeft = sizeof mp3buf;
 		} else {
-			printf("can't read more data\n");
+			iprintf("can't read more data\n");
 			outOfData = 1;
 		}
 	}
@@ -52,33 +52,49 @@ void mp3_process(EmbeddedFile *mp3file)
 	// MP3 decoder	
 	offset = MP3FindSyncWord(readPtr, bytesLeft);
 	if (offset < 0) {
-		printf("Error: MP3FindSyncWord returned <0\n");
+		iprintf("Error: MP3FindSyncWord returned <0\n");
 		// read more data
 		if (file_read( mp3file, sizeof(mp3buf), mp3buf ) == sizeof(mp3buf)) {
 			readPtr = mp3buf;
 			offset = 0;
 			bytesLeft = sizeof mp3buf;
 		} else {
-			printf("can't read more data\n");
+			iprintf("can't read more data\n");
 			outOfData = 1;
 		}
 		return;
- 	} else {
-		debug_printf("Found a frame at offset %i\n", offset);
 	}
+
 	readPtr += offset;
 	bytesLeft -= offset;
 	bytesLeftBeforeDecoding = bytesLeft;
 	
+	// check if this is really a valid frame
+	// (the decoder does not seem to calculate CRC, so make some plausibility checks)
+	if (MP3GetNextFrameInfo(hMP3Decoder, &mp3FrameInfo, readPtr) == 0 &&
+	    mp3FrameInfo.samprate == 44100 &&
+		mp3FrameInfo.nChans == 2 &&
+		mp3FrameInfo.version == 0) {
+		debug_printf("Found a frame at offset %x\n", offset + readPtr - mp3buf + mp3file->FilePtr);
+	} else {
+		iprintf("this is no valid frame\n");
+		// advance data pointer
+		// TODO: what if bytesLeft == 0?
+		assert(bytesLeft > 0);
+		bytesLeft -= 1;
+		readPtr += 1;
+		return;
+	}
+	
 	if (bytesLeft < 512) {
-		//printf("not much left, reading more data\n");
+		//iprintf("not much left, reading more data\n");
 		mp3file->FilePtr -= bytesLeftBeforeDecoding;
 		if (file_read( mp3file, sizeof(mp3buf), mp3buf ) == sizeof(mp3buf)) {
 			readPtr = mp3buf;
 			offset = 0;
 			bytesLeft = sizeof mp3buf;
 		} else {
-			printf("can't read more data\n");
+			iprintf("can't read more data\n");
 			outOfData = 1;
 		}
 		return;
@@ -88,7 +104,7 @@ void mp3_process(EmbeddedFile *mp3file)
 	
 	currentOutBuf = !currentOutBuf;
 	debug_printf("switched to output buffer %i\n", currentOutBuf);
-	//printf("read and decoded 1 frame (took %ld ms).\n", systime_get() - t);
+	//iprintf("read and decoded 1 frame (took %ld ms).\n", systime_get() - t);
 	//t = systime_get();
 	// if second buffer is still not empty, wait until transmission is complete
 	if (*AT91C_SSC_TNCR != 0) {
@@ -118,19 +134,19 @@ void mp3_process(EmbeddedFile *mp3file)
 				readPtr = mp3buf;
 				offset = 0;
 				bytesLeft = sizeof mp3buf;
-				printf("indata underflow, reading more data\n");
+				iprintf("indata underflow, reading more data\n");
 			} else {
-				printf("can't read more data\n");
+				iprintf("can't read more data\n");
 				outOfData = 1;
 			}
 			break;
  		case ERR_MP3_MAINDATA_UNDERFLOW:
  				/* do nothing - next call to decode will provide more mainData */
- 				printf("ERR_MP3_MAINDATA_UNDERFLOW");
+ 				iprintf("ERR_MP3_MAINDATA_UNDERFLOW");
  				break;
  		default:
- 				printf("unknown error: %i\n", err);
- 				// advance data pointer
+ 				iprintf("unknown error: %i\n", err);
+ 				// skip this frame
  				if (bytesLeft > 0) {
  					bytesLeft --;
  					readPtr ++;
@@ -153,10 +169,10 @@ void mp3_process(EmbeddedFile *mp3file)
 			// underrun
 			set_first_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
 			underruns++;
-			printf("ffb!.\n");
+			iprintf("ffb!.\n");
 		} else if(*AT91C_SSC_TNCR == 0) {
 			set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
-			printf("fnb\n");
+			iprintf("fnb\n");
 		}
 		
 		//printf("Wrote %i bytes\n", file_write(&filew, mp3FrameInfo.outputSamps * 2, outBuf[currentOutBuf]));

@@ -86,7 +86,7 @@ void play_wav(void)
 	
 	// open WAV
 	assert(file_fopen( &filer, &efs.myFs, "KILLIN~1.WAV", 'r') == 0 );
-	printf("\nWAV-File opened.\n");
+	iprintf("\nWAV-File opened.\n");
 
 	fill_buffer(0);
 	set_first_dma((short *)buf[0], 1024);
@@ -153,25 +153,29 @@ void play(void)
 		
 		// transitions
 		if (get_key_press( 1<<KEY0 )) {
-			// stop
-			curr_state = STOP;
+			// KEY0: start/stop
+			if (curr_state == STOP) {
+				curr_state = PLAY;
+			} else {
+				curr_state = STOP;
+			}
 		} else if (get_key_press( 1<<KEY1 )) {
-			// play
-			curr_state = PLAY;
+			// KEY1: skip
+			//curr_state = PLAY;
 		}
 		
 		// transition actions
 		if (prev_state == STOP && curr_state == PLAY) {
 			// open MP3
 			mp3_reset();
-			assert(file_fopen( &infile, &efs.myFs, "07TAKE~1.MP3", 'r') == 0);
-			printf("\nMP3-File opened.\n");
+			assert(file_fopen( &infile, &efs.myFs, "05THEK~1.MP3", 'r') == 0);
+			iprintf("\nMP3-File opened.\n");
 		}
 		
 		if (prev_state == PLAY && curr_state == STOP) {
 			// close MP3
 			file_fclose( &infile );
-			printf("\nMP3-File closed.\n");
+			iprintf("\nMP3-File closed.\n");
 		}
 		
 		// state actions
@@ -223,22 +227,22 @@ int main(void)
 	
 	//led1(1);
 	
-	printf("CARD init...");
+	iprintf("CARD init...");
 
 	if ( ( res = efs_init( &efs, 0 ) ) != 0 ) {
-		printf("failed with %i\n",res);
+		iprintf("failed with %i\n",res);
 		while(1) { res = efs_init( &efs, 0 ); }
 	}
 	else {
-		printf("ok\n");
+		iprintf("ok\n");
 		
 		//led1(0);
 		
-		printf("\nDirectory of 'root':\n");
+		iprintf("\nDirectory of 'root':\n");
 		ls_openDir( &list, &(efs.myFs) , "/");
 		while ( ls_getNext( &list ) == 0 ) {
 			list.currentEntry.FileName[LIST_MAXLENFILENAME-1] = '\0';
-			printf( "%s ( %li bytes )\n" ,
+			iprintf( "%s ( %li bytes )\n" ,
 				list.currentEntry.FileName,
 				list.currentEntry.FileSize ) ;
 		}
