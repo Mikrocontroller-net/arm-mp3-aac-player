@@ -5,6 +5,7 @@
 #include "play_mp3.h"
 #include "mp3dec.h"
 #include "efs.h"
+#include "dac.h"
 
 #define debug_printf
 

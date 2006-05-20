@@ -29,6 +29,7 @@ TARGET = main
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
 SRC = serial.c syscalls.c $(TARGET).c \
+  dac.c \
   mp3/codec/fixpt/real/huffman.c \
   mp3/codec/fixpt/real/buffers.c \
   mp3/codec/fixpt/mp3dec.c \
