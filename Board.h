@@ -84,6 +84,7 @@ extern void AT91F_RSTSetMode( AT91PS_RSTC pRSTC, unsigned int mode);
 #define  FLASH_PAGE_LOCK    32
 #define  FLASH_PAGE_SIZE    128
 
+#if 0
 /*-----------------*/
 /* Leds Definition */
 /*-----------------*/
@@ -111,6 +112,7 @@ extern void AT91F_RSTSetMode( AT91PS_RSTC pRSTC, unsigned int mode);
 #define SW2 	(1<<20)	// PA20
 #define SW3 	(1<<15)	// PA15
 #define SW4 	(1<<14)	// PA14
+#endif
 
 /*------------------*/
 /* USART Definition */

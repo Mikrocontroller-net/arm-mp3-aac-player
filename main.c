@@ -11,6 +11,7 @@
 #include "mkfs.h"
 #include "interfaces/efsl_dbg_printf_arm.h"
 #include "mp3dec.h"
+#include "control.h"
 
 //#include "mp3data.h"
 
@@ -22,6 +23,7 @@
 #define puts 
 #define printf 
 
+/*
 static void led1(int on)
 {
 	AT91PS_PIO  pPIOA = AT91C_BASE_PIOA;
@@ -29,6 +31,7 @@ static void led1(int on)
 	if (on) pPIOA->PIO_CODR = LED1;
 	else pPIOA->PIO_SODR = LED1;
 }
+*/
 
 
 EmbeddedFileSystem efs;
@@ -123,9 +126,9 @@ void play_mp3(void)
 	unsigned char *readPtr;
 	int bytesLeft, bytesLeftBefore, nRead, err, offset, outOfData, eofReached;
 	int nFrames;
-	int underruns=0;
+	int underruns = 0;
 	short outBuf[2][MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
-	int currentOutBuf;
+	int currentOutBuf = 0;
 	long t;
 	
 	/************  PWM  ***********/
@@ -184,6 +187,12 @@ void play_mp3(void)
 	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
 	
 	do {
+		// process controls
+		if (get_key_press( 1<<KEY0 )) {
+			break;
+		}
+		
+		// MP3 decoder	
 		offset = MP3FindSyncWord(readPtr, bytesLeft);
 		if (offset < 0) {
 			rprintf("Error: MP3FindSyncWord returned <0\n");
@@ -322,16 +331,18 @@ int main(void)
 	pPMC->PMC_PCER = ( ( 1 << AT91C_ID_PIOA ) | ( 1 << AT91C_ID_US0 ) ); // n.b. IDs are just bit-numbers
 	
 	// Configure the PIO Lines corresponding to LED1 to LED4
-	pPIOA->PIO_PER = LED_MASK; // pins controlled by PIO (GPIO)
-	pPIOA->PIO_OER = LED_MASK; // pins outputs
+	//pPIOA->PIO_PER = LED_MASK; // pins controlled by PIO (GPIO)
+	//pPIOA->PIO_OER = LED_MASK; // pins outputs
 	
 	// Turn off the LEDs. Low Active: set bits to turn off 
-	pPIOA->PIO_SODR = LED_MASK;
+	//pPIOA->PIO_SODR = LED_MASK;
 	
 	// enable reset-key on demo-board 
 	pRSTC->RSTC_RMR = (0xA5000000 | AT91C_RSTC_URSTEN);
 
 	systime_init();
+
+	key_init();
 
 	uart0_init();
 	uart0_prints("\n\nAT91SAM7 Filesystem-Demo (P:AT91SAM7S64 L:efsl)\n");
@@ -341,7 +352,7 @@ int main(void)
 	/* init efsl debug-output */
 	efsl_debug_devopen_arm(uart0_putc);
 	
-	led1(1);
+	//led1(1);
 	
 	rprintf("CARD init...");
 
@@ -352,7 +363,7 @@ int main(void)
 	else {
 		rprintf("ok\n");
 		
-		led1(0);
+		//led1(0);
 		
 		rprintf("\nDirectory of 'root':\n");
 		ls_openDir( &list, &(efs.myFs) , "/");
@@ -378,6 +389,7 @@ int main(void)
 			}	else {
 				rprintf("\nYou pressed the \"%c\" key\n", (char)c);
 			}
+			/*
 			if ( flag ) {
 				flag = 0;
 				led1(0);
@@ -386,6 +398,7 @@ int main(void)
 				flag = 1;
 				led1(1);
 			}
+			*/
 		}
 	}
 

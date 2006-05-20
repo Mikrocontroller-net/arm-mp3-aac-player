@@ -36,6 +36,7 @@ SRC = serial.c syscalls.c $(TARGET).c \
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
 SRCARM = interrupt_utils.c systime.c \
+  control.c \
   mp3/codec/fixpt/real/dqchan.c \
   mp3/codec/fixpt/real/imdct.c \
   mp3/codec/fixpt/real/stproc.c \

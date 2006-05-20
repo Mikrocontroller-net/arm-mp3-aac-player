@@ -18,6 +18,7 @@
 #include "Board.h"
 #include "interrupt_utils.h"
 #include "systime.h"
+#include "control.h"
 
 #ifdef ERAM  /* Fast IRQ functions Run in RAM  - see board.h */
 #define ATTR RAMFUNC
@@ -43,6 +44,9 @@ void  NACKEDFUNC ATTR systime_isr(void) {        /* System Interrupt Handler */
 		//if ((systime_value % 500) == 0) {     /* 500ms Elapsed ? */
 		//	*AT91C_PIOA_ODSR ^= LED4;          /* Toggle LED4 */
 		//}
+		if (systime_value % 16 == 0) {
+			process_keys();
+		}
 		*AT91C_AIC_EOICR = pPIT->PITC_PIVR;    /* Ack & End of Interrupt */
 	} 
 	else {
@@ -55,7 +59,7 @@ void  NACKEDFUNC ATTR systime_isr(void) {        /* System Interrupt Handler */
 void systime_init(void) {                    /* Setup PIT with Interrupt */
 	volatile AT91S_AIC * pAIC = AT91C_BASE_AIC;
 	
-	*AT91C_PIOA_OWER = LED4;     // LED4 ODSR Write Enable
+	//*AT91C_PIOA_OWER = LED4;     // LED4 ODSR Write Enable
 
 	*AT91C_PITC_PIMR = AT91C_PITC_PITIEN |    /* PIT Interrupt Enable */ 
                      AT91C_PITC_PITEN  |    /* PIT Enable */
