@@ -1,5 +1,5 @@
-#ifndef control_h_
-#define control_h_
+#ifndef _CONTROL_H_
+#define _CONTROL_H_
 
 void process_keys(void);
 long get_key_press( long key_mask );
@@ -11,4 +11,4 @@ void key_init( void );
 #define KEY0		19
 #define KEY1		20
 
-#endif
+#endif /* _CONTROL_H_ */
