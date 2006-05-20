@@ -1,36 +1,3 @@
-# Hey Emacs, this is a -*- makefile -*-
-#
-# WinARM template makefile 
-# by Martin Thomas, Kaiserslautern, Germany 
-# <eversmith@heizung-thomas.de>
-#
-# based on the WinAVR makefile written by Eric B. Weddington, Jörg Wunsch, et al.
-# Released to the Public Domain
-# Please read the make user manual!
-#
-#
-# On command line:
-#
-# make all = Make software.
-#
-# make clean = Clean out built project files.
-#
-# make program = Download the hex file to the device
-#
-# (TODO: make filename.s = Just compile filename.c into the assembler code only)
-#
-# To rebuild project do "make clean" then "make all".
-#
-# Changelog:
-# - 17. Feb. 2005  - added thumb-interwork support (mth)
-# - 28. Apr. 2005  - added C++ support (mth)
-# - 29. Arp. 2005  - changed handling for lst-Filename (mth)
-# -  1. Nov. 2005  - exception-vector placement options (mth)
-# - 15. Nov. 2005  - added library-search-path (EXTRA_LIB...) (mth)
-# -  2. Dec. 2005  - fixed ihex and binary file extensions (mth)
-#
-
-
 # MCU name and submodel
 MCU      = arm7tdmi
 SUBMDL   = AT91SAM7S64
@@ -49,12 +16,6 @@ RUN_MODE=ROM_RUN
 #VECTOR_LOCATION=VECTORS_IN_ROM
 ## - Exception vectors in RAM:
 VECTOR_LOCATION=VECTORS_IN_RAM
-
-# Project specific flashtool. Here use Keil's
-# uVision and ULINK (www.keil.com). Needs a configured 
-# uVision workspace for "batch programming"
-FLASH_TOOL = ULINK
-
 
 ## Output format. (can be ihex or binary)
 #FORMAT = ihex

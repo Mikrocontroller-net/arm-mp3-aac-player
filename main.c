@@ -123,6 +123,7 @@ void play_mp3(void)
 	unsigned char *readPtr;
 	int bytesLeft, bytesLeftBefore, nRead, err, offset, outOfData, eofReached;
 	int nFrames;
+	int underruns=0;
 	short outBuf[2][MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
 	int currentOutBuf;
 	long t;
@@ -288,6 +289,7 @@ void play_mp3(void)
 			if(*AT91C_SSC_TNCR == 0 && *AT91C_SSC_TCR == 0) {
 				// underrun
 				set_first_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
+				underruns++;
 				rprintf("ffb!.\n");
 			} else if(*AT91C_SSC_TNCR == 0) {
 				set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
@@ -300,7 +302,7 @@ void play_mp3(void)
 	
 	//file_fclose(&filew);
 
-	rprintf("Decoded frames: %i\nBytes left: %i\n", nFrames, bytesLeft);
+	rprintf("Decoded frames: %i\nBytes left: %i\nOutput buffer underruns: %i\n", nFrames, bytesLeft, underruns);
 	
 	file_fclose( &filer );
 	fs_flushFs( &(efs.myFs) );
