@@ -35,8 +35,6 @@ DirList list;
 unsigned short e;
 unsigned char buf[2][2048];
 
-static char LogFileName[] = "logSAM_5.txt";
-
 int fill_buffer(int i)
 {
 	return file_read( &filer, sizeof(buf[i]), buf[i] );
@@ -81,17 +79,41 @@ void play_wav(void)
 		
 	while(1) {
 		fill_buffer(1);
-		set_next_dma((short *)buf[1], 1024);
+		set_next_dma((short *)buf[1], sizeof(buf[0])/2);
 		while(!dma_endtx());
 		fill_buffer(0);
-		set_next_dma((short *)buf[0], 1024);
+		set_next_dma((short *)buf[0], sizeof(buf[0])/2);
 		while(!dma_endtx());
 	}
 
 	file_fclose( &filer );
 }
 
-char * get_full_filename(char * filename) {
+int wav_process(EmbeddedFile *wavfile)
+{
+	static int current_buffer = 0;
+	
+	if (file_read( wavfile, sizeof(buf[0]), buf[current_buffer] ) != sizeof(buf[0])) {
+		return -1;
+	}
+	
+	if(*AT91C_SSC_TNCR == 0 && *AT91C_SSC_TCR == 0) {
+		// underrun
+		set_first_dma((short *)buf[current_buffer], sizeof(buf[0])/2);
+		iprintf("ffb!.\n");
+	} else if(*AT91C_SSC_TNCR == 0) {
+		set_next_dma((short *)buf[current_buffer], sizeof(buf[0])/2);
+		iprintf("fnb\n");
+		while(!dma_endtx());
+	}
+	
+	current_buffer = !current_buffer;
+	
+	return 0;
+}
+
+char * get_full_filename(unsigned char * filename)
+{
 	static char full_filename[12];
 	
 	strncpy(full_filename, filename, 8);
@@ -102,14 +124,29 @@ char * get_full_filename(char * filename) {
 	return full_filename;
 }
 
+enum filetypes {MP3, WAV, UNKNOWN};
+
+enum filetypes get_filetype(unsigned char * filename)
+{
+	puts(filename);
+	if(strncmp(filename + 8, "MP3", 3) == 0) {
+		return MP3;
+	} else if (strncmp(filename + 8, "WAV", 3) == 0) {
+		return WAV;
+	} else {
+		return UNKNOWN;
+	}
+}
+
 void play(void)
 {
 	EmbeddedFile infile;
-	enum playing_states {PLAY, STOP};
-	enum playing_states curr_state=STOP, prev_state;
+	enum playing_states {START, PLAY, STOP, NEXT};
+	enum playing_states state = STOP;
+	enum filetypes infile_type = UNKNOWN;
 	
 	dac_init();
-	mp3_init();
+	mp3_init(buf[0], sizeof(buf[0]));
 	
 	// enable DMA
 	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
@@ -119,44 +156,70 @@ void play(void)
 	
 	while(1)
 	{
-		prev_state = curr_state;
-		
-		// transitions
-		if (get_key_press( 1<<KEY0 )) {
-			// KEY0: start/stop
-			if (curr_state == STOP) {
-				curr_state = PLAY;
-			} else {
-				curr_state = STOP;
+		switch(state) {
+		case STOP:
+			if (get_key_press( 1<<KEY0 )) {
+				state = START;
+			} else if (get_key_press( 1<<KEY1 )) {
+				file_fclose( &infile );
+				iprintf("\nFile closed.\n");
+				state = NEXT;
 			}
-		} else if (get_key_press( 1<<KEY1 )) {
-			// KEY1: skip
-			curr_state = STOP;
+			break;
+		
+		case START:
+			infile_type = get_filetype(list.currentEntry.FileName);
+			if (infile_type == MP3 || infile_type == WAV) {
+				assert(file_fopen( &infile, &efs.myFs, get_full_filename(list.currentEntry.FileName), 'r') == 0);
+				iprintf("\nFile opened.\n");
+				mp3_reset();
+				state = PLAY;
+			} else {
+				puts("unknown file type");
+				state = STOP;
+			}
+			break;
+		
+		case PLAY:
+			switch(infile_type) {
+			case MP3:
+				if (mp3_process(&infile) != 0) {
+					state = STOP;
+				}
+				break;
+			
+			case WAV:
+				if (wav_process(&infile) != 0) {
+					state = STOP;
+				}
+				break;
+			
+			default:
+				state = STOP;
+				break;
+			}
+		
+			if (get_key_press( 1<<KEY0 )) {
+				file_fclose( &infile );
+				iprintf("\nFile closed.\n");
+				state = STOP;
+			} else if (get_key_press( 1<<KEY1 )) {
+				file_fclose( &infile );
+				iprintf("\nFile closed.\n");
+				state = NEXT;
+			}
+			break;
+			
+		case NEXT:
 			if (ls_getNext( &list ) != 0) {
 				// reopen list
 				ls_openDir( &list, &(efs.myFs) , "/");
-				ls_getNext( &list );
+				assert(ls_getNext( &list ) == 0);
 			}
+			state = STOP;
+			break;
 		}
 		
-		// transition actions
-		if (prev_state == STOP && curr_state == PLAY) {
-			// open MP3
-			mp3_reset();
-			assert(file_fopen( &infile, &efs.myFs, get_full_filename(list.currentEntry.FileName), 'r') == 0);
-			iprintf("\nMP3-File opened.\n");
-		}
-		
-		if (prev_state == PLAY && curr_state == STOP) {
-			// close MP3
-			file_fclose( &infile );
-			iprintf("\nMP3-File closed.\n");
-		}
-		
-		// state actions
-		if (curr_state == PLAY) {
-			mp3_process(&infile);
-		}
 	}
 	
 	//rprintf("Decoded frames: %i\nBytes left: %i\nOutput buffer underruns: %i\n", nFrames, bytesLeft, underruns);

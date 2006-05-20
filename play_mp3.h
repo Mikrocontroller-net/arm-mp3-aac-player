@@ -3,8 +3,8 @@
 
 #include "efs.h"
 
-void mp3_process(EmbeddedFile *mp3file);
+int mp3_process(EmbeddedFile *mp3file);
 void mp3_reset(void);
-void mp3_init(void);
+void mp3_init(unsigned char *buffer, unsigned int buffer_size);
 
 #endif /* _PLAY_MP3_H_ */

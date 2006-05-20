@@ -17,10 +17,13 @@ int nFrames = 0;
 int underruns = 0;
 short outBuf[2][MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
 int currentOutBuf = 0;
-unsigned char mp3buf[2024];
+unsigned char *mp3buf;
+unsigned int mp3buf_size;
 
-void mp3_init()
+void mp3_init(unsigned char *buffer, unsigned int buffer_size)
 {
+	mp3buf = buffer;
+	mp3buf_size = buffer_size;
 	assert(hMP3Decoder = MP3InitDecoder());
 	mp3_reset();
 }
@@ -34,19 +37,19 @@ void mp3_reset()
 	underruns = 0;
 }
 
-void mp3_process(EmbeddedFile *mp3file)
+int mp3_process(EmbeddedFile *mp3file)
 {
 	long t;
 
 	if (readPtr == NULL) {
 		mp3file->FilePtr -= bytesLeftBeforeDecoding;
-		if (file_read( mp3file, sizeof(mp3buf), mp3buf ) == sizeof(mp3buf)) {
+		if (file_read( mp3file, mp3buf_size, mp3buf ) == mp3buf_size) {
 			readPtr = mp3buf;
 			offset = 0;
-			bytesLeft = sizeof mp3buf;
+			bytesLeft = mp3buf_size;
 		} else {
 			iprintf("can't read more data\n");
-			outOfData = 1;
+			return -1;
 		}
 	}
 
@@ -55,15 +58,15 @@ void mp3_process(EmbeddedFile *mp3file)
 	if (offset < 0) {
 		iprintf("Error: MP3FindSyncWord returned <0\n");
 		// read more data
-		if (file_read( mp3file, sizeof(mp3buf), mp3buf ) == sizeof(mp3buf)) {
+		if (file_read( mp3file, mp3buf_size, mp3buf ) == mp3buf_size) {
 			readPtr = mp3buf;
 			offset = 0;
-			bytesLeft = sizeof mp3buf;
+			bytesLeft = mp3buf_size;
+			return 0;
 		} else {
 			iprintf("can't read more data\n");
-			outOfData = 1;
+			return -1;
 		}
-		return;
 	}
 
 	readPtr += offset;
@@ -84,21 +87,21 @@ void mp3_process(EmbeddedFile *mp3file)
 		assert(bytesLeft > 0);
 		bytesLeft -= 1;
 		readPtr += 1;
-		return;
+		return 0;
 	}
 	
 	if (bytesLeft < 512) {
 		//iprintf("not much left, reading more data\n");
 		mp3file->FilePtr -= bytesLeftBeforeDecoding;
-		if (file_read( mp3file, sizeof(mp3buf), mp3buf ) == sizeof(mp3buf)) {
+		if (file_read( mp3file, mp3buf_size, mp3buf ) == mp3buf_size) {
 			readPtr = mp3buf;
 			offset = 0;
-			bytesLeft = sizeof mp3buf;
+			bytesLeft = mp3buf_size;
+			return 0;
 		} else {
 			iprintf("can't read more data\n");
-			outOfData = 1;
+			return -1;
 		}
-		return;
 	}
 	
 	debug_printf("bytesLeftBeforeDecoding: %i\n", bytesLeftBeforeDecoding);
@@ -125,7 +128,7 @@ void mp3_process(EmbeddedFile *mp3file)
 			// seek backwards to reread partial frame at end of current buffer
 			// TODO: find out why it doesn't work if the following line is uncommented
 			//mp3file->FilePtr -= bytesLeftBefore;
-			if (file_read( mp3file, sizeof(mp3buf), mp3buf ) == sizeof(mp3buf)) {
+			if (file_read( mp3file, mp3buf_size, mp3buf ) == mp3buf_size) {
 				
 				// use the same output buffer again => switch buffer because it will be switched
 				// back at the start of the loop
@@ -134,11 +137,11 @@ void mp3_process(EmbeddedFile *mp3file)
 
 				readPtr = mp3buf;
 				offset = 0;
-				bytesLeft = sizeof mp3buf;
+				bytesLeft = mp3buf_size;
 				iprintf("indata underflow, reading more data\n");
 			} else {
 				iprintf("can't read more data\n");
-				outOfData = 1;
+				return -1;
 			}
 			break;
  		case ERR_MP3_MAINDATA_UNDERFLOW:
@@ -178,4 +181,6 @@ void mp3_process(EmbeddedFile *mp3file)
 		
 		//printf("Wrote %i bytes\n", file_write(&filew, mp3FrameInfo.outputSamps * 2, outBuf[currentOutBuf]));
 	}
+	
+	return 0;
 }
