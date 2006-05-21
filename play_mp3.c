@@ -9,16 +9,16 @@
 
 #define debug_printf
 
-HMP3Decoder hMP3Decoder;
-MP3FrameInfo mp3FrameInfo;
-unsigned char *readPtr;
-int bytesLeft=0, bytesLeftBeforeDecoding=0, nRead, err, offset, outOfData=0, eofReached;
-int nFrames = 0;
-int underruns = 0;
-short outBuf[2][MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
-int currentOutBuf = 0;
-unsigned char *mp3buf;
-unsigned int mp3buf_size;
+static HMP3Decoder hMP3Decoder;
+static MP3FrameInfo mp3FrameInfo;
+static unsigned char *readPtr;
+static int bytesLeft=0, bytesLeftBeforeDecoding=0, nRead, err, offset, outOfData=0, eofReached;
+static int nFrames = 0;
+static int underruns = 0;
+static int currentOutBuf = 0;
+static unsigned char *mp3buf;
+static unsigned int mp3buf_size;
+extern short outBuf[2][2400];
 
 void mp3_init(unsigned char *buffer, unsigned int buffer_size)
 {
@@ -90,7 +90,7 @@ int mp3_process(EmbeddedFile *mp3file)
 		return 0;
 	}
 	
-	if (bytesLeft < 512) {
+	if (bytesLeft < 1024) {
 		//iprintf("not much left, reading more data\n");
 		mp3file->FilePtr -= bytesLeftBeforeDecoding;
 		if (file_read( mp3file, mp3buf_size, mp3buf ) == mp3buf_size) {
@@ -173,10 +173,10 @@ int mp3_process(EmbeddedFile *mp3file)
 			// underrun
 			set_first_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
 			underruns++;
-			iprintf("ffb!.\n");
+			puts("ffb!");
 		} else if(*AT91C_SSC_TNCR == 0) {
 			set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
-			iprintf("fnb\n");
+			puts("fnb");
 		}
 		
 		//printf("Wrote %i bytes\n", file_write(&filew, mp3FrameInfo.outputSamps * 2, outBuf[currentOutBuf]));

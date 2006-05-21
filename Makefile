@@ -30,11 +30,27 @@ TARGET = main
 # use file-extension c for "c-only"-files
 SRC = serial.c syscalls.c $(TARGET).c \
   dac.c \
+  play_wav.c \
+  play_mp3.c \
+  play_aac.c \
   mp3/codec/fixpt/real/huffman.c \
+  mp3/codec/fixpt/real/hufftabs.c \
   mp3/codec/fixpt/real/buffers.c \
   mp3/codec/fixpt/mp3dec.c \
-  play_mp3.c \
-  play_wav.c
+  mp3/codec/fixpt/mp3tabs.c \
+  aac/codec/fixpt/decoder/aacdec.c \
+  aac/codec/fixpt/decoder/aactabs.c \
+  aac/codec/fixpt/decoder/real/bitstream.c \
+  aac/codec/fixpt/decoder/real/buffers.c \
+  aac/codec/fixpt/decoder/real/decelmnt.c \
+  aac/codec/fixpt/decoder/real/filefmt.c \
+  aac/codec/fixpt/decoder/real/huffman.c \
+  aac/codec/fixpt/decoder/real/hufftabs.c \
+  aac/codec/fixpt/decoder/real/noiseless.c \
+  aac/codec/fixpt/decoder/real/sbr.c \
+  aac/codec/fixpt/decoder/real/sbrtabs.c \
+  aac/codec/fixpt/decoder/real/trigtabs.c \
+  aac/codec/fixpt/decoder/real/trigtabs_fltgen.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
@@ -43,14 +59,28 @@ SRCARM = interrupt_utils.c systime.c \
   mp3/codec/fixpt/real/dqchan.c \
   mp3/codec/fixpt/real/imdct.c \
   mp3/codec/fixpt/real/stproc.c \
-  mp3/codec/fixpt/mp3tabs.c \
   mp3/codec/fixpt/real/bitstream.c \
   mp3/codec/fixpt/real/dequant.c \
-  mp3/codec/fixpt/real/hufftabs.c \
   mp3/codec/fixpt/real/scalfact.c \
   mp3/codec/fixpt/real/subband.c \
   mp3/codec/fixpt/real/trigtabs.c \
-  mp3/codec/fixpt/real/dct32.c
+  mp3/codec/fixpt/real/dct32.c \
+  aac/codec/fixpt/decoder/real/dct4.c \
+  aac/codec/fixpt/decoder/real/dequant.c \
+  aac/codec/fixpt/decoder/real/fft.c \
+  aac/codec/fixpt/decoder/real/imdct.c \
+  aac/codec/fixpt/decoder/real/pns.c \
+  aac/codec/fixpt/decoder/real/sbrfft.c \
+  aac/codec/fixpt/decoder/real/sbrfreq.c \
+  aac/codec/fixpt/decoder/real/sbrhfadj.c \
+  aac/codec/fixpt/decoder/real/sbrhfgen.c \
+  aac/codec/fixpt/decoder/real/sbrhuff.c \
+  aac/codec/fixpt/decoder/real/sbrimdct.c \
+  aac/codec/fixpt/decoder/real/sbrmath.c \
+  aac/codec/fixpt/decoder/real/sbrqmf.c \
+  aac/codec/fixpt/decoder/real/sbrside.c \
+  aac/codec/fixpt/decoder/real/stproc.c \
+  aac/codec/fixpt/decoder/real/tns.c
 # not needed in this example: 
 #SRCARM += interrupt_utils.c
 
@@ -73,7 +103,10 @@ CPPSRCARM =
 ASRC = 
 
 # List Assembler source files here which must be assembled in ARM-Mode..
-ASRCARM = startup_SAM7S.S mp3/codec/fixpt/real/arm/asmpoly_gcc.S
+ASRCARM = startup_SAM7S.S mp3/codec/fixpt/real/arm/asmpoly_gcc.S \
+  aac/codec/fixpt/decoder/real/asm/armgcc_nosyms/sbrcov.S \
+  aac/codec/fixpt/decoder/real/asm/armgcc_nosyms/sbrqmfak.S \
+  aac/codec/fixpt/decoder/real/asm/armgcc_nosyms/sbrqmfsk.S
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 # 0 = turn off optimization. s = optimize for size.
@@ -104,10 +137,10 @@ EXTRA_LIBDIRS = efsl
 CSTANDARD = -std=gnu99
 
 # Place -D or -U options for C here
-CDEFS =  -D$(RUN_MODE) -DARM
+CDEFS =  -D$(RUN_MODE) -DARM -DUSE_DEFAULT_STDLIB
 
 # Place -I options here
-CINCS = -Iefsl/inc -Iefsl/conf -Imp3/codec/fixpt/pub
+CINCS = -Iefsl/inc -Iefsl/conf -Imp3/codec/fixpt/pub -Iaac/codec/fixpt/decoder/pub
 
 # Place -D or -U options for ASM here
 ADEFS =  -D$(RUN_MODE)
@@ -321,22 +354,6 @@ sizeafter:
 # Display compiler version information.
 gccversion : 
 	@$(CC) --version
-
-
-# Program the device.
-ifeq ($(FLASH_TOOL),ULINK)
-# Program the device with Keil's ULINK (needs configured uVision-Workspace). 
-program: $(TARGET).hex
-	@echo
-	@echo "Programming with ULINK"
-	C:\Keil\uv3\Uv3.exe -f ulinkflash.Uv2 -oulinkflash.txt
-else
-# Program the device.  - lpc21isp will not work for SAM7
-program: $(TARGET).hex
-	@echo
-	@echo $(MSG_LPC21_RESETREMINDER)
-	$(LPC21ISP) $(LPC21ISP_CONTROL) $(LPC21ISP_DEBUG) $(LPC21ISP_FLASHFILE) $(LPC21ISP_PORT) $(LPC21ISP_BAUD) $(LPC21ISP_XTAL)
-endif
 
 program: $(TARGET).bin
 	scp $(TARGET).bin 192.168.0.33:/tmp/main.bin

@@ -8,12 +8,13 @@
 
 unsigned char *wavbuf[2];
 unsigned int wavbuf_size;
+extern short outBuf[2][2400];
 
 void wav_init(unsigned char *buffer, unsigned int buffer_size)
 {
-	wavbuf[0] = buffer;
-	wavbuf[1] = buffer + buffer_size/2;
-	wavbuf_size = buffer_size/2;
+	wavbuf[0] = (unsigned char *)outBuf[0];
+	wavbuf[1] = (unsigned char *)outBuf[1];
+	wavbuf_size = sizeof(outBuf[0]);
 }
 
 int wav_process(EmbeddedFile *wavfile)
@@ -26,11 +27,11 @@ int wav_process(EmbeddedFile *wavfile)
 	
 	if(*AT91C_SSC_TNCR == 0 && *AT91C_SSC_TCR == 0) {
 		// underrun
-		set_first_dma((short *)wavbuf[current_buffer], wavbuf_size/2);
-		iprintf("ffb!.\n");
+		set_first_dma(outBuf[current_buffer], sizeof(outBuf[current_buffer])/2);
+		puts("ffb!");
 	} else if(*AT91C_SSC_TNCR == 0) {
-		set_next_dma((short *)wavbuf[current_buffer], wavbuf_size/2);
-		iprintf("fnb\n");
+		set_next_dma(outBuf[current_buffer], sizeof(outBuf[current_buffer])/2);
+		puts("fnb");
 		while(!dma_endtx());
 	}
 	

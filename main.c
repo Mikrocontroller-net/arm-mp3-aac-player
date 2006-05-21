@@ -11,6 +11,7 @@
 #include "mkfs.h"
 #include "interfaces/efsl_dbg_printf_arm.h"
 #include "play_mp3.h"
+#include "play_aac.h"
 #include "control.h"
 #include "dac.h"
 
@@ -29,11 +30,12 @@ static void led1(int on)
 }
 */
 
-EmbeddedFileSystem efs;
-EmbeddedFile filer, filew;
-DirList list;
-unsigned short e;
-unsigned char buf[2][2048];
+static EmbeddedFileSystem efs;
+static EmbeddedFile filer, filew;
+static DirList list;
+static unsigned short e;
+static unsigned char buf[4096];
+short outBuf[2][2400];
 
 char * get_full_filename(unsigned char * filename)
 {
@@ -69,8 +71,8 @@ void play(void)
 	enum filetypes infile_type = UNKNOWN;
 	
 	dac_init();
-	mp3_init(buf[0], sizeof(buf[0]));
-	wav_init(buf[0], sizeof(buf[0]));
+	mp3_init(buf, sizeof(buf));
+	wav_init(buf, sizeof(buf));
 	
 	// enable DMA
 	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
