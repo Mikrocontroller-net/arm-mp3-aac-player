@@ -67,7 +67,7 @@ static const int nfftlog2Tab[NUM_FFT_SIZES] =	{6, 9};
  *
  * Return:      none
  **************************************************************************************/
-static void BitReverse(int *inout, int tabidx)
+ __attribute__ ((section (".data"))) static void BitReverse(int *inout, int tabidx)
 {
     int *part0, *part1;
 	int a,b, t,t1;
@@ -106,7 +106,7 @@ static void BitReverse(int *inout, int tabidx)
  * Notes:       assumes 2 guard bits, gains no integer bits, 
  *                guard bits out = guard bits in - 2
  **************************************************************************************/
-static void R4FirstPass(int *x, int bg)
+ __attribute__ ((section (".data"))) static void R4FirstPass(int *x, int bg)
 {
     int ar, ai, br, bi, cr, ci, dr, di;
 	
@@ -152,7 +152,7 @@ static void R4FirstPass(int *x, int bg)
  *                or guard bits in - 2 (if inputs bounded to +/- sqrt(2)/2)
  *              see scaling comments in code
  **************************************************************************************/
-static void R8FirstPass(int *x, int bg)
+ __attribute__ ((section (".data"))) static void R8FirstPass(int *x, int bg)
 {
     int ar, ai, br, bi, cr, ci, dr, di;
 	int sr, si, tr, ti, ur, ui, vr, vi;
@@ -257,7 +257,7 @@ static void R8FirstPass(int *x, int bg)
  *              gbOut = gbIn - 1 (short block) or gbIn - 2 (long block)
  *              uses 3-mul, 3-add butterflies instead of 4-mul, 2-add
  **************************************************************************************/
-static void R4Core(int *x, int bg, int gp, int *wtab)
+ __attribute__ ((section (".data"))) static void R4Core(int *x, int bg, int gp, int *wtab)
 {
 	int ar, ai, br, bi, cr, ci, dr, di, tr, ti;
 	int wd, ws, wi;

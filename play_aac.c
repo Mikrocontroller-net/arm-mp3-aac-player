@@ -91,7 +91,7 @@ int aac_process(EmbeddedFile *aacfile)
 	}
 	*/
 	
-	if (bytesLeft < 512) {
+	if (bytesLeft < 1024) {
 		//iprintf("not much left, reading more data\n");
 		aacfile->FilePtr -= bytesLeftBeforeDecoding;
 		if (file_read( aacfile, aacbuf_size, aacbuf ) == aacbuf_size) {
@@ -105,6 +105,7 @@ int aac_process(EmbeddedFile *aacfile)
 		}
 	}
 	
+	debug_printf("aacfile->FilePtr: %i\n", aacfile->FilePtr);
 	debug_printf("bytesLeftBeforeDecoding: %i\n", bytesLeftBeforeDecoding);
 	
 	currentOutBuf = !currentOutBuf;
@@ -176,10 +177,10 @@ int aac_process(EmbeddedFile *aacfile)
 			// underrun
 			set_first_dma(outBuf[currentOutBuf], aacFrameInfo.outputSamps);
 			underruns++;
-			iprintf("ffb!.\n");
+			puts("ffb!");
 		} else if(*AT91C_SSC_TNCR == 0) {
 			set_next_dma(outBuf[currentOutBuf], aacFrameInfo.outputSamps);
-			iprintf("fnb\n");
+			puts("fnb");
 		}
 		
 		//printf("Wrote %i bytes\n", file_write(&filew, aacFrameInfo.outputSamps * 2, outBuf[currentOutBuf]));

@@ -31,7 +31,6 @@ static void led1(int on)
 */
 
 static EmbeddedFileSystem efs;
-static EmbeddedFile filer, filew;
 static DirList list;
 static unsigned short e;
 static unsigned char buf[4096];
@@ -49,13 +48,17 @@ char * get_full_filename(unsigned char * filename)
 	return full_filename;
 }
 
-enum filetypes {MP3, WAV, UNKNOWN};
+enum filetypes {WAV, MP3, AAC, UNKNOWN};
 
-enum filetypes get_filetype(unsigned char * filename)
+enum filetypes get_filetype(char * filename)
 {
 	puts(filename);
 	if(strncmp(filename + 8, "MP3", 3) == 0) {
 		return MP3;
+	} else if (strncmp(filename + 8, "MP4", 3) == 0 ||
+	           strncmp(filename + 8, "M4A", 3) == 0 ||
+	           strncmp(filename + 8, "AAC", 3) == 0) {
+		return AAC;
 	} else if (strncmp(filename + 8, "WAV", 3) == 0) {
 		return WAV;
 	} else {
@@ -71,7 +74,8 @@ void play(void)
 	enum filetypes infile_type = UNKNOWN;
 	
 	dac_init();
-	mp3_init(buf, sizeof(buf));
+	//mp3_init(buf, sizeof(buf));
+	aac_init(buf, sizeof(buf));
 	wav_init(buf, sizeof(buf));
 	
 	// enable DMA
@@ -95,10 +99,10 @@ void play(void)
 		
 		case START:
 			infile_type = get_filetype(list.currentEntry.FileName);
-			if (infile_type == MP3 || infile_type == WAV) {
+			if (infile_type == AAC || infile_type == WAV) {
 				assert(file_fopen( &infile, &efs.myFs, get_full_filename(list.currentEntry.FileName), 'r') == 0);
 				iprintf("\nFile opened.\n");
-				mp3_reset();
+				aac_reset();
 				state = PLAY;
 			} else {
 				puts("unknown file type");
@@ -108,8 +112,8 @@ void play(void)
 		
 		case PLAY:
 			switch(infile_type) {
-			case MP3:
-				if (mp3_process(&infile) != 0) {
+			case AAC:
+				if (aac_process(&infile) != 0) {
 					state = STOP;
 				}
 				break;

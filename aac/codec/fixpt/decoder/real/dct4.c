@@ -187,7 +187,7 @@ static void PostMultiply(int tabidx, int *fft1)
  *
  * Notes:       see notes on PreMultiply(), above
  **************************************************************************************/
-static void PreMultiplyRescale(int tabidx, int *zbuf1, int es)
+ __attribute__ ((section (".data"))) static void PreMultiplyRescale(int tabidx, int *zbuf1, int es)
 {
 	int i, nmdct, ar1, ai1, ar2, ai2, z1, z2;
 	int t, cms2, cps2a, sin2a, cps2b, sin2b;
@@ -245,7 +245,7 @@ static void PreMultiplyRescale(int tabidx, int *zbuf1, int es)
  * Notes:       clips output to [-2^30, 2^30 - 1], guaranteeing at least 1 guard bit
  *              see notes on PostMultiply(), above
  **************************************************************************************/
-static void PostMultiplyRescale(int tabidx, int *fft1, int es)
+ __attribute__ ((section (".data"))) static void PostMultiplyRescale(int tabidx, int *fft1, int es)
 {
 	int i, nmdct, ar1, ai1, ar2, ai2, skipFactor, z;
 	int t, cs2, sin2;

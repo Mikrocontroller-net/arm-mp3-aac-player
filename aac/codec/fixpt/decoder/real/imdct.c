@@ -73,7 +73,7 @@
  * TODO:        ARM5E version with saturating overlap/add (QADD)
  *              asm code with free pointer updates, better load scheduling
  **************************************************************************************/
-static void DecWindowOverlap(int *buf0, int *over0, short *pcm0, int nChans, int winTypeCurr, int winTypePrev)
+__attribute__ ((section (".data"))) static void DecWindowOverlap(int *buf0, int *over0, short *pcm0, int nChans, int winTypeCurr, int winTypePrev)
 {
 	int in, w0, w1, f0, f1;
 	int *buf1, *over1;
@@ -160,7 +160,7 @@ static void DecWindowOverlap(int *buf0, int *over0, short *pcm0, int nChans, int
  * TODO:        ARM5E version with saturating overlap/add (QADD)
  *              asm code with free pointer updates, better load scheduling
  **************************************************************************************/
-static void DecWindowOverlapLongStart(int *buf0, int *over0, short *pcm0, int nChans, int winTypeCurr, int winTypePrev)
+ __attribute__ ((section (".data"))) static void DecWindowOverlapLongStart(int *buf0, int *over0, short *pcm0, int nChans, int winTypeCurr, int winTypePrev)
 {
 	int i,  in, w0, w1, f0, f1;
 	int *buf1, *over1;
@@ -247,7 +247,7 @@ static void DecWindowOverlapLongStart(int *buf0, int *over0, short *pcm0, int nC
  * TODO:        ARM5E version with saturating overlap/add (QADD)
  *              asm code with free pointer updates, better load scheduling
  **************************************************************************************/
-static void DecWindowOverlapLongStop(int *buf0, int *over0, short *pcm0, int nChans, int winTypeCurr, int winTypePrev)
+ __attribute__ ((section (".data"))) static void DecWindowOverlapLongStop(int *buf0, int *over0, short *pcm0, int nChans, int winTypeCurr, int winTypePrev)
 {
 	int i, in, w0, w1, f0, f1;
 	int *buf1, *over1;
@@ -334,7 +334,7 @@ static void DecWindowOverlapLongStop(int *buf0, int *over0, short *pcm0, int nCh
  * TODO:        ARM5E version with saturating overlap/add (QADD)
  *              asm code with free pointer updates, better load scheduling
  **************************************************************************************/
-static void DecWindowOverlapShort(int *buf0, int *over0, short *pcm0, int nChans, int winTypeCurr, int winTypePrev)
+ __attribute__ ((section (".data"))) static void DecWindowOverlapShort(int *buf0, int *over0, short *pcm0, int nChans, int winTypeCurr, int winTypePrev)
 {
 	int i, in, w0, w1, f0, f1;
 	int *buf1, *over1;

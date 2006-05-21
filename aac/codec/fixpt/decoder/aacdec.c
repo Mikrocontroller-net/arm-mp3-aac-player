@@ -45,6 +45,11 @@
 
 #include "aaccommon.h"
 
+//#define PROFILE
+#ifdef PROFILE
+#include "systime.h"
+#endif
+
 /**************************************************************************************
  * Function:    AACInitDecoder
  *
@@ -276,6 +281,10 @@ int AACDecode(HAACDecoder hAACDecoder, unsigned char **inbuf, int *bytesLeft, sh
 	int elementChansSBR;
 #endif
 
+#ifdef PROFILE
+	long time;
+#endif
+
 	if (!aacDecInfo)
 		return ERR_AAC_NULL_POINTER;
 
@@ -352,24 +361,58 @@ int AACDecode(HAACDecoder hAACDecoder, unsigned char **inbuf, int *bytesLeft, sh
 
 		/* noiseless decoder and dequantizer */
 		for (ch = 0; ch < elementChans; ch++) {
+			#ifdef PROFILE
+				time = systime_get();
+			#endif
 			err = DecodeNoiselessData(aacDecInfo, &inptr, &bitOffset, &bitsAvail, ch);
+			#ifdef PROFILE
+				time = systime_get() - time;
+				printf("noiseless decoder: %i ms\n", time);
+			#endif
+			
 			if (err)
 				return err;
 
+			#ifdef PROFILE
+				time = systime_get();
+			#endif
 			if (Dequantize(aacDecInfo, ch))
 				return ERR_AAC_DEQUANT;
+			#ifdef PROFILE
+				time = systime_get() - time;
+				printf("dequant: %i ms\n", time);
+			#endif
 		}
+#ifdef PROFILE
+	time = systime_get() - time;
+	printf("noiseless decoder and dequantizer: %i ms\n", time);
+#endif
 
+#ifdef PROFILE
+	time = systime_get();
+#endif
 		/* mid-side and intensity stereo */
 		if (aacDecInfo->currBlockID == AAC_ID_CPE) {
 			if (StereoProcess(aacDecInfo))
 				return ERR_AAC_STEREO_PROCESS;
 		}
+#ifdef PROFILE
+	time = systime_get() - time;
+	printf("mid-side and intensity stereo: %i ms\n", time);
+#endif
+
 
 		/* PNS, TNS, inverse transform */
 		for (ch = 0; ch < elementChans; ch++) {
+			#ifdef PROFILE
+				time = systime_get();
+			#endif
 			if (PNS(aacDecInfo, ch))
 				return ERR_AAC_PNS;
+			#ifdef PROFILE
+				time = systime_get() - time;
+				printf("PNS: %i ms\n", time);
+			#endif
 
 			if (aacDecInfo->sbDeinterleaveReqd[ch]) {
 				/* deinterleave short blocks, if required */
@@ -378,12 +421,27 @@ int AACDecode(HAACDecoder hAACDecoder, unsigned char **inbuf, int *bytesLeft, sh
 				aacDecInfo->sbDeinterleaveReqd[ch] = 0;
 			}
 	
+			#ifdef PROFILE
+				time = systime_get();
+			#endif
 			if (TNSFilter(aacDecInfo, ch))
 				return ERR_AAC_TNS;
-
+			#ifdef PROFILE
+				time = systime_get() - time;
+				printf("TNS: %i ms\n", time);
+			#endif
+			
+			#ifdef PROFILE
+				time = systime_get();
+			#endif
 			if (IMDCT(aacDecInfo, ch, baseChan + ch, outbuf))
 				return ERR_AAC_IMDCT;
+			#ifdef PROFILE
+				time = systime_get() - time;
+				printf("IMDCT: %i ms\n", time);
+			#endif
 		}
+
 
 #ifdef AAC_ENABLE_SBR
 		if (aacDecInfo->sbrEnabled && (aacDecInfo->currBlockID == AAC_ID_FIL || aacDecInfo->currBlockID == AAC_ID_LFE)) {
