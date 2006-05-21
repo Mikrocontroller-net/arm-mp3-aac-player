@@ -46,6 +46,9 @@
 
 #include "mp3common.h"
 
+#if defined(ASSERT)
+#undef ASSERT
+#endif
 #if defined(_WIN32) && defined(_M_IX86) && (defined (_DEBUG) || defined (REL_ENABLE_ASSERTS))
 #define ASSERT(x) if (!(x)) __asm int 3;
 #else

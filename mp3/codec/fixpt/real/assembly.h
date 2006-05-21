@@ -101,7 +101,13 @@ static __inline int CLZ(int x)
  *  (sometimes compiler thunks to function calls instead of code generating)
  * required for Symbian emulator
  */
-static __inline __int64 MADD64(__int64 sum, int x, int y)
+#ifdef __CW32__
+typedef long long Word64;
+#else
+typedef __int64 Word64;
+#endif
+
+static __inline Word64 MADD64(Word64 sum, int x, int y)
 {
 	unsigned int sumLo = ((unsigned int *)&sum)[0];
 	int sumHi = ((int *)&sum)[1];
@@ -116,7 +122,7 @@ static __inline __int64 MADD64(__int64 sum, int x, int y)
 	/* equivalent to return (sum + ((__int64)x * y)); */
 }
 
-static __inline __int64 SHL64(__int64 x, int n)
+static __inline Word64 SHL64(Word64 x, int n)
 {
 	unsigned int xLo = ((unsigned int *)&x)[0];
 	int xHi = ((int *)&x)[1];
@@ -146,7 +152,7 @@ static __inline __int64 SHL64(__int64 x, int n)
 	}
 }
 
-static __inline __int64 SAR64(__int64 x, int n)
+static __inline Word64 SAR64(Word64 x, int n)
 {
 	unsigned int xLo = ((unsigned int *)&x)[0];
 	int xHi = ((int *)&x)[1];
@@ -235,7 +241,7 @@ static __inline int MULSHIFT32(int x, int y)
 
 static __inline int FASTABS(int x) 
 {
-	int t;
+	int t=0; /*Really is not necessary to initialiaze only to avoid warning*/
 
 	__asm {
 		eor	t, x, x, asr #31
@@ -283,7 +289,7 @@ static __inline int MULSHIFT32(int x, int y)
 
 static __inline int FASTABS(int x) 
 {
-	int t;
+	int t=0; /*Really is not necessary to initialiaze only to avoid warning*/
 
 	__asm__ volatile (
 		"eor %0,%2,%2, asr #31;"

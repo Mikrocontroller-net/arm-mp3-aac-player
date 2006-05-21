@@ -106,10 +106,10 @@ void MidSideProc(int x[MAX_NCHAN][MAX_NSAMP], int nSamps, int mOut[2])
 void IntensityProcMPEG1(int x[MAX_NCHAN][MAX_NSAMP], int nSamps, FrameHeader *fh, ScaleFactorInfoSub *sfis, 
 						CriticalBandInfo *cbi, int midSideFlag, int mixFlag, int mOut[2])
 {
-	int i, j, n, cb, w;
+	int i=0, j=0, n=0, cb=0, w=0;
 	int sampsLeft, isf, mOutL, mOutR, xl, xr;
 	int fl, fr, fls[3], frs[3];
-	int cbStartL, cbStartS, cbEndL, cbEndS;
+	int cbStartL=0, cbStartS=0, cbEndL=0, cbEndS=0;
 	int *isfTab;
 	
 	/* NOTE - this works fine for mixed blocks, as long as the switch point starts in the
