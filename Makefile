@@ -33,7 +33,8 @@ SRC = serial.c syscalls.c $(TARGET).c \
   mp3/codec/fixpt/real/huffman.c \
   mp3/codec/fixpt/real/buffers.c \
   mp3/codec/fixpt/mp3dec.c \
-  play_mp3.c
+  play_mp3.c \
+  play_wav.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
