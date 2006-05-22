@@ -14,7 +14,7 @@
   - mt: modified interrupt ISR handling, updated labels
 */
 
-#include "AT91SAM7S64.H"
+#include "AT91SAM7S64.h"
 #include "Board.h"
 #include "interrupt_utils.h"
 #include "systime.h"

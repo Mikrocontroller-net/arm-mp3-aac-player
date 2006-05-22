@@ -1,4 +1,4 @@
-#include "AT91SAM7S64.H"
+#include "AT91SAM7S64.h"
 #include "Board.h"
 
 #include "control.h"
