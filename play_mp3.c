@@ -6,6 +6,7 @@
 #include "mp3dec.h"
 #include "efs.h"
 #include "dac.h"
+#include "profile.h"
 
 #define debug_printf
 
@@ -18,14 +19,13 @@ static int underruns = 0;
 static int currentOutBuf = 0;
 static unsigned char *mp3buf;
 static unsigned int mp3buf_size;
+static unsigned char allocated = 0;
 extern short outBuf[2][2400];
 
 void mp3_init(unsigned char *buffer, unsigned int buffer_size)
 {
 	mp3buf = buffer;
 	mp3buf_size = buffer_size;
-	assert(hMP3Decoder = MP3InitDecoder());
-	mp3_reset();
 }
 
 void mp3_reset()
@@ -35,6 +35,20 @@ void mp3_reset()
 	currentOutBuf = 0;
 	nFrames = 0;
 	underruns = 0;
+}
+
+void mp3_alloc()
+{
+	PROFILE_START("mp3 init");
+	if (!allocated) assert(hMP3Decoder = MP3InitDecoder());
+	allocated = 1;
+	PROFILE_END();
+}
+
+void mp3_free()
+{
+	if (allocated) MP3FreeDecoder(hMP3Decoder);
+	allocated = 0;
 }
 
 int mp3_process(EmbeddedFile *mp3file)

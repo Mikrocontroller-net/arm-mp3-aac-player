@@ -18,14 +18,13 @@ static int underruns = 0;
 static int currentOutBuf = 0;
 static unsigned char *aacbuf;
 static unsigned int aacbuf_size;
+static unsigned char allocated = 0;
 extern short outBuf[2][2400];
 
 void aac_init(unsigned char *buffer, unsigned int buffer_size)
 {
 	aacbuf = buffer;
 	aacbuf_size = buffer_size;
-	assert(hAACDecoder = AACInitDecoder());
-	aac_reset();
 }
 
 void aac_reset()
@@ -35,6 +34,18 @@ void aac_reset()
 	currentOutBuf = 0;
 	nFrames = 0;
 	underruns = 0;
+}
+
+void aac_alloc()
+{
+	if (!allocated) assert(hAACDecoder = AACInitDecoder());
+	allocated = 1;
+}
+
+void aac_free()
+{
+	if (allocated) AACFreeDecoder(hAACDecoder);
+	allocated = 0;
 }
 
 int aac_process(EmbeddedFile *aacfile)

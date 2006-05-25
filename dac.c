@@ -33,7 +33,7 @@ void dac_init(void)
 	*AT91C_PMC_PCER = (1 << AT91C_ID_SSC); // Enable Clock for SSC controller
 	*AT91C_SSC_CR = AT91C_SSC_SWRST; // reset
 	*AT91C_SSC_CMR = 16;
-	//*AT91C_SSC_CMR = 32; // slow for testing
+	//*AT91C_SSC_CMR = 18; // slow for testing
 	*AT91C_SSC_TCMR = AT91C_SSC_CKS_DIV | AT91C_SSC_CKO_CONTINOUS |
 	                  AT91C_SSC_START_FALL_RF |
 	                  (1 << 16) |   // STTDLY = 1

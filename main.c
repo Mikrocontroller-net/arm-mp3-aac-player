@@ -10,6 +10,7 @@
 #include "ls.h"
 #include "mkfs.h"
 #include "interfaces/efsl_dbg_printf_arm.h"
+#include "play_wav.h"
 #include "play_mp3.h"
 #include "play_aac.h"
 #include "control.h"
@@ -32,8 +33,7 @@ static void led1(int on)
 
 static EmbeddedFileSystem efs;
 static DirList list;
-static unsigned short e;
-static unsigned char buf[4096];
+static unsigned char buf[2048];
 short outBuf[2][2400];
 
 char * get_full_filename(unsigned char * filename)
@@ -72,11 +72,12 @@ void play(void)
 	enum playing_states {START, PLAY, STOP, NEXT};
 	enum playing_states state = STOP;
 	enum filetypes infile_type = UNKNOWN;
+	long key0=0, key1=0;
 	
 	dac_init();
-	//mp3_init(buf, sizeof(buf));
-	aac_init(buf, sizeof(buf));
 	wav_init(buf, sizeof(buf));
+	mp3_init(buf, sizeof(buf));
+	aac_init(buf, sizeof(buf));
 	
 	// enable DMA
 	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
@@ -84,25 +85,48 @@ void play(void)
 	ls_openDir( &list, &(efs.myFs) , "/");
 	ls_getNext( &list );
 	
+	key0 = get_key_press( 1<<KEY0 );
+	key1 = get_key_press( 1<<KEY1 );
+	
 	while(1)
 	{
+	
 		switch(state) {
 		case STOP:
-			if (get_key_press( 1<<KEY0 )) {
+			key0 = get_key_press( 1<<KEY0 );
+			key1 = get_key_press( 1<<KEY1 );
+			
+			if (key0) {
 				state = START;
-			} else if (get_key_press( 1<<KEY1 )) {
+			} else if (key1) {
 				file_fclose( &infile );
-				iprintf("\nFile closed.\n");
+				puts("File closed.");
 				state = NEXT;
 			}
+
 			break;
 		
 		case START:
 			infile_type = get_filetype(list.currentEntry.FileName);
-			if (infile_type == AAC || infile_type == WAV) {
+			if (infile_type == AAC || infile_type == WAV || infile_type == MP3) {
 				assert(file_fopen( &infile, &efs.myFs, get_full_filename(list.currentEntry.FileName), 'r') == 0);
-				iprintf("\nFile opened.\n");
-				aac_reset();
+				puts("File opened.");
+				
+				mp3_free();
+				aac_free();
+				
+				switch(infile_type) {
+				case AAC:
+					aac_alloc();
+					aac_reset();
+					break;
+					
+				case MP3:
+					mp3_alloc();
+					mp3_reset();
+					break;
+				}
+				puts("playing");
 				state = PLAY;
 			} else {
 				puts("unknown file type");
@@ -111,7 +135,16 @@ void play(void)
 			break;
 		
 		case PLAY:
+			key0 = get_key_press( 1<<KEY0 );
+			key1 = get_key_press( 1<<KEY1 );
+			
 			switch(infile_type) {
+			case MP3:
+				if(mp3_process(&infile) != 0) {
+					state = STOP;
+				}
+				break;
+				
 			case AAC:
 				if (aac_process(&infile) != 0) {
 					state = STOP;
@@ -129,11 +162,11 @@ void play(void)
 				break;
 			}
 		
-			if (get_key_press( 1<<KEY0 )) {
+			if (key0) {
 				file_fclose( &infile );
 				iprintf("\nFile closed.\n");
 				state = STOP;
-			} else if (get_key_press( 1<<KEY1 )) {
+			} else if (key1) {
 				file_fclose( &infile );
 				iprintf("\nFile closed.\n");
 				state = NEXT;

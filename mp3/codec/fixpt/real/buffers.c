@@ -46,6 +46,7 @@
  **************************************************************************************/
 
 //#include "hlxclib/stdlib.h"		/* for malloc, free */ 
+#include <stdlib.h>
 #include <string.h>
 #include "coder.h"
 
