@@ -39,10 +39,8 @@ void mp3_reset()
 
 void mp3_alloc()
 {
-	PROFILE_START("mp3 init");
 	if (!allocated) assert(hMP3Decoder = MP3InitDecoder());
 	allocated = 1;
-	PROFILE_END();
 }
 
 void mp3_free()
@@ -105,15 +103,17 @@ int mp3_process(EmbeddedFile *mp3file)
 	}
 	
 	if (bytesLeft < 1024) {
-		//iprintf("not much left, reading more data\n");
+		PROFILE_START("file_read");
 		mp3file->FilePtr -= bytesLeftBeforeDecoding;
 		if (file_read( mp3file, mp3buf_size, mp3buf ) == mp3buf_size) {
 			readPtr = mp3buf;
 			offset = 0;
 			bytesLeft = mp3buf_size;
+			PROFILE_END();
 			return 0;
 		} else {
 			iprintf("can't read more data\n");
+			PROFILE_END();
 			return -1;
 		}
 	}
@@ -125,12 +125,16 @@ int mp3_process(EmbeddedFile *mp3file)
 	//iprintf("read and decoded 1 frame (took %ld ms).\n", systime_get() - t);
 	//t = systime_get();
 	// if second buffer is still not empty, wait until transmission is complete
+	PROFILE_START("waiting for DMA");
 	if (*AT91C_SSC_TNCR != 0) {
 		while(!dma_endtx());
 	}
+	PROFILE_END();
 	
 	debug_printf("beginning decoding\n");
+	PROFILE_START("MP3Decode");
 	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf[currentOutBuf], 0);
+	PROFILE_END();
 	nFrames++;
 		
 	if (err) {

@@ -33,7 +33,7 @@ static void led1(int on)
 
 static EmbeddedFileSystem efs;
 static DirList list;
-static unsigned char buf[2048];
+static unsigned char buf[4096];
 short outBuf[2][2400];
 
 char * get_full_filename(unsigned char * filename)

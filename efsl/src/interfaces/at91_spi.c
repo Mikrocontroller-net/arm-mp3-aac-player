@@ -37,6 +37,8 @@ TODO:
 - check CPOL
 */
 
+#include <stdio.h>
+
 /*****************************************************************************/
 #include "interfaces/AT91SAM7S64.h"
 #include "config.h"
@@ -284,6 +286,9 @@ esint8 if_readBuf(hwInterface* iface,euint32 address,euint8* buf)
 	do
 		firstblock=sd_Resp8b(iface); 
 	while(firstblock==0xff && fb_timeout--);
+	
+	// takes about 21-25 SPI cycles
+	//iprintf("took %i SPI cycles\n", 0xffff - fb_timeout);
 
 	if(cardresp!=0x00 || firstblock!=0xfe){
 		sd_Resp8bError(iface,firstblock);

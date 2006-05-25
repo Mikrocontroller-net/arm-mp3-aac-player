@@ -139,7 +139,7 @@
  * and nothing will happen. For real world use debugging should be turned off.
 */
 
-	#define DEBUG
+//	#define DEBUG
 
 
 #endif
