@@ -20,7 +20,7 @@ static int currentOutBuf = 0;
 static unsigned char *mp3buf;
 static unsigned int mp3buf_size;
 static unsigned char allocated = 0;
-extern short outBuf[2][2400];
+extern short outBuf[3][2400];
 
 void mp3_init(unsigned char *buffer, unsigned int buffer_size)
 {
@@ -122,9 +122,8 @@ int mp3_process(EmbeddedFile *mp3file)
 	
 	currentOutBuf = !currentOutBuf;
 	debug_printf("switched to output buffer %i\n", currentOutBuf);
-	//iprintf("read and decoded 1 frame (took %ld ms).\n", systime_get() - t);
-	//t = systime_get();
-	// if second buffer is still not empty, wait until transmission is complete
+
+	// if the current buffer is not yet empty, wait until transmission is complete
 	PROFILE_START("waiting for DMA");
 	if (*AT91C_SSC_TNCR != 0) {
 		while(!dma_endtx());
