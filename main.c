@@ -34,7 +34,8 @@ static void led1(int on)
 static EmbeddedFileSystem efs;
 static DirList list;
 static unsigned char buf[4096];
-short outBuf[2][2400];
+short outBuf[3][2400];
+int underruns=0;
 
 char * get_full_filename(unsigned char * filename)
 {
@@ -165,6 +166,7 @@ void play(void)
 			if (key0) {
 				file_fclose( &infile );
 				iprintf("\nFile closed.\n");
+				iprintf("underruns: %i\n", underruns - 1);
 				state = STOP;
 			} else if (key1) {
 				file_fclose( &infile );
@@ -184,8 +186,6 @@ void play(void)
 		}
 		
 	}
-	
-	//rprintf("Decoded frames: %i\nBytes left: %i\nOutput buffer underruns: %i\n", nFrames, bytesLeft, underruns);
 	
 	fs_flushFs( &(efs.myFs) );
 	fs_umount( &efs.myFs );

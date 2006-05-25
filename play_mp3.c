@@ -15,12 +15,12 @@ static MP3FrameInfo mp3FrameInfo;
 static unsigned char *readPtr;
 static int bytesLeft=0, bytesLeftBeforeDecoding=0, nRead, err, offset, outOfData=0, eofReached;
 static int nFrames = 0;
-static int underruns = 0;
 static int currentOutBuf = 0;
 static unsigned char *mp3buf;
 static unsigned int mp3buf_size;
 static unsigned char allocated = 0;
 extern short outBuf[3][2400];
+extern int underruns;
 
 void mp3_init(unsigned char *buffer, unsigned int buffer_size)
 {
@@ -113,7 +113,6 @@ int mp3_process(EmbeddedFile *mp3file)
 			return 0;
 		} else {
 			iprintf("can't read more data\n");
-			PROFILE_END();
 			return -1;
 		}
 	}
@@ -123,16 +122,9 @@ int mp3_process(EmbeddedFile *mp3file)
 	currentOutBuf = !currentOutBuf;
 	debug_printf("switched to output buffer %i\n", currentOutBuf);
 
-	// if the current buffer is not yet empty, wait until transmission is complete
-	PROFILE_START("waiting for DMA");
-	if (*AT91C_SSC_TNCR != 0) {
-		while(!dma_endtx());
-	}
-	PROFILE_END();
-	
 	debug_printf("beginning decoding\n");
 	PROFILE_START("MP3Decode");
-	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf[currentOutBuf], 0);
+	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf[2], 0);
 	PROFILE_END();
 	nFrames++;
 		
@@ -185,6 +177,17 @@ int mp3_process(EmbeddedFile *mp3file)
 		
 		debug_printf("Words remaining in first DMA buffer: %i\n", *AT91C_SSC_TCR);
 		debug_printf("Words remaining in next DMA buffer: %i\n", *AT91C_SSC_TNCR);
+		
+		// if the current buffer is not yet empty, wait until transmission is complete
+		PROFILE_START("waiting for DMA");
+		if (*AT91C_SSC_TNCR != 0) {
+			while(!dma_endtx());
+		}
+		PROFILE_END();
+		
+		PROFILE_START("memcpy");
+		memcpy(outBuf[currentOutBuf], outBuf[2], sizeof(outBuf[2]));
+		PROFILE_END();
 		
 		if(*AT91C_SSC_TNCR == 0 && *AT91C_SSC_TCR == 0) {
 			// underrun

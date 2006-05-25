@@ -1,5 +1,73 @@
+#include <stdio.h>
+
 #include "dac.h"
 #include "AT91SAM7S64.h"
+
+#define MAX_BUFFERS 3
+
+static unsigned int readpos=0, writepos=0, readable=0, writeable=MAX_BUFFERS;
+static short *ringbuffer[MAX_BUFFERS]; // contains pointers to buffers
+
+// add a pointer to a buffer to the ring
+int dac_ringbuffer_write(short *buffer)
+{
+	if (writeable - dac_buffers_in_use() > 0) {
+		ringbuffer[writepos] = buffer;
+		writeable --;
+		readable ++;
+		if (writepos == MAX_BUFFERS) {
+			writepos = 0;
+		} else {
+			writepos ++;
+		}
+		return 0;
+	} else {
+		return -1;
+	}
+}
+
+// get a pointer to a buffer
+short * dac_ringbuffer_read()
+{
+	short * returnvalue;
+	
+	if (readable > 0) {
+		returnvalue = ringbuffer[readpos];
+		readable --;
+		writeable ++;
+		if (readpos == MAX_BUFFERS) {
+			readpos = 0;
+		} else {
+		 	readpos ++;
+		}
+		return returnvalue;
+	} else {
+		return NULL;
+	}
+}
+
+int dac_buffers_in_use()
+{
+	if(next_dma_empty()) {
+		if(first_dma_empty()) {
+			return 0;
+		} else {
+			return 1;
+		}
+	} else {
+		return 2;
+	}
+}
+
+int first_dma_empty()
+{
+	return *AT91C_SSC_TCR == 0;
+}
+
+int next_dma_empty()
+{
+	return *AT91C_SSC_TNCR == 0;
+}
 
 void set_first_dma(short *buffer, int n)
 {
