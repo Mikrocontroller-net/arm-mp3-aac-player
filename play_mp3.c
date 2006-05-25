@@ -13,13 +13,11 @@
 static HMP3Decoder hMP3Decoder;
 static MP3FrameInfo mp3FrameInfo;
 static unsigned char *readPtr;
-static int bytesLeft=0, bytesLeftBeforeDecoding=0, nRead, err, offset, outOfData=0, eofReached;
+static int bytesLeft=0, bytesLeftBeforeDecoding=0, err, offset;
 static int nFrames = 0;
-static int currentOutBuf = 0;
 static unsigned char *mp3buf;
 static unsigned int mp3buf_size;
 static unsigned char allocated = 0;
-extern short outBuf[3][2400];
 extern int underruns;
 
 void mp3_init(unsigned char *buffer, unsigned int buffer_size)
@@ -32,7 +30,6 @@ void mp3_reset()
 {
 	readPtr = NULL;
 	bytesLeftBeforeDecoding = bytesLeft = 0;
-	currentOutBuf = 0;
 	nFrames = 0;
 	underruns = 0;
 }
@@ -51,8 +48,8 @@ void mp3_free()
 
 int mp3_process(EmbeddedFile *mp3file)
 {
-	long t;
-
+	int readable_buffer, writeable_buffer;
+	
 	if (readPtr == NULL) {
 		mp3file->FilePtr -= bytesLeftBeforeDecoding;
 		if (file_read( mp3file, mp3buf_size, mp3buf ) == mp3buf_size) {
@@ -119,13 +116,16 @@ int mp3_process(EmbeddedFile *mp3file)
 	
 	debug_printf("bytesLeftBeforeDecoding: %i\n", bytesLeftBeforeDecoding);
 	
-	currentOutBuf = !currentOutBuf;
-	debug_printf("switched to output buffer %i\n", currentOutBuf);
 
-	debug_printf("beginning decoding\n");
+	do { writeable_buffer = dac_get_writeable_buffer(); } while (writeable_buffer == -1);
+	iprintf("writing buffer %i\n", writeable_buffer);
+	
 	PROFILE_START("MP3Decode");
-	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outBuf[2], 0);
+	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, dac_buffer[writeable_buffer], 0);
 	PROFILE_END();
+	
+	// TODO: this should only be done in case of success
+	dac_set_buffer_ready(writeable_buffer);
 	nFrames++;
 		
 	if (err) {
@@ -139,11 +139,8 @@ int mp3_process(EmbeddedFile *mp3file)
 			//mp3file->FilePtr -= bytesLeftBefore;
 			if (file_read( mp3file, mp3buf_size, mp3buf ) == mp3buf_size) {
 				
-				// use the same output buffer again => switch buffer because it will be switched
-				// back at the start of the loop
-				// (TODO: deuglyfy)
-				currentOutBuf = !currentOutBuf;
-
+				// TODO: reuse writable_buffer
+				
 				readPtr = mp3buf;
 				offset = 0;
 				bytesLeft = mp3buf_size;
@@ -155,7 +152,7 @@ int mp3_process(EmbeddedFile *mp3file)
 			break;
  		case ERR_MP3_MAINDATA_UNDERFLOW:
  				/* do nothing - next call to decode will provide more mainData */
- 				iprintf("ERR_MP3_MAINDATA_UNDERFLOW");
+ 				puts("ERR_MP3_MAINDATA_UNDERFLOW");
  				break;
  		default:
  				iprintf("unknown error: %i\n", err);
@@ -184,23 +181,22 @@ int mp3_process(EmbeddedFile *mp3file)
 			while(!dma_endtx());
 		}
 		PROFILE_END();
-		
-		PROFILE_START("memcpy");
-		memcpy(outBuf[currentOutBuf], outBuf[2], sizeof(outBuf[2]));
-		PROFILE_END();
-		
+
+		do { readable_buffer = dac_get_readable_buffer(); } while (readable_buffer == -1);
+		dac_set_buffer_busy(readable_buffer);
+		iprintf("reading buffer %i\n", readable_buffer);
+
 		if(*AT91C_SSC_TNCR == 0 && *AT91C_SSC_TCR == 0) {
 			// underrun
-			set_first_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
+			set_first_dma(dac_buffer[readable_buffer], mp3FrameInfo.outputSamps);
 			underruns++;
 			puts("ffb!");
 		} else if(*AT91C_SSC_TNCR == 0) {
-			set_next_dma(outBuf[currentOutBuf], mp3FrameInfo.outputSamps);
+			set_next_dma(dac_buffer[readable_buffer], mp3FrameInfo.outputSamps);
 			puts("fnb");
 		}
 		
-		//printf("Wrote %i bytes\n", file_write(&filew, mp3FrameInfo.outputSamps * 2, outBuf[currentOutBuf]));
 	}
-	
+
 	return 0;
 }

@@ -6,36 +6,34 @@
 #include "efs.h"
 #include "dac.h"
 
-unsigned char *wavbuf[2];
-unsigned int wavbuf_size;
-extern short outBuf[2][2400];
-
 void wav_init(unsigned char *buffer, unsigned int buffer_size)
 {
-	wavbuf[0] = (unsigned char *)outBuf[0];
-	wavbuf[1] = (unsigned char *)outBuf[1];
-	wavbuf_size = sizeof(outBuf[0]);
+
 }
 
 int wav_process(EmbeddedFile *wavfile)
 {
-	static int current_buffer = 0;
+	int writeable_buffer, readable_buffer;
 	
-	if (file_read(wavfile, wavbuf_size, wavbuf[current_buffer]) != wavbuf_size) {
+	while ( (writeable_buffer = dac_get_writeable_buffer()) == -1);
+	
+	if (file_read(wavfile, DAC_BUFFER_SIZE*2, dac_buffer[writeable_buffer]) != DAC_BUFFER_SIZE*2) {
 		return -1;
 	}
+	dac_set_buffer_ready(writeable_buffer);
+	
+	while ( (readable_buffer = dac_get_readable_buffer()) == -1);
+	dac_set_buffer_busy(readable_buffer);
 	
 	if(*AT91C_SSC_TNCR == 0 && *AT91C_SSC_TCR == 0) {
 		// underrun
-		set_first_dma(outBuf[current_buffer], sizeof(outBuf[current_buffer])/2);
+		set_first_dma(dac_buffer[readable_buffer], DAC_BUFFER_SIZE);
 		puts("ffb!");
 	} else if(*AT91C_SSC_TNCR == 0) {
-		set_next_dma(outBuf[current_buffer], sizeof(outBuf[current_buffer])/2);
+		set_next_dma(dac_buffer[readable_buffer], DAC_BUFFER_SIZE);
 		puts("fnb");
 		while(!dma_endtx());
 	}
-	
-	current_buffer = !current_buffer;
 	
 	return 0;
 }

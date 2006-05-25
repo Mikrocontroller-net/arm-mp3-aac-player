@@ -3,60 +3,76 @@
 #include "dac.h"
 #include "AT91SAM7S64.h"
 
-#define MAX_BUFFERS 3
+int wp=0, rp=0;
+char dac_buffer_status[MAX_BUFFERS + 1] = {'E', 'E', 'E', '\0'}; // TODO: init for MAX_BUFFERS != 3
+short dac_buffer[MAX_BUFFERS][DAC_BUFFER_SIZE];
 
-static unsigned int readpos=0, writepos=0, readable=0, writeable=MAX_BUFFERS;
-static short *ringbuffer[MAX_BUFFERS]; // contains pointers to buffers
+/*
+	buffer_status:
+		'e': empty (writeable)
+		'r': ready (readable)
+		'b': busy (in DMA pointer register)
+		
+	TODO: there is a simpler and better way to do this, the buffer_status array is not really necessary
+*/
 
-// add a pointer to a buffer to the ring
-int dac_ringbuffer_write(short *buffer)
+int dac_get_writeable_buffer()
 {
-	if (writeable - dac_buffers_in_use() > 0) {
-		ringbuffer[writepos] = buffer;
-		writeable --;
-		readable ++;
-		if (writepos == MAX_BUFFERS) {
-			writepos = 0;
+	if (dac_buffer_status[wp] == 'B') {
+		// check if buffer is really busy
+		// TODO: remove this ugly hack!
+		if (dac_buffer[wp] == (*AT91C_SSC_TPR + *AT91C_SSC_TCR - DAC_BUFFER_SIZE) || dac_buffer[wp] == (*AT91C_SSC_TNPR + *AT91C_SSC_TNCR - DAC_BUFFER_SIZE)) {
+			// yes, it is
+			return -1;
 		} else {
-			writepos ++;
+			// no, mark buffer as empty
+			dac_buffer_status[wp] = 'E';
 		}
-		return 0;
+	}
+	
+	if (dac_buffer_status[wp] == 'E') {
+		int writeablebuffer;
+		writeablebuffer = wp;
+		wp = (wp + 1) % MAX_BUFFERS;
+		return writeablebuffer;
 	} else {
 		return -1;
 	}
 }
 
-// get a pointer to a buffer
-short * dac_ringbuffer_read()
+int dac_get_readable_buffer()
 {
-	short * returnvalue;
-	
-	if (readable > 0) {
-		returnvalue = ringbuffer[readpos];
-		readable --;
-		writeable ++;
-		if (readpos == MAX_BUFFERS) {
-			readpos = 0;
-		} else {
-		 	readpos ++;
-		}
-		return returnvalue;
+	puts(dac_buffer_status);
+	if (dac_buffer_status[rp] == 'R') {
+		int readablebuffer;
+		readablebuffer = rp;
+		rp = (rp + 1) % MAX_BUFFERS;
+		return readablebuffer;
 	} else {
-		return NULL;
+		return -1;
 	}
 }
 
-int dac_buffers_in_use()
+void dac_set_buffer_ready(int i)
 {
-	if(next_dma_empty()) {
-		if(first_dma_empty()) {
-			return 0;
-		} else {
-			return 1;
-		}
-	} else {
-		return 2;
-	}
+	dac_buffer_status[i] = 'R';
+}
+
+void dac_set_buffer_busy(int i)
+{
+	dac_buffer_status[i] = 'B';
+}
+
+void dac_enable_dma()
+{
+	// enable DMA
+	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
+}
+
+void dac_disable_dma()
+{
+	// disable DMA
+	*AT91C_SSC_PTCR = AT91C_PDC_TXTDIS;
 }
 
 int first_dma_empty()

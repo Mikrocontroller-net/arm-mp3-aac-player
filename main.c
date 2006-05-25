@@ -33,8 +33,7 @@ static void led1(int on)
 
 static EmbeddedFileSystem efs;
 static DirList list;
-static unsigned char buf[4096];
-short outBuf[3][2400];
+static unsigned char buf[2048];
 int underruns=0;
 
 char * get_full_filename(unsigned char * filename)
@@ -79,9 +78,8 @@ void play(void)
 	wav_init(buf, sizeof(buf));
 	mp3_init(buf, sizeof(buf));
 	aac_init(buf, sizeof(buf));
-	
-	// enable DMA
-	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
+
+	dac_enable_dma();
 	
 	ls_openDir( &list, &(efs.myFs) , "/");
 	ls_getNext( &list );

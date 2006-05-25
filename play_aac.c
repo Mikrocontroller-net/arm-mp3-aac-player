@@ -18,7 +18,6 @@ static int currentOutBuf = 0;
 static unsigned char *aacbuf;
 static unsigned int aacbuf_size;
 static unsigned char allocated = 0;
-extern short outBuf[3][2400];
 extern int underruns;
 
 void aac_init(unsigned char *buffer, unsigned int buffer_size)
@@ -50,8 +49,7 @@ void aac_free()
 
 int aac_process(EmbeddedFile *aacfile)
 {
-	long t;
-
+	#if 0
 	if (readPtr == NULL) {
 		aacfile->FilePtr -= bytesLeftBeforeDecoding;
 		if (file_read( aacfile, aacbuf_size, aacbuf ) == aacbuf_size) {
@@ -196,6 +194,6 @@ int aac_process(EmbeddedFile *aacfile)
 		
 		//printf("Wrote %i bytes\n", file_write(&filew, aacFrameInfo.outputSamps * 2, outBuf[currentOutBuf]));
 	}
-	
+	#endif
 	return 0;
 }
