@@ -14,7 +14,7 @@ do {								\
 
 #define PROFILE_END()				\
 do {								\
-  iprintf("Time for %s: %li ms\n", profile_name, systime_get() - profile_time);	\
+  iprintf("%s: %li ms\n", profile_name, systime_get() - profile_time);	\
 } while(0)
 
 #endif /* _PROFILE_H_ */

@@ -6,6 +6,7 @@
 #include "aacdec.h"
 #include "efs.h"
 #include "dac.h"
+#include "profile.h"
 
 #define debug_printf
 
@@ -14,7 +15,6 @@ static AACFrameInfo aacFrameInfo;
 static unsigned char *readPtr;
 static int bytesLeft=0, bytesLeftBeforeDecoding=0, nRead, err, offset, outOfData=0, eofReached;
 static int nFrames = 0;
-static int currentOutBuf = 0;
 static unsigned char *aacbuf;
 static unsigned int aacbuf_size;
 static unsigned char allocated = 0;
@@ -30,7 +30,6 @@ void aac_reset()
 {
 	readPtr = NULL;
 	bytesLeftBeforeDecoding = bytesLeft = 0;
-	currentOutBuf = 0;
 	nFrames = 0;
 	underruns = 0;
 }
@@ -49,7 +48,8 @@ void aac_free()
 
 int aac_process(EmbeddedFile *aacfile)
 {
-	#if 0
+	int writeable_buffer;
+
 	if (readPtr == NULL) {
 		aacfile->FilePtr -= bytesLeftBeforeDecoding;
 		if (file_read( aacfile, aacbuf_size, aacbuf ) == aacbuf_size) {
@@ -101,12 +101,14 @@ int aac_process(EmbeddedFile *aacfile)
 	*/
 	
 	if (bytesLeft < 1024) {
+		PROFILE_START("file_read");
 		//iprintf("not much left, reading more data\n");
 		aacfile->FilePtr -= bytesLeftBeforeDecoding;
 		if (file_read( aacfile, aacbuf_size, aacbuf ) == aacbuf_size) {
 			readPtr = aacbuf;
 			offset = 0;
 			bytesLeft = aacbuf_size;
+			PROFILE_END();
 			return 0;
 		} else {
 			iprintf("can't read more data\n");
@@ -117,17 +119,18 @@ int aac_process(EmbeddedFile *aacfile)
 	debug_printf("aacfile->FilePtr: %i\n", aacfile->FilePtr);
 	debug_printf("bytesLeftBeforeDecoding: %i\n", bytesLeftBeforeDecoding);
 	
-	currentOutBuf = !currentOutBuf;
-	debug_printf("switched to output buffer %i\n", currentOutBuf);
-	//iprintf("read and decoded 1 frame (took %ld ms).\n", systime_get() - t);
-	//t = systime_get();
-	// if second buffer is still not empty, wait until transmission is complete
-	if (*AT91C_SSC_TNCR != 0) {
-		while(!dma_endtx());
+	while (dac_fill_dma() == 0);
+	
+	writeable_buffer = dac_get_writeable_buffer();
+	if (writeable_buffer == -1) {
+		return 0;
 	}
 	
-	debug_printf("beginning decoding\n");
-	err = AACDecode(hAACDecoder, &readPtr, &bytesLeft, outBuf[currentOutBuf]);
+	iprintf("wb %i\n", writeable_buffer);
+	
+	PROFILE_START("AACDecode");
+	err = AACDecode(hAACDecoder, &readPtr, &bytesLeft, dac_buffer[writeable_buffer]);
+	PROFILE_END();
 	nFrames++;
 		
 	if (err) {
@@ -141,11 +144,6 @@ int aac_process(EmbeddedFile *aacfile)
 			//aacfile->FilePtr -= bytesLeftBefore;
 			if (file_read( aacfile, aacbuf_size, aacbuf ) == aacbuf_size) {
 				
-				// use the same output buffer again => switch buffer because it will be switched
-				// back at the start of the loop
-				// (TODO: deuglyfy)
-				currentOutBuf = !currentOutBuf;
-
 				readPtr = aacbuf;
 				offset = 0;
 				bytesLeft = aacbuf_size;
@@ -155,24 +153,21 @@ int aac_process(EmbeddedFile *aacfile)
 				return -1;
 			}
 			break;
-#if 0
- 		case ERR_AAC_MAINDATA_UNDERFLOW:
- 				/* do nothing - next call to decode will provide more mainData */
- 				iprintf("ERR_AAC_MAINDATA_UNDERFLOW");
- 				break;
-#endif
+
  		default:
- 				iprintf("unknown error: %i\n", err);
- 				// skip this frame
- 				if (bytesLeft > 0) {
- 					bytesLeft --;
- 					readPtr ++;
- 				} else {
- 					// TODO
- 					assert(0);
- 				}
- 				break;
+ 			iprintf("unknown error: %i\n", err);
+ 			// skip this frame
+ 			if (bytesLeft > 0) {
+ 				bytesLeft --;
+ 				readPtr ++;
+ 			} else {
+ 				// TODO
+ 				assert(0);
  			}
+ 			break;
+ 		}
+
+		dac_buffer_size[writeable_buffer] = 0;
 	} else {
 		/* no error */
 		AACGetLastFrameInfo(hAACDecoder, &aacFrameInfo);
@@ -182,18 +177,12 @@ int aac_process(EmbeddedFile *aacfile)
 		debug_printf("Words remaining in first DMA buffer: %i\n", *AT91C_SSC_TCR);
 		debug_printf("Words remaining in next DMA buffer: %i\n", *AT91C_SSC_TNCR);
 		
-		if(*AT91C_SSC_TNCR == 0 && *AT91C_SSC_TCR == 0) {
-			// underrun
-			set_first_dma(outBuf[currentOutBuf], aacFrameInfo.outputSamps);
-			underruns++;
-			puts("ffb!");
-		} else if(*AT91C_SSC_TNCR == 0) {
-			set_next_dma(outBuf[currentOutBuf], aacFrameInfo.outputSamps);
-			puts("fnb");
-		}
+		dac_buffer_size[writeable_buffer] = aacFrameInfo.outputSamps;
 		
 		//printf("Wrote %i bytes\n", file_write(&filew, aacFrameInfo.outputSamps * 2, outBuf[currentOutBuf]));
 	}
-	#endif
+	
+	while (dac_fill_dma() == 0);
+	
 	return 0;
 }

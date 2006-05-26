@@ -48,7 +48,9 @@ void mp3_free()
 
 int mp3_process(EmbeddedFile *mp3file)
 {
+
 	int readable_buffer, writeable_buffer;
+	
 	
 	if (readPtr == NULL) {
 		mp3file->FilePtr -= bytesLeftBeforeDecoding;
@@ -81,7 +83,7 @@ int mp3_process(EmbeddedFile *mp3file)
 	readPtr += offset;
 	bytesLeft -= offset;
 	bytesLeftBeforeDecoding = bytesLeft;
-	
+
 	// check if this is really a valid frame
 	// (the decoder does not seem to calculate CRC, so make some plausibility checks)
 	if (MP3GetNextFrameInfo(hMP3Decoder, &mp3FrameInfo, readPtr) == 0 &&
@@ -98,7 +100,7 @@ int mp3_process(EmbeddedFile *mp3file)
 		readPtr += 1;
 		return 0;
 	}
-	
+
 	if (bytesLeft < 1024) {
 		PROFILE_START("file_read");
 		mp3file->FilePtr -= bytesLeftBeforeDecoding;
@@ -113,34 +115,37 @@ int mp3_process(EmbeddedFile *mp3file)
 			return -1;
 		}
 	}
-	
-	debug_printf("bytesLeftBeforeDecoding: %i\n", bytesLeftBeforeDecoding);
-	
 
-	do { writeable_buffer = dac_get_writeable_buffer(); } while (writeable_buffer == -1);
-	iprintf("writing buffer %i\n", writeable_buffer);
+	debug_printf("bytesLeftBeforeDecoding: %i\n", bytesLeftBeforeDecoding);
+
+	while (dac_fill_dma() == 0);
 	
+	writeable_buffer = dac_get_writeable_buffer();
+	if (writeable_buffer == -1) {
+		return 0;
+	}
+	
+	iprintf("wb %i\n", writeable_buffer);
+
 	PROFILE_START("MP3Decode");
 	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, dac_buffer[writeable_buffer], 0);
 	PROFILE_END();
-	
-	// TODO: this should only be done in case of success
-	dac_set_buffer_ready(writeable_buffer);
+
 	nFrames++;
-		
+	
 	if (err) {
  		switch (err) {
 		 case ERR_MP3_INDATA_UNDERFLOW:
-			puts("ERR_MP3_INDATA_UNDERFLOW\r");
+			puts("ERR_MP3_INDATA_UNDERFLOW");
 			//outOfData = 1;
 			// try to read more data
 			// seek backwards to reread partial frame at end of current buffer
 			// TODO: find out why it doesn't work if the following line is uncommented
 			//mp3file->FilePtr -= bytesLeftBefore;
 			if (file_read( mp3file, mp3buf_size, mp3buf ) == mp3buf_size) {
-				
+			
 				// TODO: reuse writable_buffer
-				
+			
 				readPtr = mp3buf;
 				offset = 0;
 				bytesLeft = mp3buf_size;
@@ -166,37 +171,31 @@ int mp3_process(EmbeddedFile *mp3file)
  				}
  				break;
  			}
+
+		dac_buffer_size[writeable_buffer] = 0;
 	} else {
 		/* no error */
 		MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
 		debug_printf("Bitrate: %i\r\n", mp3FrameInfo.bitrate);
 		debug_printf("%i samples\n", mp3FrameInfo.outputSamps);			
-		
+	
 		debug_printf("Words remaining in first DMA buffer: %i\n", *AT91C_SSC_TCR);
 		debug_printf("Words remaining in next DMA buffer: %i\n", *AT91C_SSC_TNCR);
-		
+	
+		dac_buffer_size[writeable_buffer] = mp3FrameInfo.outputSamps;
+	
 		// if the current buffer is not yet empty, wait until transmission is complete
-		PROFILE_START("waiting for DMA");
-		if (*AT91C_SSC_TNCR != 0) {
-			while(!dma_endtx());
-		}
-		PROFILE_END();
+		//PROFILE_START("waiting for DMA");
+		//if (*AT91C_SSC_TNCR != 0) {
+		//	while(!dma_endtx());
+		//}
+		//PROFILE_END();
 
-		do { readable_buffer = dac_get_readable_buffer(); } while (readable_buffer == -1);
-		dac_set_buffer_busy(readable_buffer);
-		iprintf("reading buffer %i\n", readable_buffer);
+		//do { readable_buffer = dac_get_readable_buffer(); } while (readable_buffer == -1);
 
-		if(*AT91C_SSC_TNCR == 0 && *AT91C_SSC_TCR == 0) {
-			// underrun
-			set_first_dma(dac_buffer[readable_buffer], mp3FrameInfo.outputSamps);
-			underruns++;
-			puts("ffb!");
-		} else if(*AT91C_SSC_TNCR == 0) {
-			set_next_dma(dac_buffer[readable_buffer], mp3FrameInfo.outputSamps);
-			puts("fnb");
-		}
-		
 	}
+	
+	while (dac_fill_dma() == 0);
 
 	return 0;
 }

@@ -16,20 +16,8 @@
 #include "control.h"
 #include "dac.h"
 
-//#include "mp3data.h"
-
 #define TCK  1000                           /* Timer Clock  */
 #define PIV  ((MCK/TCK/16)-1)               /* Periodic Interval Value */
-
-/*
-static void led1(int on)
-{
-	AT91PS_PIO  pPIOA = AT91C_BASE_PIOA;
-	
-	if (on) pPIOA->PIO_CODR = LED1;
-	else pPIOA->PIO_SODR = LED1;
-}
-*/
 
 static EmbeddedFileSystem efs;
 static DirList list;
@@ -113,6 +101,7 @@ void play(void)
 				
 				mp3_free();
 				aac_free();
+				dac_reset();
 				
 				switch(infile_type) {
 				case AAC:
