@@ -1,10 +1,11 @@
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "AT91SAM7S64.h"
 #include "play_aac.h"
 #include "aacdec.h"
-#include "efs.h"
+#include "ff.h"
 #include "dac.h"
 #include "profile.h"
 
@@ -24,6 +25,7 @@ void aac_init(unsigned char *buffer, unsigned int buffer_size)
 {
 	aacbuf = buffer;
 	aacbuf_size = buffer_size;
+	aac_reset();
 }
 
 void aac_reset()
@@ -46,28 +48,30 @@ void aac_free()
 	allocated = 0;
 }
 
-int aac_process(EmbeddedFile *aacfile)
+int aac_process(FIL *aacfile)
 {
 	int writeable_buffer;
+	WORD bytes_read;
 
 	if (readPtr == NULL) {
-		aacfile->FilePtr -= bytesLeftBeforeDecoding;
-		if (file_read( aacfile, aacbuf_size, aacbuf ) == aacbuf_size) {
+		assert(f_read(aacfile, (BYTE *)aacbuf, aacbuf_size, &bytes_read) == FR_OK);
+		if (bytes_read == aacbuf_size) {
 			readPtr = aacbuf;
 			offset = 0;
 			bytesLeft = aacbuf_size;
 		} else {
-			iprintf("can't read more data\n");
+			puts("can't read more data");
 			return -1;
 		}
 	}
 
-	// AAC decoder	
 	offset = AACFindSyncWord(readPtr, bytesLeft);
 	if (offset < 0) {
-		iprintf("Error: AACFindSyncWord returned <0\n");
+		puts("Error: AACFindSyncWord returned <0");
+		
 		// read more data
-		if (file_read( aacfile, aacbuf_size, aacbuf ) == aacbuf_size) {
+		assert(f_read(aacfile, (BYTE *)aacbuf, aacbuf_size, &bytes_read) == FR_OK);
+		if (bytes_read == aacbuf_size) {
 			readPtr = aacbuf;
 			offset = 0;
 			bytesLeft = aacbuf_size;
@@ -102,9 +106,13 @@ int aac_process(EmbeddedFile *aacfile)
 	
 	if (bytesLeft < 1024) {
 		PROFILE_START("file_read");
-		//iprintf("not much left, reading more data\n");
-		aacfile->FilePtr -= bytesLeftBeforeDecoding;
-		if (file_read( aacfile, aacbuf_size, aacbuf ) == aacbuf_size) {
+		// after fseeking backwards the FAT has to be read from the beginning -> S L O W
+		//assert(f_lseek(aacfile, aacfile->fptr - bytesLeftBeforeDecoding) == FR_OK);
+		// better: move unused rest of buffer to the start
+		// no overlap as long as (1024 <= aacbuf_size/2), so no need to use memove
+		memcpy(aacbuf, readPtr, bytesLeft);
+		assert(f_read(aacfile, (BYTE *)aacbuf + bytesLeft, aacbuf_size - bytesLeft, &bytes_read) == FR_OK);
+		if (bytes_read == aacbuf_size - bytesLeft) {
 			readPtr = aacbuf;
 			offset = 0;
 			bytesLeft = aacbuf_size;
@@ -116,7 +124,6 @@ int aac_process(EmbeddedFile *aacfile)
 		}
 	}
 	
-	debug_printf("aacfile->FilePtr: %i\n", aacfile->FilePtr);
 	debug_printf("bytesLeftBeforeDecoding: %i\n", bytesLeftBeforeDecoding);
 	
 	while (dac_fill_dma() == 0);
@@ -135,21 +142,22 @@ int aac_process(EmbeddedFile *aacfile)
 		
 	if (err) {
  		switch (err) {
-		 case ERR_AAC_INDATA_UNDERFLOW:
-			puts("ERR_AAC_INDATA_UNDERFLOW\r");
+		case ERR_AAC_INDATA_UNDERFLOW:
+			puts("ERR_AAC_INDATA_UNDERFLOW");
 			//outOfData = 1;
 			// try to read more data
 			// seek backwards to reread partial frame at end of current buffer
 			// TODO: find out why it doesn't work if the following line is uncommented
 			//aacfile->FilePtr -= bytesLeftBefore;
-			if (file_read( aacfile, aacbuf_size, aacbuf ) == aacbuf_size) {
-				
+			f_read(aacfile, (BYTE *)aacbuf, aacbuf_size, &bytes_read);
+			if (bytes_read == aacbuf_size) {
+				// TODO: reuse writable_buffer
 				readPtr = aacbuf;
 				offset = 0;
 				bytesLeft = aacbuf_size;
-				iprintf("indata underflow, reading more data\n");
+				puts("indata underflow, reading more data");
 			} else {
-				iprintf("can't read more data\n");
+				puts("can't read more data");
 				return -1;
 			}
 			break;
@@ -178,8 +186,6 @@ int aac_process(EmbeddedFile *aacfile)
 		debug_printf("Words remaining in next DMA buffer: %i\n", *AT91C_SSC_TNCR);
 		
 		dac_buffer_size[writeable_buffer] = aacFrameInfo.outputSamps;
-		
-		//printf("Wrote %i bytes\n", file_write(&filew, aacFrameInfo.outputSamps * 2, outBuf[currentOutBuf]));
 	}
 	
 	while (dac_fill_dma() == 0);

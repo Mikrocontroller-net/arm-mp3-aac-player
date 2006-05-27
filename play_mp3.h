@@ -1,10 +1,10 @@
 #ifndef _PLAY_MP3_H_
 #define _PLAY_MP3_H_
 
-#include "efs.h"
+#include "ff.h"
 
-int mp3_process(EmbeddedFile *mp3file);
-void mp3_reset(void);
+int mp3_process(FIL *mp3file);
+void mp3_reset();
 void mp3_init(unsigned char *buffer, unsigned int buffer_size);
 void mp3_alloc();
 void mp3_free();

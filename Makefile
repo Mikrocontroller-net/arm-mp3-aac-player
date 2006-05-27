@@ -129,7 +129,7 @@ EXTRAINCDIRS =
 
 # List any extra directories to look for library files here.
 #     Each directory must be seperated by a space.
-EXTRA_LIBDIRS = efsl
+EXTRA_LIBDIRS = 
 
 # Compiler flag to set the C Standard level.
 # c89   - "ANSI" C
@@ -142,7 +142,7 @@ CSTANDARD = -std=gnu99
 CDEFS =  -D$(RUN_MODE) -DARM -DUSE_DEFAULT_STDLIB
 
 # Place -I options here
-CINCS = -Ifatfs -Iefsl/inc -Iefsl/conf -Imp3/codec/fixpt/pub -Iaac/codec/fixpt/decoder/pub
+CINCS = -Ifatfs -Imp3/codec/fixpt/pub -Iaac/codec/fixpt/decoder/pub
 
 # Place -D or -U options for ASM here
 ADEFS =  -D$(RUN_MODE)
@@ -199,7 +199,7 @@ ASFLAGS = $(ADEFS) -Wa,-adhlns=$(<:.S=.lst),-g$(DEBUG)
 #    Each library-name must be seperated by a space.
 #    To add libxyz.a, libabc.a and libefsl.a: 
 #    EXTRA_LIBS = xyz abc efsl
-EXTRA_LIBS = efsl
+EXTRA_LIBS = 
 
 #Support for newlibc-lpc (file: libnewlibc-lpc.a)
 #NEWLIBLPC = -lnewlib-lpc
@@ -393,14 +393,11 @@ program: $(TARGET).bin
 # Link: create ELF output file from object files.
 .SECONDARY : $(TARGET).elf
 .PRECIOUS : $(AOBJARM) $(AOBJ) $(COBJARM) $(COBJ) $(CPPOBJ) $(CPPOBJARM)
-%.elf:  $(AOBJARM) $(AOBJ) $(COBJARM) $(COBJ) $(CPPOBJ) $(CPPOBJARM) efsl/libefsl.a
+%.elf:  $(AOBJARM) $(AOBJ) $(COBJARM) $(COBJ) $(CPPOBJ) $(CPPOBJARM)
 	@echo
 	@echo $(MSG_LINKING) $@
 	$(CC) $(THUMB) $(ALL_CFLAGS) $(AOBJARM) $(AOBJ) $(COBJARM) $(COBJ) $(CPPOBJ) $(CPPOBJARM) --output $@ $(LDFLAGS)
 #	$(CPP) $(THUMB) $(ALL_CFLAGS) $(AOBJARM) $(AOBJ) $(COBJARM) $(COBJ) $(CPPOBJ) $(CPPOBJARM) --output $@ $(LDFLAGS)
-
-efsl/libefsl.a :
-	make -C efsl
 
 # Compile: create object files from C source files. ARM/Thumb
 $(COBJ) : %.o : %.c
