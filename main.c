@@ -15,6 +15,8 @@
 #include "play_aac.h"
 #include "control.h"
 #include "dac.h"
+#include "ff.h"
+#include "diskio.h"
 
 #define TCK  1000                           /* Timer Clock  */
 #define PIV  ((MCK/TCK/16)-1)               /* Periodic Interval Value */
@@ -68,6 +70,10 @@ void play(void)
 	aac_init(buf, sizeof(buf));
 
 	dac_enable_dma();
+	
+	fatfs_test();
+	
+	while(1);
 	
 	ls_openDir( &list, &(efs.myFs) , "/");
 	ls_getNext( &list );
@@ -178,6 +184,37 @@ void play(void)
 	fs_umount( &efs.myFs );
 }
 
+void fatfs_test()
+{
+	FATFS fs;
+	FIL file;
+	BYTE fbuff[512];
+	BYTE csd[16];
+	DWORD sectors;
+	
+	memset(&fs, 0, sizeof(FATFS));
+	FatFs = &fs;
+	
+	/*
+	iprintf("disk_initialize: %i\n", disk_initialize());
+	iprintf("disk_ioctl: %i\n", disk_ioctl(MMC_GET_CSD, csd));
+	for(int i=0; i<=16; i++) {
+		iprintf("%x\n", csd[i]);
+	}
+	
+	iprintf("disk_ioctl: %i\n", disk_ioctl(GET_SECTORS, &sectors));
+	iprintf("sectors: %lu\n", sectors);
+	*/ 
+	
+	file.buffer = fbuff;
+	iprintf("f_mountdrv: %i\n", f_mountdrv());
+	iprintf("f_open: %i\n", f_open(&file, "/HOUSEO~1.WAV", FA_OPEN_EXISTING|FA_READ));
+	
+	while(wav_process(&file) == 0);
+	puts("finished");
+	
+}
+
 int main(void)
 {
 	signed char res;
@@ -213,7 +250,8 @@ int main(void)
 	/* init efsl debug-output */
 	efsl_debug_devopen_arm(uart0_putc);
 	
-	//led1(1);
+	play();
+	while(1);
 	
 	iprintf("CARD init...");
 

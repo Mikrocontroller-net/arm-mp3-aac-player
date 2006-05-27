@@ -50,7 +50,7 @@
  * ioman_init.
 */
 	/*#define IOMAN_NUMBUFFER 1*/
-	#define IOMAN_NUMBUFFER 6 /* 32kB RAM on the LPC2138 - let's use 3 kB */
+	#define IOMAN_NUMBUFFER 0 /* 32kB RAM on the LPC2138 - let's use 3 kB */
 	#define IOMAN_NUMITERATIONS 3
 	#define IOMAN_DO_MEMALLOC
 

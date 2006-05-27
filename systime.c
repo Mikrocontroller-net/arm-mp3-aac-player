@@ -19,6 +19,7 @@
 #include "interrupt_utils.h"
 #include "systime.h"
 #include "control.h"
+#include "diskio.h"
 
 #ifdef ERAM  /* Fast IRQ functions Run in RAM  - see board.h */
 #define ATTR RAMFUNC
@@ -46,6 +47,9 @@ void  NACKEDFUNC ATTR systime_isr(void) {        /* System Interrupt Handler */
 		//}
 		if (systime_value % 16 == 0) {
 			process_keys();
+		}
+		if (systime_value % 10 == 0) {
+			disk_timerproc();
 		}
 		*AT91C_AIC_EOICR = pPIT->PITC_PIVR;    /* Ack & End of Interrupt */
 	} 

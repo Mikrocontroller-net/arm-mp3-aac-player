@@ -50,7 +50,9 @@ SRC = serial.c syscalls.c $(TARGET).c \
   aac/codec/fixpt/decoder/real/sbr.c \
   aac/codec/fixpt/decoder/real/sbrtabs.c \
   aac/codec/fixpt/decoder/real/trigtabs.c \
-  aac/codec/fixpt/decoder/real/trigtabs_fltgen.c
+  aac/codec/fixpt/decoder/real/trigtabs_fltgen.c \
+  fatfs/ff.c \
+  fatfs/mmc.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
@@ -140,7 +142,7 @@ CSTANDARD = -std=gnu99
 CDEFS =  -D$(RUN_MODE) -DARM -DUSE_DEFAULT_STDLIB
 
 # Place -I options here
-CINCS = -Iefsl/inc -Iefsl/conf -Imp3/codec/fixpt/pub -Iaac/codec/fixpt/decoder/pub
+CINCS = -Ifatfs -Iefsl/inc -Iefsl/conf -Imp3/codec/fixpt/pub -Iaac/codec/fixpt/decoder/pub
 
 # Place -D or -U options for ASM here
 ADEFS =  -D$(RUN_MODE)
