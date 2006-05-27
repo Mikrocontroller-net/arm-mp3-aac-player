@@ -324,11 +324,11 @@
  241              	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 main.c
-/var/tmp//ccJfeDOb.s:1      .text:00000000 $t
-/var/tmp//ccJfeDOb.s:28     .text:00000000 main
-/var/tmp//ccJfeDOb.s:176    .text:000000c0 $d
-/var/tmp//ccJfeDOb.s:203    .data:00000000 pPIO
-/var/tmp//ccJfeDOb.s:204    .data:00000000 $d
+/var/tmp//ccLnj0pW.s:1      .text:00000000 $t
+/var/tmp//ccLnj0pW.s:28     .text:00000000 main
+/var/tmp//ccLnj0pW.s:176    .text:000000c0 $d
+/var/tmp//ccLnj0pW.s:203    .data:00000000 pPIO
+/var/tmp//ccLnj0pW.s:204    .data:00000000 $d
 
 UNDEFINED SYMBOLS
 uart0_init

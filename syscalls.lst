@@ -387,17 +387,17 @@
  360              	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 syscalls.c
-/var/tmp//ccFZZas4.s:1      .text:00000000 $t
-/var/tmp//ccFZZas4.s:16     .text:00000000 _close_r
-/var/tmp//ccFZZas4.s:36     .text:00000004 _lseek_r
-/var/tmp//ccFZZas4.s:55     .text:00000008 _fstat_r
-/var/tmp//ccFZZas4.s:79     .text:00000014 isatty
-/var/tmp//ccFZZas4.s:98     .text:00000018 _sbrk_r
-/var/tmp//ccFZZas4.s:127    .text:0000002c $d
-/var/tmp//ccFZZas4.s:253    .bss:00000000 heap_ptr
-/var/tmp//ccFZZas4.s:136    .text:00000034 _write_r
-/var/tmp//ccFZZas4.s:133    .text:00000034 $t
-/var/tmp//ccFZZas4.s:188    .text:00000060 _read_r
+/var/tmp//ccv3VlnE.s:1      .text:00000000 $t
+/var/tmp//ccv3VlnE.s:16     .text:00000000 _close_r
+/var/tmp//ccv3VlnE.s:36     .text:00000004 _lseek_r
+/var/tmp//ccv3VlnE.s:55     .text:00000008 _fstat_r
+/var/tmp//ccv3VlnE.s:79     .text:00000014 isatty
+/var/tmp//ccv3VlnE.s:98     .text:00000018 _sbrk_r
+/var/tmp//ccv3VlnE.s:127    .text:0000002c $d
+/var/tmp//ccv3VlnE.s:253    .bss:00000000 heap_ptr
+/var/tmp//ccv3VlnE.s:136    .text:00000034 _write_r
+/var/tmp//ccv3VlnE.s:133    .text:00000034 $t
+/var/tmp//ccv3VlnE.s:188    .text:00000060 _read_r
                              .bss:00000000 $d
 
 UNDEFINED SYMBOLS

@@ -167,12 +167,12 @@
  135              	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 ExtInt.c
-/var/tmp//cc5TAMJD.s:14     .fastrun:00000000 irq0_int
-/var/tmp//cc5TAMJD.s:23     .fastrun:00000000 $a
-/var/tmp//cc5TAMJD.s:66     .fastrun:00000068 $d
-/var/tmp//cc5TAMJD.s:73     .text:00000000 init_extint
-/var/tmp//cc5TAMJD.s:81     .text:00000000 $a
-/var/tmp//cc5TAMJD.s:98     .text:00000020 $d
+/var/tmp//ccTI4xMh.s:14     .fastrun:00000000 irq0_int
+/var/tmp//ccTI4xMh.s:23     .fastrun:00000000 $a
+/var/tmp//ccTI4xMh.s:66     .fastrun:00000068 $d
+/var/tmp//ccTI4xMh.s:73     .text:00000000 init_extint
+/var/tmp//ccTI4xMh.s:81     .text:00000000 $a
+/var/tmp//ccTI4xMh.s:98     .text:00000020 $d
 
 UNDEFINED SYMBOLS
 pPIO
