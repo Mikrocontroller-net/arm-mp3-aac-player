@@ -1,6 +1,6 @@
 USE_THUMB_MODE=YES
 DEBUG=-g
-OPTIM=-Os
+OPTIM=-O0
 RUN_MODE=RUN_FROM_ROM
 LDSCRIPT=atmel-rom.ld
 
@@ -19,7 +19,7 @@ RTOS_PORT_DIR = ./FreeRTOS_CORE/portable/GCC/ARM7_AT91SAM7S
 # CFLAGS common to both the THUMB and ARM mode builds
 #
 CFLAGS=$(WARNINGS) -D $(RUN_MODE) -D SAM7_GCC -D ARM -I. -I$(RTOS_SOURCE_DIR)/include -IDemo_Common/include \
-		-I$(RTOS_PORT_DIR) -Imp3/codec/fixpt/pub -mcpu=arm7tdmi -T$(LDSCRIPT) \
+		-I$(RTOS_PORT_DIR) -Imp3/codec/fixpt/pub -Iefsl/inc -Iefsl/conf -mcpu=arm7tdmi -T$(LDSCRIPT) \
 		 $(OPTIM) $(DEBUG)
 
 ifeq ($(USE_THUMB_MODE),YES)

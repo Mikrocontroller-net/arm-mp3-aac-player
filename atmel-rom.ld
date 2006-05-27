@@ -1,10 +1,10 @@
 MEMORY 
 {
-	flash	: ORIGIN = 0x00100000, LENGTH = 64K
-	ram		: ORIGIN = 0x00200000, LENGTH = 16K
+	flash	: ORIGIN = 0x00100000, LENGTH = 256K
+	ram		: ORIGIN = 0x00200000, LENGTH = 64K
 }
 
-__stack_end__ = 0x00200000 + 16K - 4;
+__stack_end__ = 0x00200000 + 64K - 4;
 
 SECTIONS 
 {

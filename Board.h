@@ -16,8 +16,8 @@
 #ifndef Board_h
 #define Board_h
 
-#include "AT91SAM7S64.h"
-#include "ioat91sam7s64.h"
+#include "AT91SAM7S256.h"
+//#include "ioat91sam7s256.h"
 
 #define true	-1
 #define false	0
@@ -35,7 +35,7 @@
 /* Leds Definition */
 /*-----------------*/
 #define LED1            (1<<18)	// PB19
-#define LED2            (1<<17)	// PB20
+#define LED2            (1<<19)	// PB20
 #define LED3            (1<<21)	// PB21
 #define LED4            (1<<22)	// PB22
 #define NB_LED			4
