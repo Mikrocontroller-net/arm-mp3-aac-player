@@ -49,6 +49,7 @@
 /* Library includes. */
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
 /* Scheduler includes. */
 #include "FreeRTOS.h"
@@ -61,6 +62,10 @@
 #include "flash.h"
 #include "integer.h"
 #include "BlockQ.h"
+
+#include "efs.h"
+#include "ls.h"
+#include "mkfs.h"
 
 /* Hardware specific headers. */
 #include "Board.h"
@@ -103,9 +108,105 @@ static void prvSetupHardware( void );
 
 /*-----------------------------------------------------------*/
 
-/*
- * Setup hardware then start all the demo application tasks.
- */
+EmbeddedFileSystem efs;
+EmbeddedFile filer, filew;
+DirList list;
+unsigned short e;
+unsigned char buf[2][2048];
+
+#define rprintf 
+
+
+int fill_buffer(int i)
+{
+	return file_read( &filer, sizeof(buf[i]), buf[i] );
+}
+
+void set_first_dma(short *buffer, int n)
+{
+	*AT91C_SSC_TPR = buffer;
+	*AT91C_SSC_TCR = n;
+}
+
+void set_next_dma(short *buffer, int n)
+{
+	*AT91C_SSC_TNPR = buffer;
+	*AT91C_SSC_TNCR = n;
+}
+
+int dma_endtx()
+{
+	return *AT91C_SSC_SR & AT91C_SSC_ENDTX;
+}
+
+void play_wav(void)
+{
+	/************  PWM  ***********/
+	/*   PWM0 = MAINCK/4          */
+	*AT91C_PMC_PCER = (1 << AT91C_ID_PWMC); // Enable Clock for PWM controller
+	*AT91C_PWMC_CH0_CPRDR = 2; // channel period = 2
+	*AT91C_PWMC_CH0_CMR = 1; // prescaler = 2
+	*AT91C_PIOA_PDR = AT91C_PA0_PWM0; // enable pin
+	*AT91C_PWMC_CH0_CUPDR = 1;
+	*AT91C_PWMC_ENA = AT91C_PWMC_CHID0; // enable channel 0 output
+
+	/************  SSC  ***********/
+	*AT91C_PMC_PCER = (1 << AT91C_ID_SSC); // Enable Clock for SSC controller
+	*AT91C_SSC_CR = AT91C_SSC_SWRST; // reset
+	*AT91C_SSC_CMR = 16;
+	*AT91C_SSC_TCMR = AT91C_SSC_CKS_DIV | AT91C_SSC_CKO_CONTINOUS |
+	                  AT91C_SSC_START_FALL_RF |
+	                  (1 << 16) |   // STTDLY = 1
+	                  (15 << 24);   // PERIOD = 15
+	*AT91C_PIOA_PDR = AT91C_PA16_TK | AT91C_PA15_TF | AT91C_PA17_TD; // enable pins
+	*AT91C_SSC_TFMR = (15) |        // 16 bit word length
+	                  (1 << 8) |		// DATNB = 1 => 2 words per frame
+	                  (15 << 16) |	// FSLEN = 15
+	                  AT91C_SSC_MSBF | AT91C_SSC_FSOS_NEGATIVE;
+	*AT91C_SSC_CR = AT91C_SSC_TXEN; // enable TX
+	
+	// open WAV
+	assert(file_fopen( &filer, &efs.myFs, "BBC.wav", 'r') == 0 );
+	rprintf("\nWAV-File opened.\n");
+
+	fill_buffer(0);
+	set_first_dma((short *)buf[0], 1024);
+	
+	// enable DMA transfer
+	*AT91C_SSC_PTCR = AT91C_PDC_TXTEN;
+	assert(*AT91C_SSC_PTSR == AT91C_PDC_TXTEN);
+		
+	while(1) {
+		fill_buffer(1);
+		set_next_dma((short *)buf[1], 1024);
+		while(!dma_endtx());
+		fill_buffer(0);
+		set_next_dma((short *)buf[0], 1024);
+		while(!dma_endtx());
+	}
+
+	file_fclose( &filer );
+}
+
+static portTASK_FUNCTION_PROTO( vTestTask, pvParameters );
+
+/*-----------------------------------------------------------*/
+
+void vStartTestTask( unsigned portBASE_TYPE uxPriority )
+{
+	xTaskCreate( vTestTask, ( const signed portCHAR * const ) "Test", 2000, NULL, uxPriority, ( xTaskHandle * ) NULL );
+}
+/*-----------------------------------------------------------*/
+
+static portTASK_FUNCTION( vTestTask, pvParameters )
+{
+	efs_init( &efs, 0 );
+	play_wav();
+	
+	while(1);
+}
+
+
 int main( void )
 {
 	/* Setup the ports. */
@@ -115,14 +216,15 @@ int main( void )
 	vParTestInitialise();
 	
 	/* Create the standard demo application tasks. */
-	vStartPolledQueueTasks( mainQUEUE_POLL_PRIORITY );
-	vStartSemaphoreTasks( mainSEM_TEST_PRIORITY );
-	//vStartLEDFlashTasks( mainFLASH_PRIORITY );
-	vStartIntegerMathTasks( tskIDLE_PRIORITY );
-	vStartBlockingQueueTasks( mainBLOCK_Q_PRIORITY );
+	vStartTestTask( tskIDLE_PRIORITY + 3);
+  //vStartPolledQueueTasks( mainQUEUE_POLL_PRIORITY );
+	//vStartSemaphoreTasks( mainSEM_TEST_PRIORITY );
+	vStartLEDFlashTasks( mainFLASH_PRIORITY );
+	//vStartIntegerMathTasks( tskIDLE_PRIORITY );
+	//vStartBlockingQueueTasks( mainBLOCK_Q_PRIORITY );
 
 	/* Start the check task - which is defined in this file. */	
-    xTaskCreate( vErrorChecks, ( signed portCHAR * ) "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
+  //xTaskCreate( vErrorChecks, ( signed portCHAR * ) "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
 
 	/* Finally, start the scheduler. 
 
@@ -134,6 +236,7 @@ int main( void )
 	vTaskStartScheduler();
 
 	/* Should never get here! */
+	
 	return 0;
 }
 /*-----------------------------------------------------------*/
