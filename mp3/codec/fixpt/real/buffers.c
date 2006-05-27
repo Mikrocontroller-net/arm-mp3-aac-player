@@ -46,11 +46,9 @@
  **************************************************************************************/
 
 //#include "hlxclib/stdlib.h"		/* for malloc, free */ 
+#include <stdlib.h>
 #include <string.h>
 #include "coder.h"
-
-#define malloc(x) pvPortMalloc(x)
-#define free(x) vPortFree(x)
 
 /**************************************************************************************
  * Function:    ClearBuffer

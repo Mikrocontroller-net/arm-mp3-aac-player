@@ -81,6 +81,7 @@
 
 #define COS4_0  0x5a82799a	/* Q31 */
 
+// faster in ROM
 static const int dcttab[48] = {
 	/* first pass */
 	COS0_0, COS0_15, COS1_0,	/* 31, 27, 31 */
@@ -139,7 +140,8 @@ static const int dcttab[48] = {
  *              possibly interleave stereo (cut # of coef loads in half - may not have
  *                enough registers)
  **************************************************************************************/
-void FDCT32(int *buf, int *dest, int offset, int oddBlock, int gb)
+// about 1ms faster in RAM
+__attribute__ ((section (".data"))) void FDCT32(int *buf, int *dest, int offset, int oddBlock, int gb)
 {
     int i, s, tmp, es;
     const int *cptr = dcttab;

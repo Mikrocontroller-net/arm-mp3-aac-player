@@ -57,7 +57,7 @@
  *
  * Return:      0 on success,  -1 if null input pointers
  **************************************************************************************/
-int Subband(MP3DecInfo *mp3DecInfo, short *pcmBuf)
+__attribute__ ((section (".data"))) int Subband(MP3DecInfo *mp3DecInfo, short *pcmBuf)
 {
 	int b;
 	HuffmanInfo *hi;

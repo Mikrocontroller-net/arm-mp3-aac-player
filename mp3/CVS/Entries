@@ -1,5 +1,12 @@
-/LICENSE.txt/1.1/Fri Feb  6 15:27:50 2004//
-/RCSL.txt/1.1/Fri Feb  6 15:27:50 2004//
-/RPSL.txt/1.1/Fri Feb  6 15:27:50 2004//
-/Umakefil/1.1/Fri Oct 18 01:54:47 2002//
-D
+D/codec////
+D/common////
+D/decoder////
+D/fileformat////
+D/import////
+D/mp3metaff////
+D/payload////
+D/renderer////
+/LICENSE.txt/1.1/Sun May 21 11:47:11 2006//
+/RCSL.txt/1.1/Sun May 21 11:47:12 2006//
+/RPSL.txt/1.1/Sun May 21 11:47:12 2006//
+/Umakefil/1.1/Sun May 21 11:47:12 2006//
