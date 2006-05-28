@@ -165,10 +165,8 @@ void play(void)
 			}
 		
 			if (key0) {
-				f_close( &file );
 				state = STOP;
 			} else if (key1) {
-				f_close( &file );
 				state = NEXT;
 			}
 			break;

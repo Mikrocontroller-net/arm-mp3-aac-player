@@ -186,6 +186,8 @@ int aac_process(FIL *aacfile)
 		debug_printf("Words remaining in next DMA buffer: %i\n", *AT91C_SSC_TNCR);
 		
 		dac_buffer_size[writeable_buffer] = aacFrameInfo.outputSamps;
+		
+		//iprintf("%i kbps\n", aacFrameInfo.bitRate);
 	}
 	
 	while (dac_fill_dma() == 0);
