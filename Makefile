@@ -228,26 +228,6 @@ else
 LDFLAGS +=-T$(SUBMDL)-ROM.ld
 endif
 
-
-
-# ---------------------------------------------------------------------------
-# Flash-Programming support using lpc21isp by Martin Maurer 
-# only for Philips LPC and Analog ADu ARMs
-#
-# Settings and variables:
-#LPC21ISP = lpc21isp
-LPC21ISP = lpc21isp_beta
-LPC21ISP_PORT = com1
-LPC21ISP_BAUD = 115200
-LPC21ISP_XTAL = 14746
-LPC21ISP_FLASHFILE = $(TARGET).hex
-# verbose output:
-## LPC21ISP_DEBUG = -debug
-# enter bootloader via RS232 DTR/RTS (only if hardware supports this
-# feature - see Philips AppNote):
-LPC21ISP_CONTROL = -control
-
-
 # ---------------------------------------------------------------------------
 
 # Define directories, if needed.
@@ -356,10 +336,6 @@ sizeafter:
 # Display compiler version information.
 gccversion : 
 	@$(CC) --version
-
-program: $(TARGET).bin
-	scp $(TARGET).bin 192.168.0.33:/tmp/main.bin
-	ssh 192.168.0.33 openocd -f at91sam7_wiggler.cfg
 
 # Create final output files (.hex, .eep) from ELF output file.
 # TODO: handle an .eeprom-section but should be redundant
