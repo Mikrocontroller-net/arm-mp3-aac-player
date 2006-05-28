@@ -23,7 +23,7 @@ static FIL file;
 static DIR dir;
 static FILINFO fileinfo;
 static BYTE fbuff[512];
-int underruns=0;
+extern int underruns;
 
 char * get_full_filename(unsigned char * filename)
 {
@@ -60,22 +60,23 @@ enum filetypes get_filetype(char * filename)
 void play(void)
 {
 	enum playing_states {START, PLAY, STOP, NEXT};
-	enum playing_states state = STOP;
+	enum playing_states state = NEXT;
 	enum filetypes infile_type = UNKNOWN;
 	long key0=0, key1=0;
-	char id3buffer[128];
+	BYTE id3buffer[128];
 	int bytes_read;
+	char title[30];
+	char artist[30];
 	
 	memset(&dir, 0, sizeof(DIR));
 	assert(f_opendir(&dir, "/") == FR_OK);
-	assert(f_readdir( &dir, &fileinfo ) == FR_OK && fileinfo.fname[0]); // read first entry
 	
 	dac_init();
 	wav_init(buf, sizeof(buf));
 	mp3_init(buf, sizeof(buf));
 	aac_init(buf, sizeof(buf));
 
-	dac_enable_dma();
+	//dac_enable_dma();
 	
 	
 	//iprintf("f_open: %i\n", f_open(&file, "/04TUYY~1.MP3", FA_OPEN_EXISTING|FA_READ));
@@ -109,8 +110,8 @@ void play(void)
 		case START:
 			infile_type = get_filetype(fileinfo.fname);
 			if (infile_type == AAC || infile_type == WAV || infile_type == MP3) {
-				assert(f_open( &file, get_full_filename(fileinfo.fname), FA_OPEN_EXISTING|FA_READ) == FR_OK);
-				puts("File opened.");
+				//assert(f_open( &file, get_full_filename(fileinfo.fname), FA_OPEN_EXISTING|FA_READ) == FR_OK);
+				//puts("File opened.");
 				
 				mp3_free();
 				aac_free();
@@ -183,13 +184,32 @@ void play(void)
 			
 			// read ID3 tag
 			assert(f_open( &file, get_full_filename(fileinfo.fname), FA_OPEN_EXISTING|FA_READ) == FR_OK);
-			f_lseek(&file, fileinfo.fsize - 128);
-			assert(f_read(&file, id3buffer, 128, &bytes_read) == FR_OK);
-			if (strncmp("TAG", id3buffer, 3) == 0) {
-				iprintf("Artist: %.30s\nTitle: %.30s\n", id3buffer + 3 + 30, id3buffer + 3);
-				
+			
+			assert(f_read(&file, id3buffer, sizeof(id3buffer), &bytes_read) == FR_OK);
+			// try ID3v2
+			if (strncmp("ID3", id3buffer, 3) == 0) {
+				DWORD tag_size, frame_size;
+				tag_size = ((DWORD)id3buffer[6] << 21)|((DWORD)id3buffer[7] << 14)|((WORD)id3buffer[8] << 7)|id3buffer[9];
+				iprintf("found ID3 version 2.%x.%x, length %lu, extended header: %i\n", id3buffer[3], id3buffer[4], tag_size, id3buffer[5] & (1<<6));
+				// iterate thorugh frames
+				if (strncmp("TT2", id3buffer + 10, 3) == 0) {
+					tag_size = ((DWORD)id3buffer[13] << 14)|((WORD)id3buffer[14] << 7)|id3buffer[15];
+					strncpy(title, id3buffer + 17, tag_size - 1);
+					title[tag_size - 1] = '\0';
+					iprintf("Title: %s\n", title);
+				}
+				f_lseek(&file, tag_size);
+			} else {
+				// try ID3v1
+				f_lseek(&file, fileinfo.fsize - 128);
+				assert(f_read(&file, id3buffer, 128, &bytes_read) == FR_OK);
+				if (strncmp("TAG", id3buffer, 3) == 0) {
+					iprintf("Artist: %.30s\nAlbum: %.30s\nTitle: %.30s\n", id3buffer + 3 + 30, id3buffer + 3 + 60, id3buffer + 3);
+				}
+				f_lseek(&file, 0);
 			}
-			f_close(&file);
+			
+			//f_close(&file);
 			
 			state = STOP;
 			break;

@@ -7,11 +7,13 @@ static int wp=0, rp=0, readable_buffers=0;
 short dac_buffer[MAX_BUFFERS][DAC_BUFFER_MAX_SIZE];
 int dac_buffer_size[MAX_BUFFERS];
 int stopped;
+int underruns;
 
 void dac_reset()
 {
 	wp = rp = readable_buffers = 0;
-	stopped = 0;
+	stopped = 1;
+	underruns = 0;
 }
 
 // return the index of the next writeable buffer or -1 on failure
@@ -66,6 +68,7 @@ int dac_busy_buffers()
 	}
 }
 
+// returns -1 if there is no free DMA buffer
 int dac_fill_dma()
 {
 	int readable_buffer;
@@ -73,6 +76,7 @@ int dac_fill_dma()
 	if(*AT91C_SSC_TNCR == 0 && *AT91C_SSC_TCR == 0) {
 		// underrun
 		stopped = 1;
+		underruns++;
 		puts("both buffers empty, disabling DMA");
 		dac_disable_dma();
 

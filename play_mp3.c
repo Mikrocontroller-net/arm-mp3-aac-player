@@ -191,6 +191,8 @@ int mp3_process(FIL *mp3file)
 		debug_printf("Words remaining in next DMA buffer: %i\n", *AT91C_SSC_TNCR);
 	
 		dac_buffer_size[writeable_buffer] = mp3FrameInfo.outputSamps;
+		
+		iprintf("%i kbps\n", mp3FrameInfo.bitrate/1000);
 	}
 	
 	while (dac_fill_dma() == 0);
