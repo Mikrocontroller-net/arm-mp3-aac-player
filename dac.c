@@ -3,6 +3,8 @@
 #include "dac.h"
 #include "AT91SAM7S64.h"
 
+#define debug_printf
+
 static int wp=0, rp=0, readable_buffers=0;
 short dac_buffer[MAX_BUFFERS][DAC_BUFFER_MAX_SIZE];
 int dac_buffer_size[MAX_BUFFERS];
@@ -83,19 +85,19 @@ int dac_fill_dma()
 		if ( (readable_buffer = dac_get_readable_buffer()) == -1 ) {
 			return -1;
 		}
-		iprintf("rb %i, size %i\n", readable_buffer, dac_buffer_size[readable_buffer]);
+		debug_printf("rb %i, size %i\n", readable_buffer, dac_buffer_size[readable_buffer]);
 		
 		set_first_dma(dac_buffer[readable_buffer], dac_buffer_size[readable_buffer]);
-		puts("ffb!");
+		//puts("ffb!");
 		return 0;
 	} else if(*AT91C_SSC_TNCR == 0) {
 		if ( (readable_buffer = dac_get_readable_buffer()) == -1 ) {
 			return -1;
 		}
-		iprintf("rb %i, size %i\n", readable_buffer, dac_buffer_size[readable_buffer]);
+		debug_printf("rb %i, size %i\n", readable_buffer, dac_buffer_size[readable_buffer]);
 		
 		set_next_dma(dac_buffer[readable_buffer], dac_buffer_size[readable_buffer]);
-		puts("fnb");
+		//puts("fnb");
 		return 0;
 	} else {
 		// both DMA buffers are full

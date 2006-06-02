@@ -11,6 +11,9 @@
 
 #define debug_printf
 
+#define PROFILE_START(x)
+#define PROFILE_END()
+
 static HAACDecoder hAACDecoder;
 static AACFrameInfo aacFrameInfo;
 static unsigned char *readPtr;
@@ -133,7 +136,7 @@ int aac_process(FIL *aacfile)
 		return 0;
 	}
 	
-	iprintf("wb %i\n", writeable_buffer);
+	debug_printf("wb %i\n", writeable_buffer);
 	
 	PROFILE_START("AACDecode");
 	err = AACDecode(hAACDecoder, &readPtr, &bytesLeft, dac_buffer[writeable_buffer]);

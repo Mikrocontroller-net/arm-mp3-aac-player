@@ -132,7 +132,7 @@ int mp3_process(FIL *mp3file)
 		return 0;
 	}
 	
-	iprintf("wb %i\n", writeable_buffer);
+	debug_printf("wb %i\n", writeable_buffer);
 
 	PROFILE_START("MP3Decode");
 	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, dac_buffer[writeable_buffer], 0);
