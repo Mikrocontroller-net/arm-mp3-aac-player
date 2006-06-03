@@ -255,7 +255,7 @@ void dac_init(void)
 	//*AT91C_SSC_CMR = 18; // slow for testing
 	*AT91C_SSC_TCMR = AT91C_SSC_CKS_RK |		// external clock on TK
 	                  AT91C_SSC_START_EDGE_RF |	// falling edge
-	                  (1 << 16);				// STTDLY = 1
+	                  (0 << 16);				// STTDLY = 0!
 	*AT91C_SSC_TFMR = (15) |					// 16 bit word length
 	                  (0 << 8) |				// DATNB = 0 => 1 words per frame
 	                  AT91C_SSC_MSBF;			// MSB first
