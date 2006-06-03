@@ -152,30 +152,98 @@ int dma_endtx(void)
 	return *AT91C_SSC_SR & AT91C_SSC_ENDTX;
 }
 
+void dac_write_reg(unsigned char reg, unsigned short value)
+{
+	unsigned char b0, b1;
+	
+	b1 = (reg << 1) | ((value >> 8) & 0x01);
+	b0 = value & 0xFF;
+	
+	iprintf("reg: %x, value: %x\nb1: %x, b0: %x\n", reg, value, b1, b0);
+	
+	// load high byte
+	*AT91C_TWI_THR = b1;
+	// send start condition
+	*AT91C_TWI_CR = AT91C_TWI_START;
+	while(!(*AT91C_TWI_SR & AT91C_TWI_TXRDY));
+	// send low byte
+	*AT91C_TWI_THR = b0;
+	while(!(*AT91C_TWI_SR & AT91C_TWI_TXRDY));
+	iprintf("%lu\n", *AT91C_TWI_SR);
+	*AT91C_TWI_CR = AT91C_TWI_STOP;
+	while(!(*AT91C_TWI_SR & AT91C_TWI_TXCOMP));
+}
+
 void dac_init(void)
 {
+	AT91PS_PMC pPMC = AT91C_BASE_PMC;
+	
 	/************  PWM  ***********/
 	/*   PWM0 = MAINCK/4          */
+	/*
 	*AT91C_PMC_PCER = (1 << AT91C_ID_PWMC); // Enable Clock for PWM controller
 	*AT91C_PWMC_CH0_CPRDR = 2; // channel period = 2
 	*AT91C_PWMC_CH0_CMR = 1; // prescaler = 2
 	*AT91C_PIOA_PDR = AT91C_PA0_PWM0; // enable pin
 	*AT91C_PWMC_CH0_CUPDR = 1;
 	*AT91C_PWMC_ENA = AT91C_PWMC_CHID0; // enable channel 0 output
-
+	*/
+	
+	/************ Programmable Clock Output PCK2 ***********/
+	// select source (PLL)
+	// select prescaler (8)
+	// => 12 MHz
+	pPMC->PMC_PCKR[2] = (AT91C_PMC_PRES_CLK_8 | AT91C_PMC_CSS_PLL_CLK);
+	// enable PCK2
+	*AT91C_PMC_SCER = AT91C_PMC_PCK2;
+	// wait
+	while( !(*AT91C_PMC_SR & AT91C_PMC_PCK2RDY) );
+	// select peripheral b
+	*AT91C_PIOA_BSR = AT91C_PA31_PCK2;
+	// disable PIO 31
+	*AT91C_PIOA_PDR = AT91C_PA31_PCK2;
+	
+	/************* TWI ************/
+	// internal pull ups enabled by default
+	// enable clock for TWI
+	*AT91C_PMC_PCER = (1 << AT91C_ID_TWI);
+	// disable pio
+	*AT91C_PIOA_PDR = AT91C_PA3_TWD | AT91C_PA4_TWCK;
+	// reset
+	*AT91C_TWI_CR = AT91C_TWI_SWRST;
+	// set TWI clock to ( MCK / ((CxDIV) * 2^CKDIV) + 3) ) / 2
+	*AT91C_TWI_CWGR = (5 << 16) |		// CKDIV
+	                  (255 << 8) |		// CHDIV
+	                  (255 << 0);		// CLDIV
+	// enable master transfer
+	*AT91C_TWI_CR = AT91C_TWI_MSEN;
+	// master mode
+	*AT91C_TWI_MMR = AT91C_TWI_IADRSZ_NO | (0x1A << 16); // codec address = 0b0011010 = 0x1A
+	
+	dac_write_reg(AIC23B_REG_RESET, 0x00);
+	dac_write_reg(AIC23B_REG_POWER, 7); // ADC, MIC and Line are powered down
+	dac_write_reg(AIC23B_REG_SRATE, SR3 | BOSR | USB);
+	dac_write_reg(AIC23B_REG_AN_PATH, 1 << 4 | 0 << 3); // enable DAC, disable bypass
+	dac_write_reg(AIC23B_REG_DIG_PATH, 0 << 3); // disable soft mute
+	dac_write_reg(AIC23B_REG_DIG_FORMAT, (1 << 6) | 2); // master, I2S left aligned
+	dac_write_reg(AIC23B_REG_DIG_ACT, 1 << 0); // activate digital interface
+	
 	/************  SSC  ***********/
 	*AT91C_PMC_PCER = (1 << AT91C_ID_SSC); // Enable Clock for SSC controller
 	*AT91C_SSC_CR = AT91C_SSC_SWRST; // reset
-	*AT91C_SSC_CMR = 16;
+	*AT91C_SSC_CMR = 0; // no divider
 	//*AT91C_SSC_CMR = 18; // slow for testing
-	*AT91C_SSC_TCMR = AT91C_SSC_CKS_DIV | AT91C_SSC_CKO_CONTINOUS |
-	                  AT91C_SSC_START_FALL_RF |
-	                  (1 << 16) |   // STTDLY = 1
-	                  (15 << 24);   // PERIOD = 15
+	*AT91C_SSC_TCMR = AT91C_SSC_CKS_RK |		// external clock on TK
+	                  AT91C_SSC_START_EDGE_RF |	// falling edge
+	                  (1 << 16);				// STTDLY = 1
+	*AT91C_SSC_TFMR = (15) |					// 16 bit word length
+	                  (0 << 8) |				// DATNB = 0 => 1 words per frame
+	                  AT91C_SSC_MSBF;			// MSB first
 	*AT91C_PIOA_PDR = AT91C_PA16_TK | AT91C_PA15_TF | AT91C_PA17_TD; // enable pins
-	*AT91C_SSC_TFMR = (15) |        // 16 bit word length
-	                  (1 << 8) |		// DATNB = 1 => 2 words per frame
-	                  (15 << 16) |	// FSLEN = 15
-	                  AT91C_SSC_MSBF | AT91C_SSC_FSOS_NEGATIVE;
 	*AT91C_SSC_CR = AT91C_SSC_TXEN; // enable TX
+
+	//*AT91C_SSC_THR = 0x5555; // transmit something
+
+	//while(1);
+
 }
