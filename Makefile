@@ -5,10 +5,9 @@ THUMB    = -mthumb
 THUMB_IW = -mthumb-interwork
 
 
-## Create ROM-Image (final)
+## Create ROM-Image
 RUN_MODE=ROM_RUN
-## Create RAM-Image (debugging)
-#RUN_MODE=RAM_RUN
+
 
 ## Exception-Vector placement only supported for "ROM_RUN"
 ## (placement settings ignored when using "RAM_RUN")
@@ -17,11 +16,6 @@ RUN_MODE=ROM_RUN
 ## - Exception vectors in RAM:
 VECTOR_LOCATION=VECTORS_IN_RAM
 
-## Output format. (can be ihex or binary)
-#FORMAT = ihex
-FORMAT = binary
-
-
 # Target file name (without extension).
 TARGET = main
 
@@ -29,6 +23,8 @@ TARGET = main
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
 SRC = serial.c syscalls.c $(TARGET).c \
+  player.c \
+  fileinfo.c \
   dac.c \
   play_wav.c \
   play_mp3.c \
@@ -115,12 +111,6 @@ ASRCARM = startup_SAM7S.S mp3/codec/fixpt/real/arm/asmpoly_gcc.S \
 # (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
 OPT = s
 #OPT = 0
-
-# Debugging format.
-# Native formats for AVR-GCC's -g are stabs [default], or dwarf-2.
-# AVR (extended) COFF requires stabs, plus an avr-objcopy run.
-#DEBUG = stabs
-#DEBUG = dwarf-2
 
 # List any extra directories to look for include files here.
 #     Each directory must be seperated by a space.
@@ -265,7 +255,6 @@ MSG_COMPILINGCPP_ARM = "Compiling C++ (ARM-only):"
 MSG_ASSEMBLING = Assembling:
 MSG_ASSEMBLING_ARM = "Assembling (ARM-only):"
 MSG_CLEANING = Cleaning project:
-MSG_FORMATERROR = Can not handle output-format
 MSG_LPC21_RESETREMINDER = You may have to bring the target in bootloader-mode now.
 
 
@@ -294,18 +283,9 @@ ALL_ASFLAGS = -mcpu=$(MCU) $(THUMB_IW) -I. -x assembler-with-cpp $(ASFLAGS)
 # Default target.
 all: begin gccversion sizebefore build sizeafter finished end
 
-ifeq ($(FORMAT),ihex)
-build: elf hex lss sym
-hex: $(TARGET).hex
-else 
-ifeq ($(FORMAT),binary)
-build: elf bin lss sym
+build: elf bin hex lss sym
 bin: $(TARGET).bin
-else 
-$(error "$(MSG_FORMATERROR) $(FORMAT)")
-endif
-endif
-
+hex: $(TARGET).hex
 elf: $(TARGET).elf
 lss: $(TARGET).lss 
 sym: $(TARGET).sym
@@ -324,7 +304,7 @@ end:
 
 
 # Display size of file.
-HEXSIZE = $(SIZE) --target=$(FORMAT) $(TARGET).hex
+HEXSIZE = $(SIZE) --target=ihex $(TARGET).hex
 ELFSIZE = $(SIZE) -A $(TARGET).elf
 sizebefore:
 	@if [ -f $(TARGET).elf ]; then echo; echo $(MSG_SIZE_BEFORE); $(ELFSIZE); echo; fi
@@ -342,13 +322,13 @@ gccversion :
 %.hex: %.elf
 	@echo
 	@echo $(MSG_FLASH) $@
-	$(OBJCOPY) -O $(FORMAT) $< $@
+	$(OBJCOPY) -O ihex $< $@
 	
 # Create final output file (.bin) from ELF output file.
 %.bin: %.elf
 	@echo
 	@echo $(MSG_FLASH) $@
-	$(OBJCOPY) -O $(FORMAT) $< $@
+	$(OBJCOPY) -O binary $< $@
 
 
 # Create extended listing file from ELF output file.
@@ -418,9 +398,6 @@ $(AOBJARM) : %.o : %.S
 	@echo
 	@echo $(MSG_ASSEMBLING_ARM) $<
 	$(CC) -c $(ALL_ASFLAGS) $< -o $@
-
-$(TARGET).bin : $(TARGET).elf
-	$(OBJCOPY) $(TARGET).elf -O binary $(TARGET).bin
 
 program : $(TARGET).bin
 	scp $(TARGET).bin 192.168.0.33:/tmp/main.bin
