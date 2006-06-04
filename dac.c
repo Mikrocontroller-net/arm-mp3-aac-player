@@ -29,13 +29,17 @@ static int wp=0, rp=0, readable_buffers=0;
 short dac_buffer[MAX_BUFFERS][DAC_BUFFER_MAX_SIZE];
 int dac_buffer_size[MAX_BUFFERS];
 int stopped;
-int underruns;
+unsigned long current_srate;
+unsigned int underruns;
 
 void dac_reset()
 {
 	wp = rp = readable_buffers = 0;
+	dac_disable_dma();
 	stopped = 1;
 	underruns = 0;
+	dac_set_srate(44100);
+
 }
 
 // return the index of the next writeable buffer or -1 on failure
@@ -81,9 +85,9 @@ int dac_writeable_buffers()
 // return the number of buffers that are set up for DMA
 int dac_busy_buffers()
 {
-	if (!next_dma_empty()) {
+	if (!dac_next_dma_empty()) {
 		return 2;
-	} else if (!first_dma_empty()) {
+	} else if (!dac_first_dma_empty()) {
 		return 1;
 	} else {
 		return 0;
@@ -96,18 +100,20 @@ int dac_fill_dma()
 	int readable_buffer;
 	
 	if(*AT91C_SSC_TNCR == 0 && *AT91C_SSC_TCR == 0) {
-		// underrun
-		stopped = 1;
-		underruns++;
-		puts("both buffers empty, disabling DMA");
-		dac_disable_dma();
+		if (!stopped) {
+			// underrun
+			stopped = 1;
+			underruns++;
+			puts("both buffers empty, disabling DMA");
+			dac_disable_dma();
+		}
 
 		if ( (readable_buffer = dac_get_readable_buffer()) == -1 ) {
 			return -1;
 		}
 		debug_printf("rb %i, size %i\n", readable_buffer, dac_buffer_size[readable_buffer]);
 		
-		set_first_dma(dac_buffer[readable_buffer], dac_buffer_size[readable_buffer]);
+		dac_set_first_dma(dac_buffer[readable_buffer], dac_buffer_size[readable_buffer]);
 		//puts("ffb!");
 		return 0;
 	} else if(*AT91C_SSC_TNCR == 0) {
@@ -116,7 +122,7 @@ int dac_fill_dma()
 		}
 		debug_printf("rb %i, size %i\n", readable_buffer, dac_buffer_size[readable_buffer]);
 		
-		set_next_dma(dac_buffer[readable_buffer], dac_buffer_size[readable_buffer]);
+		dac_set_next_dma(dac_buffer[readable_buffer], dac_buffer_size[readable_buffer]);
 		//puts("fnb");
 		return 0;
 	} else {
@@ -145,23 +151,23 @@ void dac_disable_dma()
 	*AT91C_SSC_PTCR = AT91C_PDC_TXTDIS;
 }
 
-int first_dma_empty()
+int dac_first_dma_empty()
 {
 	return *AT91C_SSC_TCR == 0;
 }
 
-int next_dma_empty()
+int dac_next_dma_empty()
 {
 	return *AT91C_SSC_TNCR == 0;
 }
 
-void set_first_dma(short *buffer, int n)
+void dac_set_first_dma(short *buffer, int n)
 {
 	*AT91C_SSC_TPR = buffer;
 	*AT91C_SSC_TCR = n;
 }
 
-void set_next_dma(short *buffer, int n)
+void dac_set_next_dma(short *buffer, int n)
 {
 	*AT91C_SSC_TNPR = buffer;
 	*AT91C_SSC_TNCR = n;
@@ -192,6 +198,27 @@ void dac_write_reg(unsigned char reg, unsigned short value)
 	//iprintf("%lu\n", *AT91C_TWI_SR);
 	*AT91C_TWI_CR = AT91C_TWI_STOP;
 	while(!(*AT91C_TWI_SR & AT91C_TWI_TXCOMP));
+}
+
+int dac_set_srate(unsigned long srate)
+{
+	if (current_srate == srate)
+		return 0;
+		
+	iprintf("setting rate %lu\n", srate);
+	switch(srate) {
+	case 8000:	dac_write_reg(AIC23B_REG_SRATE, SR1|SR0|USB);				break;
+	case 8021:	dac_write_reg(AIC23B_REG_SRATE, SR3|SR1|SR0|BOSR|USB);		break;
+	case 32000:	dac_write_reg(AIC23B_REG_SRATE, SR2|SR1|USB);				break;
+	case 44100:	dac_write_reg(AIC23B_REG_SRATE, SR3|BOSR|USB);				break;
+	case 48000:	dac_write_reg(AIC23B_REG_SRATE, USB);						break;
+	case 88200:	dac_write_reg(AIC23B_REG_SRATE, SR3|SR2|SR1|SR0|BOSR|USB);	break;
+	case 96000:	dac_write_reg(AIC23B_REG_SRATE, SR2|SR1|SR0|USB);			break;
+	default:	return -1;
+	}
+	
+	current_srate = srate;
+	return 0;
 }
 
 void dac_init(void)
@@ -261,9 +288,7 @@ void dac_init(void)
 	                  AT91C_SSC_MSBF;			// MSB first
 	*AT91C_PIOA_PDR = AT91C_PA16_TK | AT91C_PA15_TF | AT91C_PA17_TD; // enable pins
 	*AT91C_SSC_CR = AT91C_SSC_TXEN; // enable TX
-
-	//*AT91C_SSC_THR = 0x5555; // transmit something
-
-	//while(1);
+	
+	dac_reset();
 
 }

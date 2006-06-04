@@ -39,7 +39,6 @@ static int nFrames = 0;
 static unsigned char *mp3buf;
 static unsigned int mp3buf_size;
 static unsigned char allocated = 0;
-extern int underruns;
 
 void mp3_init(unsigned char *buffer, unsigned int buffer_size)
 {
@@ -53,7 +52,6 @@ void mp3_reset()
 	readPtr = NULL;
 	bytesLeftBeforeDecoding = bytesLeft = 0;
 	nFrames = 0;
-	underruns = 0;
 }
 
 void mp3_alloc()
@@ -109,7 +107,6 @@ int mp3_process(FIL *mp3file)
 	// check if this is really a valid frame
 	// (the decoder does not seem to calculate CRC, so make some plausibility checks)
 	if (MP3GetNextFrameInfo(hMP3Decoder, &mp3FrameInfo, readPtr) == 0 &&
-	    mp3FrameInfo.samprate == 44100 &&
 		mp3FrameInfo.nChans == 2 &&
 		mp3FrameInfo.version == 0) {
 		debug_printf("Found a frame at offset %x\n", offset + readPtr - mp3buf + mp3file->fptr);
@@ -211,8 +208,13 @@ int mp3_process(FIL *mp3file)
 		debug_printf("Words remaining in next DMA buffer: %i\n", *AT91C_SSC_TNCR);
 	
 		dac_buffer_size[writeable_buffer] = mp3FrameInfo.outputSamps;
+
+		iprintf("%lu Hz, %i kbps\n", mp3FrameInfo.samprate, mp3FrameInfo.bitrate/1000);
 		
-		iprintf("%i kbps\n", mp3FrameInfo.bitrate/1000);
+		if (dac_set_srate(mp3FrameInfo.samprate) != 0) {
+			iprintf("unsupported sample rate: %lu\n", mp3FrameInfo.samprate);
+			return -1;
+		}
 	}
 	
 	while (dac_fill_dma() == 0);

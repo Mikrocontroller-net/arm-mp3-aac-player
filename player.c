@@ -37,7 +37,6 @@ extern FIL file;
 extern DIR dir;
 extern FILINFO fileinfo;
 extern BYTE fbuff[512];
-extern int underruns;
 
 void play(void)
 {
@@ -148,7 +147,9 @@ void play(void)
 		
 			if (key0) {
 				state = STOP;
+				iprintf("underruns: %u\n", underruns);
 			} else if (key1) {
+				iprintf("underruns: %u\n", underruns);
 				state = NEXT;
 			}
 		break;

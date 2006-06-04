@@ -42,7 +42,6 @@ static int nFrames = 0;
 static unsigned char *aacbuf;
 static unsigned int aacbuf_size;
 static unsigned char allocated = 0;
-extern int underruns;
 
 void aac_init(unsigned char *buffer, unsigned int buffer_size)
 {
@@ -56,7 +55,6 @@ void aac_reset()
 	readPtr = NULL;
 	bytesLeftBeforeDecoding = bytesLeft = 0;
 	nFrames = 0;
-	underruns = 0;
 }
 
 void aac_alloc()

@@ -44,6 +44,8 @@
 #define DAC_BUFFER_MAX_SIZE 2400
 extern short dac_buffer[MAX_BUFFERS][DAC_BUFFER_MAX_SIZE];
 extern int dac_buffer_size[MAX_BUFFERS];
+extern unsigned long current_srate;
+extern unsigned int underruns;
 
 void dac_reset();
 int dac_get_writeable_buffer();
@@ -55,11 +57,13 @@ int dac_fill_dma();
 
 void dac_enable_dma();
 void dac_disable_dma();
-int next_dma_empty();
-int first_dma_empty();
-void set_first_dma(short *buffer, int n);
-void set_next_dma(short *buffer, int n);
+int dac_next_dma_empty();
+int dac_first_dma_empty();
+void dac_set_first_dma(short *buffer, int n);
+void dac_set_next_dma(short *buffer, int n);
 int dma_endtx(void);
+void dac_write_reg(unsigned char reg, unsigned short value);
+int dac_set_srate(unsigned long srate);
 void dac_init(void);
 
 #endif /* _DAC_H_ */
