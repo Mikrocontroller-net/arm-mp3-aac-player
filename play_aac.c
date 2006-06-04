@@ -37,7 +37,7 @@
 static HAACDecoder hAACDecoder;
 static AACFrameInfo aacFrameInfo;
 static unsigned char *readPtr;
-static int bytesLeft=0, bytesLeftBeforeDecoding=0, nRead, err, offset, outOfData=0, eofReached;
+static int bytesLeft=0, bytesLeftBeforeDecoding=0, err, offset;
 static int nFrames = 0;
 static unsigned char *aacbuf;
 static unsigned int aacbuf_size;
@@ -208,7 +208,12 @@ int aac_process(FIL *aacfile)
 		
 		dac_buffer_size[writeable_buffer] = aacFrameInfo.outputSamps;
 		
-		//iprintf("%i kbps\n", aacFrameInfo.bitRate);
+		iprintf("%lu Hz, %i kbps\n", aacFrameInfo.sampRateOut, aacFrameInfo.bitRate/1000);
+		
+		if (dac_set_srate(aacFrameInfo.sampRateOut) != 0) {
+			iprintf("unsupported sample rate: %lu\n", aacFrameInfo.sampRateOut);
+			return -1;
+		}
 	}
 	
 	while (dac_fill_dma() == 0);
