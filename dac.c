@@ -179,7 +179,7 @@ void dac_write_reg(unsigned char reg, unsigned short value)
 	b1 = (reg << 1) | ((value >> 8) & 0x01);
 	b0 = value & 0xFF;
 	
-	iprintf("reg: %x, value: %x\nb1: %x, b0: %x\n", reg, value, b1, b0);
+	//iprintf("reg: %x, value: %x\nb1: %x, b0: %x\n", reg, value, b1, b0);
 	
 	// load high byte
 	*AT91C_TWI_THR = b1;
@@ -189,7 +189,7 @@ void dac_write_reg(unsigned char reg, unsigned short value)
 	// send low byte
 	*AT91C_TWI_THR = b0;
 	while(!(*AT91C_TWI_SR & AT91C_TWI_TXRDY));
-	iprintf("%lu\n", *AT91C_TWI_SR);
+	//iprintf("%lu\n", *AT91C_TWI_SR);
 	*AT91C_TWI_CR = AT91C_TWI_STOP;
 	while(!(*AT91C_TWI_SR & AT91C_TWI_TXCOMP));
 }

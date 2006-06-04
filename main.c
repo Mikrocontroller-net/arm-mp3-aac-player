@@ -125,7 +125,7 @@ void play(void)
 				state = NEXT;
 			}
 
-			break;
+		break;
 		
 		case START:
 			infile_type = get_filetype(fileinfo.fname);
@@ -141,12 +141,12 @@ void play(void)
 				case AAC:
 					aac_alloc();
 					aac_reset();
-					break;
+				break;
 					
 				case MP3:
 					mp3_alloc();
 					mp3_reset();
-					break;
+				break;
 				}
 				puts("playing");
 				state = PLAY;
@@ -154,7 +154,7 @@ void play(void)
 				puts("unknown file type");
 				state = STOP;
 			}
-			break;
+		break;
 		
 		case PLAY:
 			key0 = get_key_press( 1<<KEY0 );
@@ -163,25 +163,25 @@ void play(void)
 			switch(infile_type) {
 			case MP3:
 				if(mp3_process(&file) != 0) {
-					state = STOP;
+					state = NEXT;
 				}
-				break;
+			break;
 				
 			case AAC:
 				if (aac_process(&file) != 0) {
-					state = STOP;
+					state = NEXT;
 				}
-				break;
+			break;
 			
 			case WAV:
 				if (wav_process(&file) != 0) {
-					state = STOP;
+					state = NEXT;
 				}
-				break;
+			break;
 			
 			default:
 				state = STOP;
-				break;
+			break;
 			}
 		
 			if (key0) {
@@ -189,7 +189,7 @@ void play(void)
 			} else if (key1) {
 				state = NEXT;
 			}
-			break;
+		break;
 			
 		case NEXT:
 			if ( !(f_readdir( &dir, &fileinfo ) == FR_OK && fileinfo.fname[0])) {
@@ -230,7 +230,7 @@ void play(void)
 			//f_close(&file);
 			
 			state = STOP;
-			break;
+		break;
 		}
 		
 	}
