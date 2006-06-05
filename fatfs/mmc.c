@@ -213,9 +213,9 @@ BOOL rcvr_datablock (
 
 #ifdef USE_DMA
 	// enable DMA transfer
-	*AT91C_SPI_RPR = buff;
+	*AT91C_SPI_RPR = (unsigned long)buff;
 	*AT91C_SPI_RCR = 2 * (wc == 0 ? 256 : wc);
-	*AT91C_SPI_TPR = dummy_ff_block;
+	*AT91C_SPI_TPR = (unsigned long)dummy_ff_block;
 	*AT91C_SPI_TCR = 2 * (wc == 0 ? 256 : wc);
 	*AT91C_SPI_PTCR = AT91C_PDC_RXTEN;
 	*AT91C_SPI_PTCR = AT91C_PDC_TXTEN;
@@ -251,6 +251,7 @@ BOOL xmit_datablock (
 	BYTE token			/* Data/Stop token */
 )
 {
+	AT91PS_SPI pSPI      = AT91C_BASE_SPI;
 	BYTE resp, wc = 0;
 
 
@@ -258,10 +259,23 @@ BOOL xmit_datablock (
 
 	xmit_spi(token);					/* Xmit data token */
 	if (token != 0xFD) {	/* Is data token */
+		
+#ifdef USE_DMA
+		// enable DMA transfer
+		*AT91C_SPI_TPR = buff;
+		*AT91C_SPI_TCR = 512;
+		*AT91C_SPI_PTCR = AT91C_PDC_TXTEN;
+
+		while(! (*AT91C_SPI_SR & AT91C_SPI_ENDTX));	
+		*AT91C_SPI_PTCR = AT91C_PDC_TXTDIS;
+		(BYTE)( pSPI->SPI_RDR ); // it's important to read RDR here!
+#else
 		do {							/* Xmit the 512 byte data block to MMC */
 			xmit_spi(*buff++);
 			xmit_spi(*buff++);
 		} while (--wc);
+#endif
+		
 		xmit_spi(0xFF);					/* CRC (Dummy) */
 		xmit_spi(0xFF);
 		resp = rcvr_spi();				/* Reveive data response */
