@@ -35,7 +35,8 @@ enum filetypes get_filetype(char * filename)
 	           strncasecmp(extension, "M4A", 3) == 0 ||
 	           strncasecmp(extension, "AAC", 3) == 0) {
 		return AAC;
-	} else if (strncasecmp(extension, "WAV", 3) == 0) {
+	} else if (strncasecmp(extension, "WAV", 3) == 0 ||
+	           strncasecmp(extension, "RAW", 3) == 0) {
 		return WAV;
 	} else {
 		return UNKNOWN;

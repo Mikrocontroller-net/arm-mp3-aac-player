@@ -151,7 +151,7 @@ endif
 #    -adhlns...: create assembler listing
 #
 # Flags for C and C++ (arm-elf-gcc/arm-elf-g++)
-CFLAGS = -g$(DEBUG) -ffunction-sections
+CFLAGS = -g$(DEBUG) -ffunction-sections -fdata-sections
 CFLAGS += $(CDEFS) $(CINCS)
 CFLAGS += -O$(OPT)
 CFLAGS += -Wall -Wcast-align -Wimplicit 

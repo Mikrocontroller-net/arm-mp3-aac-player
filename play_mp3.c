@@ -121,7 +121,6 @@ int mp3_process(FIL *mp3file)
 	}
 
 	if (bytesLeft < 1024) {
-		PROFILE_START("file_read");
 		// after fseeking backwards the FAT has to be read from the beginning -> S L O W
 		//assert(f_lseek(mp3file, mp3file->fptr - bytesLeftBeforeDecoding) == FR_OK);
 		// better: move unused rest of buffer to the start
@@ -132,7 +131,6 @@ int mp3_process(FIL *mp3file)
 			readPtr = mp3buf;
 			offset = 0;
 			bytesLeft = mp3buf_size;
-			PROFILE_END();
 			return 0;
 		} else {
 			iprintf("can't read more data\n");
@@ -209,7 +207,7 @@ int mp3_process(FIL *mp3file)
 	
 		dac_buffer_size[writeable_buffer] = mp3FrameInfo.outputSamps;
 
-		iprintf("%lu Hz, %i kbps\n", mp3FrameInfo.samprate, mp3FrameInfo.bitrate/1000);
+		debug_printf("%lu Hz, %i kbps\n", mp3FrameInfo.samprate, mp3FrameInfo.bitrate/1000);
 		
 		if (dac_set_srate(mp3FrameInfo.samprate) != 0) {
 			iprintf("unsupported sample rate: %lu\n", mp3FrameInfo.samprate);
