@@ -21,9 +21,16 @@
 #ifndef _FILEINFO_H_
 #define _FILEINFO_H_
 
+typedef struct _SONGINFO {
+	char	title[30];
+	char	artist[30];
+	char	album[30];
+} SONGINFO;
+
 enum filetypes {WAV, MP3, AAC, UNKNOWN};
 
 enum filetypes get_filetype(char * filename);
 char * get_full_filename(unsigned char * filename);
+int read_song_info(FIL *file, SONGINFO *songinfo);
 
 #endif /* _FILEINFO_H_ */

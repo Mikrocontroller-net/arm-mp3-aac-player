@@ -20,8 +20,12 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
+#include "ff.h"
 #include "fileinfo.h"
+
+#define MIN(x,y) ( ((x) < (y)) ? (x) : (y) )
 
 enum filetypes get_filetype(char * filename)
 {
@@ -40,6 +44,53 @@ enum filetypes get_filetype(char * filename)
 		return WAV;
 	} else {
 		return UNKNOWN;
+	}
+}
+
+int read_song_info(FIL *file, SONGINFO *songinfo)
+{
+	char id3buffer[200];
+	WORD bytes_read;
+	
+	// try ID3v2
+	assert(f_read(file, &id3buffer, sizeof(id3buffer), &bytes_read) == FR_OK);
+	if (strncmp("ID3", id3buffer, 3) == 0) {
+		DWORD tag_size, frame_size;
+		BYTE version_major, version_release, extended_header;
+		int i;
+		
+		tag_size = ((DWORD)id3buffer[6] << 21)|((DWORD)id3buffer[7] << 14)|((WORD)id3buffer[8] << 7)|id3buffer[9];
+		version_major = id3buffer[3];
+		version_release = id3buffer[4];
+		extended_header = id3buffer[5] & (1<<6);
+		iprintf("found ID3 version 2.%x.%x, length %lu, extended header: %i\n", version_major, version_release, tag_size, extended_header);
+		i = 10;
+		// iterate thorugh frames
+		while (i < MIN(tag_size, sizeof(id3buffer))) {
+			//puts(id3buffer + i);
+			frame_size = ((DWORD)id3buffer[i + 3] << 14)|((WORD)id3buffer[i + 4] << 7)|id3buffer[i + 5];
+			if (strncmp("TT2", id3buffer + i, 3) == 0) {
+				strncpy(songinfo->title, id3buffer + i + 7, MIN(frame_size - 1, sizeof(songinfo->title) - 1));
+			} else if (strncmp("TP1", id3buffer + i, 3) == 0) {
+				strncpy(songinfo->artist, id3buffer + i + 7, MIN(frame_size - 1, sizeof(songinfo->artist) - 1));
+			} else if (strncmp("TAL", id3buffer + i, 3) == 0) {
+				strncpy(songinfo->album, id3buffer + i + 7, MIN(frame_size - 1, sizeof(songinfo->album) - 1));
+			}
+			i += frame_size + 6;
+		}
+		//f_lseek(&file, tag_size);
+	} else {
+		// try ID3v1
+		//f_lseek(&file, fileinfo.fsize - 128);
+		
+		//assert(f_read(&file, id3buffer, 128, &bytes_read) == FR_OK);
+		if (strncmp("TAG", id3buffer, 3) == 0) {
+			strncpy(songinfo->title, id3buffer + 3 + 30, MIN(30, sizeof(songinfo->title) - 1));
+			strncpy(songinfo->artist, id3buffer + 3 + 30, MIN(30, sizeof(songinfo->artist) - 1));
+			strncpy(songinfo->album, id3buffer + 3 + 60, MIN(30, sizeof(songinfo->album) - 1));
+			iprintf("Artist: %.30s\nAlbum: %.30s\nTitle: %.30s\n", id3buffer + 3 + 30, id3buffer + 3 + 60, id3buffer + 3);
+		}
+		//f_lseek(&file, 0);
 	}
 }
 

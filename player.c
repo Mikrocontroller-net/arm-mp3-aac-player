@@ -32,6 +32,7 @@
 #include "control.h"
 
 static unsigned char buf[2048];
+static SONGINFO songinfo;
 extern FATFS fs;
 extern FIL file;
 extern DIR dir;
@@ -163,9 +164,16 @@ void play(void)
 			}
 			iprintf("selected file: %s\n", fileinfo.fname);
 			
-			// read ID3 tag
 			assert(f_open( &file, get_full_filename(fileinfo.fname), FA_OPEN_EXISTING|FA_READ) == FR_OK);
+
+			memset(&songinfo, 0, sizeof(songinfo));
+			read_song_info(&file, &songinfo);
 			
+			puts(songinfo.title);
+			puts(songinfo.artist);
+			puts(songinfo.album);
+			
+			/*
 			assert(f_read(&file, id3buffer, sizeof(id3buffer), &bytes_read) == FR_OK);
 			// try ID3v2
 			if (strncmp("ID3", id3buffer, 3) == 0) {
@@ -189,6 +197,7 @@ void play(void)
 				}
 				f_lseek(&file, 0);
 			}
+			*/
 			
 			//f_close(&file);
 			
