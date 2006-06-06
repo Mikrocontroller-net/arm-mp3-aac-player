@@ -49,7 +49,7 @@ enum filetypes get_filetype(char * filename)
 
 int read_song_info(FIL *file, SONGINFO *songinfo)
 {
-	char id3buffer[200];
+	char id3buffer[1000];
 	WORD bytes_read;
 	
 	// try ID3v2
@@ -60,6 +60,7 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 		int i;
 		
 		tag_size = ((DWORD)id3buffer[6] << 21)|((DWORD)id3buffer[7] << 14)|((WORD)id3buffer[8] << 7)|id3buffer[9];
+		songinfo->data_start = tag_size;
 		version_major = id3buffer[3];
 		version_release = id3buffer[4];
 		extended_header = id3buffer[5] & (1<<6);

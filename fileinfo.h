@@ -22,9 +22,10 @@
 #define _FILEINFO_H_
 
 typedef struct _SONGINFO {
-	char	title[30];
-	char	artist[30];
-	char	album[30];
+	char	title[40];
+	char	artist[40];
+	char	album[40];
+	unsigned int	data_start;
 } SONGINFO;
 
 enum filetypes {WAV, MP3, AAC, UNKNOWN};

@@ -172,6 +172,7 @@ void play(void)
 			puts(songinfo.title);
 			puts(songinfo.artist);
 			puts(songinfo.album);
+			f_lseek(&file, songinfo.data_start);
 			
 			/*
 			assert(f_read(&file, id3buffer, sizeof(id3buffer), &bytes_read) == FR_OK);
