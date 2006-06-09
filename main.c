@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #include "control.h"
 #include "ff.h"
@@ -143,6 +144,31 @@ void record(void)
 }
 
 void codec_bypass(void)
+{
+	short x[3] = {0, 0, 0};
+	short y;
+	short h[3] = {32767, 0, 0};
+	
+	dac_init();
+	dac_set_srate(8000);
+
+	*AT91C_SSC_THR = 0;
+	while(1)
+	{
+		//iprintf("endrx: %i, txempty: %i", *AT91C_SSC_PTCR & AT91C_SSC_ENDRX)
+		x[2] = x[1];
+		x[1] = x[0];
+		while(!(*AT91C_SSC_SR & AT91C_SSC_ENDRX));
+		x[0] = *(short *)(AT91C_SSC_RHR);
+		//x[0] = rand();
+		y = ((x[0]*h[0]) >> 16) + ((x[1]*h[1]) >> 16) + ((x[2]*h[2]) >> 16);
+		while(!(*AT91C_SSC_SR & AT91C_SSC_TXEMPTY));
+		*AT91C_SSC_THR = *(unsigned short *)(&y);
+		//iprintf("y: %i\n", y);
+	}
+}
+
+void codec_buffered_bypass(void)
 {
 	int writeable_buffer;
 
