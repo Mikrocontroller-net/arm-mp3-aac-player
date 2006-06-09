@@ -19,6 +19,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
@@ -39,16 +40,26 @@ extern DIR dir;
 extern FILINFO fileinfo;
 extern BYTE fbuff[512];
 
+char *memstr(char *haystack, char *needle, int size)
+{
+	char *p;
+	char needlesize = strlen(needle);
+
+	for (p = haystack; p <= (haystack-needlesize+size); p++)
+	{
+		if (memcmp(p, needle, needlesize) == 0)
+			return p; /* found */
+	}
+	return NULL;
+}
+
 void play(void)
 {
 	enum playing_states {START, PLAY, STOP, NEXT};
 	enum playing_states state = NEXT;
 	enum filetypes infile_type = UNKNOWN;
 	long key0=0, key1=0;
-	BYTE id3buffer[128];
 	int bytes_read;
-	char title[30];
-	char artist[30];
 	
 	memset(&dir, 0, sizeof(DIR));
 	assert(f_opendir(&dir, "/") == FR_OK);
@@ -91,7 +102,7 @@ void play(void)
 		
 		case START:
 			infile_type = get_filetype(fileinfo.fname);
-			if (infile_type == AAC || infile_type == WAV || infile_type == MP3) {
+			if (infile_type != UNKNOWN) {
 				//assert(f_open( &file, get_full_filename(fileinfo.fname), FA_OPEN_EXISTING|FA_READ) == FR_OK);
 				//puts("File opened.");
 				
@@ -103,6 +114,26 @@ void play(void)
 				case AAC:
 					aac_alloc();
 					aac_reset();
+				break;
+				
+				case MP4:
+					// skip MP4 header (fixed offset 0x20 for sample MP4 file "C128.MP4")
+					{
+						char buffer[1000];
+						char *p;
+						int data_offset;
+						
+						assert(f_read(&file, &buffer, sizeof(buffer), &bytes_read) == FR_OK);
+						p = memstr(buffer, "mdat", sizeof(buffer));
+						assert(p != NULL);
+						data_offset = p - buffer + 4;
+						iprintf("found mdat atom data at 0x%x\n", data_offset);
+						
+						assert(f_lseek(&file, data_offset) == FR_OK);
+					}
+					aac_alloc();
+					aac_reset();
+					aac_setup_raw();
 				break;
 					
 				case MP3:
@@ -128,9 +159,15 @@ void play(void)
 					state = NEXT;
 				}
 			break;
-				
+			
+			case MP4:
+				if (aac_process(&file, 1) != 0) {
+					state = NEXT;
+				}
+			break;
+			
 			case AAC:
-				if (aac_process(&file) != 0) {
+				if (aac_process(&file, 0) != 0) {
 					state = NEXT;
 				}
 			break;
@@ -173,34 +210,6 @@ void play(void)
 			puts(songinfo.artist);
 			puts(songinfo.album);
 			f_lseek(&file, songinfo.data_start);
-			
-			/*
-			assert(f_read(&file, id3buffer, sizeof(id3buffer), &bytes_read) == FR_OK);
-			// try ID3v2
-			if (strncmp("ID3", id3buffer, 3) == 0) {
-				DWORD tag_size, frame_size;
-				tag_size = ((DWORD)id3buffer[6] << 21)|((DWORD)id3buffer[7] << 14)|((WORD)id3buffer[8] << 7)|id3buffer[9];
-				iprintf("found ID3 version 2.%x.%x, length %lu, extended header: %i\n", id3buffer[3], id3buffer[4], tag_size, id3buffer[5] & (1<<6));
-				// iterate thorugh frames
-				if (strncmp("TT2", id3buffer + 10, 3) == 0) {
-					tag_size = ((DWORD)id3buffer[13] << 14)|((WORD)id3buffer[14] << 7)|id3buffer[15];
-					strncpy(title, id3buffer + 17, tag_size - 1);
-					title[tag_size - 1] = '\0';
-					iprintf("Title: %s\n", title);
-				}
-				f_lseek(&file, tag_size);
-			} else {
-				// try ID3v1
-				f_lseek(&file, fileinfo.fsize - 128);
-				assert(f_read(&file, id3buffer, 128, &bytes_read) == FR_OK);
-				if (strncmp("TAG", id3buffer, 3) == 0) {
-					iprintf("Artist: %.30s\nAlbum: %.30s\nTitle: %.30s\n", id3buffer + 3 + 30, id3buffer + 3 + 60, id3buffer + 3);
-				}
-				f_lseek(&file, 0);
-			}
-			*/
-			
-			//f_close(&file);
 			
 			state = STOP;
 		break;

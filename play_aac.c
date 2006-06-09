@@ -31,8 +31,8 @@
 
 #define debug_printf
 
-#define PROFILE_START(x)
-#define PROFILE_END()
+//#define PROFILE_START(x)
+//#define PROFILE_END()
 
 static HAACDecoder hAACDecoder;
 static AACFrameInfo aacFrameInfo;
@@ -69,7 +69,16 @@ void aac_free()
 	allocated = 0;
 }
 
-int aac_process(FIL *aacfile)
+void aac_setup_raw()
+{
+	memset(&aacFrameInfo, 0, sizeof(AACFrameInfo));
+	aacFrameInfo.nChans = 2;
+	aacFrameInfo.sampRateCore = 44100;
+	aacFrameInfo.profile = AAC_PROFILE_LC;
+	assert(AACSetRawBlockParams(hAACDecoder, 0, &aacFrameInfo) == 0);
+}
+
+int aac_process(FIL *aacfile, int raw)
 {
 	int writeable_buffer;
 	WORD bytes_read;
@@ -86,25 +95,28 @@ int aac_process(FIL *aacfile)
 		}
 	}
 
-	offset = AACFindSyncWord(readPtr, bytesLeft);
-	if (offset < 0) {
-		puts("Error: AACFindSyncWord returned <0");
+	if (!raw) {
+		offset = AACFindSyncWord(readPtr, bytesLeft);
+		if (offset < 0) {
+			puts("Error: AACFindSyncWord returned <0");
 		
-		// read more data
-		assert(f_read(aacfile, (BYTE *)aacbuf, aacbuf_size, &bytes_read) == FR_OK);
-		if (bytes_read == aacbuf_size) {
-			readPtr = aacbuf;
-			offset = 0;
-			bytesLeft = aacbuf_size;
-			return 0;
-		} else {
-			puts("can't read more data");
-			return -1;
+			// read more data
+			assert(f_read(aacfile, (BYTE *)aacbuf, aacbuf_size, &bytes_read) == FR_OK);
+			if (bytes_read == aacbuf_size) {
+				readPtr = aacbuf;
+				offset = 0;
+				bytesLeft = aacbuf_size;
+				return 0;
+			} else {
+				puts("can't read more data");
+				return -1;
+			}
 		}
-	}
 
-	readPtr += offset;
-	bytesLeft -= offset;
+		readPtr += offset;
+		bytesLeft -= offset;
+	}
+	
 	bytesLeftBeforeDecoding = bytesLeft;
 	
 	// check if this is really a valid frame

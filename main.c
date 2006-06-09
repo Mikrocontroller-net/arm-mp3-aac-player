@@ -230,11 +230,11 @@ void test_raw_aac(void)
 	for(int i=0; i<100; i++) {
 		res = AACDecode(hAACDecoder, &readPtr, &bytesLeft, outBuf);
 		iprintf("AACDecode: %i\nbytesLeft: %i\n", res, bytesLeft);
+		AACGetLastFrameInfo(hAACDecoder, &aacFrameInfo);
+		iprintf("Bitrate: %i\n", aacFrameInfo.bitRate);
+		iprintf("%i samples\n", aacFrameInfo.outputSamps);
 	}
 	
-	AACGetLastFrameInfo(hAACDecoder, &aacFrameInfo);
-	iprintf("Bitrate: %i\n", aacFrameInfo.bitRate);
-	iprintf("%i samples\n", aacFrameInfo.outputSamps);
 	
 	while(1);
 	

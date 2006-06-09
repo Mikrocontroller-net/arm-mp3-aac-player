@@ -23,7 +23,8 @@
 
 #include "ff.h"
 
-int aac_process(FIL *aacfile);
+int aac_process(FIL *aacfile, int raw);
+void aac_setup_raw();
 void aac_reset();
 void aac_init(unsigned char *buffer, unsigned int buffer_size);
 void aac_alloc();

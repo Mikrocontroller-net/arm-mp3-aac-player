@@ -28,7 +28,7 @@ typedef struct _SONGINFO {
 	unsigned int	data_start;
 } SONGINFO;
 
-enum filetypes {WAV, MP3, AAC, UNKNOWN};
+enum filetypes {WAV, MP3, MP4, AAC, UNKNOWN};
 
 enum filetypes get_filetype(char * filename);
 char * get_full_filename(unsigned char * filename);
