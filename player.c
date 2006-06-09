@@ -117,7 +117,7 @@ void play(void)
 				break;
 				
 				case MP4:
-					// skip MP4 header (fixed offset 0x20 for sample MP4 file "C128.MP4")
+					// skip MP4 header
 					{
 						char buffer[1000];
 						char *p;
