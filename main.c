@@ -34,6 +34,9 @@
 #include "player.h"
 #include "profile.h"
 #include "dac.h"
+#include "aacdec.h"
+
+#include "raw_aac_data.h"
 
 #define TCK  1000                           /* Timer Clock  */
 #define PIV  ((MCK/TCK/16)-1)               /* Periodic Interval Value */
@@ -203,6 +206,40 @@ void codec_buffered_bypass(void)
 	}
 }
 
+void test_raw_aac(void)
+{
+	static HAACDecoder hAACDecoder;
+	static AACFrameInfo aacFrameInfo;
+	static unsigned char *readPtr;
+	static short outBuf[2300];
+	static int bytesLeft;
+	int res;
+	
+	bytesLeft = sizeof(raw_aac_data);
+	readPtr = (unsigned char *)raw_aac_data;
+	
+	assert(hAACDecoder = AACInitDecoder());
+	puts("decoder initialized");
+		
+	memset(&aacFrameInfo, 0, sizeof(AACFrameInfo));
+	aacFrameInfo.nChans = 2;
+	aacFrameInfo.sampRateCore = 44100;
+	aacFrameInfo.profile = AAC_PROFILE_LC;
+	assert(AACSetRawBlockParams(hAACDecoder, 0, &aacFrameInfo) == 0);
+	
+	for(int i=0; i<100; i++) {
+		res = AACDecode(hAACDecoder, &readPtr, &bytesLeft, outBuf);
+		iprintf("AACDecode: %i\nbytesLeft: %i\n", res, bytesLeft);
+	}
+	
+	AACGetLastFrameInfo(hAACDecoder, &aacFrameInfo);
+	iprintf("Bitrate: %i\n", aacFrameInfo.bitRate);
+	iprintf("%i samples\n", aacFrameInfo.outputSamps);
+	
+	while(1);
+	
+}
+
 int main(void)
 {
 	AT91PS_PMC  pPMC  = AT91C_BASE_PMC;
@@ -256,6 +293,7 @@ int main(void)
 	//codec_bypass();
 	//record();
 	play();
+	//test_raw_aac();
 	while(1);
 
 	return 0; /* never reached */
