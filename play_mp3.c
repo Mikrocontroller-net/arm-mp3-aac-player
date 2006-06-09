@@ -78,7 +78,7 @@ int mp3_process(FIL *mp3file)
 			offset = 0;
 			bytesLeft = mp3buf_size;
 		} else {
-			iprintf("can't read more data\n");
+			puts("can't read more data");
 			return -1;
 		}
 	}
@@ -95,7 +95,7 @@ int mp3_process(FIL *mp3file)
 			bytesLeft = mp3buf_size;
 			return 0;
 		} else {
-			iprintf("can't read more data\n");
+			puts("can't read more data");
 			return -1;
 		}
 	}
@@ -111,7 +111,7 @@ int mp3_process(FIL *mp3file)
 		mp3FrameInfo.version == 0) {
 		debug_printf("Found a frame at offset %x\n", offset + readPtr - mp3buf + mp3file->fptr);
 	} else {
-		iprintf("this is no valid frame\n");
+		puts("this is no valid frame");
 		// advance data pointer
 		// TODO: handle bytesLeft == 0
 		assert(bytesLeft > 0);
@@ -133,7 +133,7 @@ int mp3_process(FIL *mp3file)
 			bytesLeft = mp3buf_size;
 			return 0;
 		} else {
-			iprintf("can't read more data\n");
+			puts("can't read more data");
 			return -1;
 		}
 	}
@@ -149,9 +149,9 @@ int mp3_process(FIL *mp3file)
 	
 	debug_printf("wb %i\n", writeable_buffer);
 
-	PROFILE_START("MP3Decode");
+	//PROFILE_START("MP3Decode");
 	err = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, dac_buffer[writeable_buffer], 0);
-	PROFILE_END();
+	//PROFILE_END();
 
 	nFrames++;
 	

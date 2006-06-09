@@ -98,7 +98,7 @@ int aac_process(FIL *aacfile)
 			bytesLeft = aacbuf_size;
 			return 0;
 		} else {
-			iprintf("can't read more data\n");
+			puts("can't read more data");
 			return -1;
 		}
 	}
@@ -140,7 +140,7 @@ int aac_process(FIL *aacfile)
 			PROFILE_END();
 			return 0;
 		} else {
-			iprintf("can't read more data\n");
+			puts("can't read more data");
 			return -1;
 		}
 	}
@@ -208,7 +208,7 @@ int aac_process(FIL *aacfile)
 		
 		dac_buffer_size[writeable_buffer] = aacFrameInfo.outputSamps;
 		
-		iprintf("%lu Hz, %i kbps\n", aacFrameInfo.sampRateOut, aacFrameInfo.bitRate/1000);
+		debug_printf("%lu Hz, %i kbps\n", aacFrameInfo.sampRateOut, aacFrameInfo.bitRate/1000);
 		
 		if (dac_set_srate(aacFrameInfo.sampRateOut) != 0) {
 			iprintf("unsupported sample rate: %lu\n", aacFrameInfo.sampRateOut);

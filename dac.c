@@ -23,7 +23,7 @@
 #include "dac.h"
 #include "AT91SAM7S64.h"
 
-#define debug_printf iprintf
+#define debug_printf
 
 static int wp=0, rp=0, readable_buffers=0;
 short dac_buffer[MAX_BUFFERS][DAC_BUFFER_MAX_SIZE];
