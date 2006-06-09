@@ -121,14 +121,22 @@ void play(void)
 					{
 						char buffer[1000];
 						char *p;
-						int data_offset;
+						long data_offset = -1;
 						
-						assert(f_read(&file, &buffer, sizeof(buffer), &bytes_read) == FR_OK);
-						p = memstr(buffer, "mdat", sizeof(buffer));
-						assert(p != NULL);
-						data_offset = p - buffer + 4;
-						iprintf("found mdat atom data at 0x%x\n", data_offset);
+						for(int n=0; n<100; n++) {
+							assert(f_read(&file, &buffer, sizeof(buffer), &bytes_read) == FR_OK);
+							p = memstr(buffer, "mdat", sizeof(buffer));
+							if(p != NULL) {
+								data_offset = (p - buffer) + file.fptr - bytes_read + 4;
+								iprintf("found mdat atom data at 0x%lx\n", data_offset);
+								break;
+							} else {
+								// seek backwards
+								assert(f_lseek(&file, file.fptr - 4) == FR_OK);
+							}
+						}
 						
+						assert(data_offset > 0);
 						assert(f_lseek(&file, data_offset) == FR_OK);
 					}
 					aac_alloc();
