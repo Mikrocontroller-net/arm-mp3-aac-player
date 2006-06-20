@@ -2,6 +2,7 @@
 #include "Board.h"
 
 #include "control.h"
+#include "interrupt_utils.h"
 
 #include <stdio.h>
 
