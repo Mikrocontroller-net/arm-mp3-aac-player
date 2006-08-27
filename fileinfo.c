@@ -22,7 +22,18 @@
 #include <string.h>
 #include <assert.h>
 
+#ifdef ARM
+
 #include "ff.h"
+
+#else
+
+#include "fatfs/integer.h"
+#define FIL FILE
+#define iprintf printf
+
+#endif
+
 #include "fileinfo.h"
 
 #define MIN(x,y) ( ((x) < (y)) ? (x) : (y) )
@@ -53,8 +64,13 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 	char id3buffer[1000];
 	WORD bytes_read;
 	
-	// try ID3v2
+  // try ID3v2
+  #ifdef ARM
 	assert(f_read(file, &id3buffer, sizeof(id3buffer), &bytes_read) == FR_OK);
+	#else
+	fread(id3buffer, 1, sizeof(id3buffer), file);
+	#endif
+	
 	if (strncmp("ID3", id3buffer, 3) == 0) {
 		DWORD tag_size, frame_size;
 		BYTE version_major, version_release, extended_header;
@@ -94,6 +110,8 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 		}
 		//f_lseek(&file, 0);
 	}
+	
+	return 0;
 }
 
 char * get_full_filename(unsigned char * filename)
@@ -106,3 +124,20 @@ char * get_full_filename(unsigned char * filename)
 	
 	return full_filename;
 }
+
+#ifndef ARM
+int main(void)
+{
+	FILE           *fp;
+	SONGINFO        songinfo;
+
+	memset(&songinfo, 0, sizeof(songinfo));
+	fp = fopen("/media/Music/Journey/Essential Journey/Good Morning Girl.mp3", "r");
+	read_song_info(fp, &songinfo);
+	puts(songinfo.title);
+	puts(songinfo.artist);
+	puts(songinfo.album);
+
+	return 0;
+}
+#endif
