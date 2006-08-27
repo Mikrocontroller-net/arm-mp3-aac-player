@@ -78,9 +78,8 @@ SRCARM = interrupt_utils.c systime.c \
   aac/codec/fixpt/decoder/real/sbrqmf.c \
   aac/codec/fixpt/decoder/real/sbrside.c \
   aac/codec/fixpt/decoder/real/stproc.c \
-  aac/codec/fixpt/decoder/real/tns.c
-# not needed in this example: 
-#SRCARM += interrupt_utils.c
+  aac/codec/fixpt/decoder/real/tns.c \
+  filter.c
 
 # List C++ source files here.
 # use file-extension cpp for C++-files (use extension .cpp)
@@ -236,6 +235,7 @@ NM = arm-elf-nm
 REMOVE = rm -f
 COPY = cp
 
+HOSTCC = gcc
 
 # Define Messages
 # English
@@ -402,6 +402,9 @@ $(AOBJARM) : %.o : %.S
 program : $(TARGET).bin
 	scp $(TARGET).bin 192.168.0.33:/tmp/main.bin
 	ssh 192.168.0.33 openocd -f at91sam7_wiggler.cfg
+
+fileinfo_test : fileinfo.c
+	$(HOSTCC) -o fileinfo_test fileinfo.c
 
 # Target: clean project.
 clean: begin clean_list finished end
