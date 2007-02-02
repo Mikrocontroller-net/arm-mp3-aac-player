@@ -33,6 +33,7 @@
 @ *  
 @ * ***** END LICENSE BLOCK ***** */ 
 
+# a lot faster in RAM (1-2 ms per frame)
 .data
 
 	.GLOBAL xmp3_PolyphaseStereo

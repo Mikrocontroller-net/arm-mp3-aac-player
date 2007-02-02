@@ -69,7 +69,8 @@
  *                (should be guaranteed from dequant, and max gain from stproc * max 
  *                 gain from AntiAlias < 2.0)
  **************************************************************************************/
- __attribute__ ((section (".data"))) static void AntiAlias(int *x, int nBfly)
+// a little bit faster in RAM (< 1 ms per block)
+/* __attribute__ ((section (".data"))) */ static void AntiAlias(int *x, int nBfly)
 {
 	int k, a0, b0, c0, c1;
 	const int *c;
@@ -366,7 +367,8 @@ int fastWin36[18] = {
  * TODO:        optimize for ARM (reorder window coefs, ARM-style pointers in C, 
  *                inline asm may or may not be helpful)
  **************************************************************************************/
-__attribute__ ((section (".data"))) static int IMDCT36(int *xCurr, int *xPrev, int *y, int btCurr, int btPrev, int blockIdx, int gb)
+// barely faster in RAM
+/*__attribute__ ((section (".data")))*/ static int IMDCT36(int *xCurr, int *xPrev, int *y, int btCurr, int btPrev, int blockIdx, int gb)
 {
 	int i, es, xBuf[18], xPrevWin[18];
 	int acc1, acc2, s, d, t, mOut;
@@ -534,7 +536,8 @@ static __inline void imdct12 (int *x, int *out)
  *
  * TODO:        optimize for ARM
  **************************************************************************************/
-__attribute__ ((section (".data"))) static int IMDCT12x3(int *xCurr, int *xPrev, int *y, int btPrev, int blockIdx, int gb)
+ // barely faster in RAM
+/*__attribute__ ((section (".data")))*/ static int IMDCT12x3(int *xCurr, int *xPrev, int *y, int btPrev, int blockIdx, int gb)
 {
 	int i, es, mOut, yLo, xBuf[18], xPrevWin[18];	/* need temp buffer for reordering short blocks */
 	const int *wp;
@@ -715,7 +718,8 @@ __attribute__ ((section (".data"))) static int HybridTransform(int *xCurr, int *
  *
  * Return:      0 on success,  -1 if null input pointers
  **************************************************************************************/
-__attribute__ ((section (".data"))) int IMDCT(MP3DecInfo *mp3DecInfo, int gr, int ch)
+ // a bit faster in RAM
+/*__attribute__ ((section (".data")))*/ int IMDCT(MP3DecInfo *mp3DecInfo, int gr, int ch)
 {
 	int nBfly, blockCutoff;
 	FrameHeader *fh;
