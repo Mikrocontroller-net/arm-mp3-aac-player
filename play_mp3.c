@@ -71,7 +71,7 @@ int mp3_refill_inbuffer(FIL *mp3file)
   WORD bytes_read;
   int bytes_to_read;
   
-  iprintf("left: %d. refilling inbuffer...\n", bytes_left);
+  debug_printf("left: %d. refilling inbuffer...\n", bytes_left);
   if (bytes_left > 0) {
     // after fseeking backwards the FAT has to be read from the beginning -> S L O W
 		//assert(f_lseek(mp3file, mp3file->fptr - bytes_leftBeforeDecoding) == FR_OK);
@@ -87,7 +87,7 @@ int mp3_refill_inbuffer(FIL *mp3file)
 		read_ptr = mp3buf;
 		offset = 0;
 		bytes_left = mp3buf_size;
-		iprintf("ok. read: %d. left: %d\n", bytes_read, bytes_left);
+		debug_printf("ok. read: %d. left: %d\n", bytes_read, bytes_left);
 		return 0;
 	} else {
 		puts("can't read more data");

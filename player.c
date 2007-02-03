@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <malloc.h>
 
 #include "player.h"
 #include "ff.h"
@@ -33,11 +34,8 @@
 #include "control.h"
 
 static unsigned char buf[2048];
-static SONGINFO songinfo;
+//static SONGINFO songinfo;
 extern FATFS fs;
-extern FIL file;
-extern DIR dir;
-extern FILINFO fileinfo;
 extern BYTE fbuff[512];
 
 char *memstr(char *haystack, char *needle, int size)
@@ -60,10 +58,11 @@ void play(void)
 	enum filetypes infile_type = UNKNOWN;
 	long key0=0, key1=0;
 	WORD bytes_read;
+	FIL file;
+	SONGINFO songinfo;
 	
-	memset(&dir, 0, sizeof(DIR));
-	assert(f_opendir(&dir, "/") == FR_OK);
-	
+	int song_index = -1;
+
 	dac_init();
 	wav_init(buf, sizeof(buf));
 	mp3_init(buf, sizeof(buf));
@@ -101,7 +100,7 @@ void play(void)
 		break;
 		
 		case START:
-			infile_type = get_filetype(fileinfo.fname);
+			infile_type = get_filetype(songlist.list[song_index].filename);
 			if (infile_type != UNKNOWN) {
 				//assert(f_open( &file, get_full_filename(fileinfo.fname), FA_OPEN_EXISTING|FA_READ) == FR_OK);
 				//puts("File opened.");
@@ -119,7 +118,7 @@ void play(void)
 				case MP4:
 					// skip MP4 header
 					{
-						char buffer[1000];
+						char buffer[4000];
 						char *p;
 						long data_offset = -1;
 						
@@ -150,6 +149,7 @@ void play(void)
 				break;
 				}
 				puts("playing");
+				malloc_stats();
 				state = PLAY;
 			} else {
 				puts("unknown file type");
@@ -201,22 +201,21 @@ void play(void)
 		break;
 			
 		case NEXT:
-			if ( !(f_readdir( &dir, &fileinfo ) == FR_OK && fileinfo.fname[0])) {
-				// reopen list
-				memset(&dir, 0, sizeof(DIR));
-				assert(f_opendir(&dir, "/") == FR_OK);
-				assert(f_readdir( &dir, &fileinfo ) == FR_OK && fileinfo.fname[0]);
+		  song_index++;
+			if (song_index >= songlist.size) {
+				song_index = 0;
 			}
-			iprintf("selected file: %s\n", fileinfo.fname);
-			
-			assert(f_open( &file, get_full_filename(fileinfo.fname), FA_OPEN_EXISTING|FA_READ) == FR_OK);
+			iprintf("selected file: %.12s\n", songlist.list[song_index].filename);
+
+			assert(f_open( &file, get_full_filename(songlist.list[song_index].filename), FA_OPEN_EXISTING|FA_READ) == FR_OK);
 
 			memset(&songinfo, 0, sizeof(songinfo));
 			read_song_info(&file, &songinfo);
 			
-			puts(songinfo.title);
-			puts(songinfo.artist);
-			puts(songinfo.album);
+			iprintf("title: %s\n", songinfo.title);
+			iprintf("artist: %s\n", songinfo.artist);
+			iprintf("album: %s\n", songinfo.album);
+			iprintf("skipping: %i\n", songinfo.data_start);
 			f_lseek(&file, songinfo.data_start);
 			
 			state = STOP;

@@ -38,6 +38,42 @@
 
 #define MIN(x,y) ( ((x) < (y)) ? (x) : (y) )
 
+SONGLIST songlist;
+
+// compare two songs to determine the list order
+int compar_song(SONGFILE *a, SONGFILE *b) {
+  SONGINFO songinfo;
+  char str_a[30], str_b[30];
+  int offset;
+  
+  memset(str_a, 0, sizeof(str_a));
+  memset(str_b, 0, sizeof(str_b));
+  
+  memset(&songinfo, 0, sizeof(songinfo));
+  read_song_info_for_song(a, &songinfo);
+  
+  if(strstr(songinfo.artist, "The ") == NULL) {
+    offset = 0;
+  } else {
+    offset = 4;
+  }
+  strncpy(str_a, songinfo.artist + offset, sizeof(str_a) - offset);
+  
+  memset(&songinfo, 0, sizeof(songinfo));
+  read_song_info_for_song(b, &songinfo);
+  
+  if(strstr(songinfo.artist, "The ") == NULL) {
+    offset = 0;
+  } else {
+    offset = 4;
+  }
+  strncpy(str_b, songinfo.artist + offset, sizeof(str_b) - offset);
+  
+  //iprintf("comparing %s <-> %s: %d\n", str_a, str_b, strncasecmp(str_a, str_b, MIN(sizeof(str_a), sizeof(str_b))));
+  
+  return strncasecmp(str_a, str_b, MIN(sizeof(str_a), sizeof(str_b)));
+}
+
 enum filetypes get_filetype(char * filename)
 {
 	char *extension;
@@ -59,11 +95,21 @@ enum filetypes get_filetype(char * filename)
 	}
 }
 
+int read_song_info_for_song(SONGFILE *song, SONGINFO *songinfo)
+{
+  static FIL _file;
+  memset(&_file, 0, sizeof(_file));
+  assert(f_open(&_file, get_full_filename(song->filename), FA_OPEN_EXISTING|FA_READ) == FR_OK);
+  assert(read_song_info(&_file, songinfo) == 0);
+  assert(f_close(&_file) == FR_OK);
+  return 0;
+}
+
 int read_song_info(FIL *file, SONGINFO *songinfo)
 {
-	char id3buffer[1000];
+	char id3buffer[2000];
 	WORD bytes_read;
-	
+
   // try ID3v2
   #ifdef ARM
 	assert(f_read(file, id3buffer, sizeof(id3buffer), &bytes_read) == FR_OK);
@@ -83,7 +129,7 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 		version_major = id3buffer[3];
 		version_release = id3buffer[4];
 		extended_header = id3buffer[5] & (1<<6);
-		iprintf("found ID3 version 2.%x.%x, length %lu, extended header: %i\n", version_major, version_release, tag_size, extended_header);
+		//iprintf("found ID3 version 2.%x.%x, length %lu, extended header: %i\n", version_major, version_release, tag_size, extended_header);
 		i = 10;
 		// iterate through frames
 		while (i < MIN(tag_size, sizeof(id3buffer))) {
@@ -100,23 +146,29 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 		}
 	} else {
 		// try ID3v1
-		f_lseek(file, file->fsize - 128);
-		
+		#ifdef ARM
+		// TODO: test this
+		puts("seeking");
+		iprintf("%d\n", file->fsize);
+		assert(f_lseek(file, file->fsize - 128) == FR_OK);
+		puts("ok");
 		assert(f_read(file, id3buffer, 128, &bytes_read) == FR_OK);
+		#endif
+		
 		if (strncmp("TAG", id3buffer, 3) == 0) {
 			strncpy(songinfo->title, id3buffer + 3, MIN(30, sizeof(songinfo->title) - 1));
 			strncpy(songinfo->artist, id3buffer + 3 + 30, MIN(30, sizeof(songinfo->artist) - 1));
 			strncpy(songinfo->album, id3buffer + 3 + 60, MIN(30, sizeof(songinfo->album) - 1));
-			iprintf("found ID3 version 1\n");
+			//iprintf("found ID3 version 1\n");
 		}
 		
 		songinfo->data_start = 0;
 	}
-	
+
 	return 0;
 }
 
-char * get_full_filename(unsigned char * filename)
+char * get_full_filename(char * filename)
 {
 	static char full_filename[14];
 	

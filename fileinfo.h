@@ -21,17 +21,30 @@
 #ifndef _FILEINFO_H_
 #define _FILEINFO_H_
 
+typedef struct _SONGFILE {
+  char  filename[12]; // 8.3 format, not null terminated!
+} SONGFILE;
+
+typedef struct _SONGLIST {
+  SONGFILE list[40];
+  unsigned int size;
+} SONGLIST;
+
 typedef struct _SONGINFO {
-	char	title[40];
-	char	artist[40];
-	char	album[40];
+	char	title[30];
+	char	artist[30];
+	char	album[30];
 	unsigned int	data_start;
 } SONGINFO;
 
 enum filetypes {WAV, MP3, MP4, AAC, UNKNOWN};
 
+int compar_song(SONGFILE *a, SONGFILE *b);
 enum filetypes get_filetype(char * filename);
-char * get_full_filename(unsigned char * filename);
+char * get_full_filename(char * filename);
+int read_song_info_for_song(SONGFILE *song, SONGINFO *songinfo);
 int read_song_info(FIL *file, SONGINFO *songinfo);
+
+extern SONGLIST songlist;
 
 #endif /* _FILEINFO_H_ */

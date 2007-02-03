@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <malloc.h>
 
 #include "control.h"
 #include "ff.h"
@@ -35,6 +36,7 @@
 #include "profile.h"
 #include "dac.h"
 #include "aacdec.h"
+#include "heapsort.h"
 
 #include "raw_aac_data.h"
 
@@ -42,10 +44,9 @@
 #define PIV  ((MCK/TCK/16)-1)               /* Periodic Interval Value */
 
 FATFS fs;
-FIL file;
-DIR dir;
-FILINFO fileinfo;
-BYTE fbuff[512];
+static FIL file;
+static DIR dir;
+static FILINFO fileinfo;
 
 void write_benchmark(void)
 {
@@ -265,8 +266,7 @@ int main(void)
 	
 	memset(&fs, 0, sizeof(FATFS));
 	FatFs = &fs;
-	
-	file.buffer = fbuff;
+
 	iprintf("f_mountdrv: %i\n", f_mountdrv());
 	
 	memset(&dir, 0, sizeof(DIR));
@@ -289,6 +289,35 @@ int main(void)
 	    iprintf("%lu bytes available on the disk.\n", clust * FatFs->sects_clust * 512);
 	}
 	
+
+  {
+    // build song list
+    unsigned int song_index = 0;
+    memset(&songlist, 0, sizeof(songlist));
+	  memset(&dir, 0, sizeof(DIR));
+	  assert(f_opendir(&dir, "/") == FR_OK);
+	  while ( f_readdir( &dir, &fileinfo ) == FR_OK && fileinfo.fname[0] ) {
+		  iprintf( "%s ( %li bytes )\n" ,
+			  fileinfo.fname,
+			  fileinfo.fsize ) ;
+		
+		  if(get_filetype(fileinfo.fname) == MP3) {
+		    strncpy(songlist.list[song_index].filename, fileinfo.fname, sizeof(songlist.list[song_index].filename));
+		    song_index++;
+		  }
+		  
+		  songlist.size = song_index;
+	  }
+	}
+
+  PROFILE_START("sorting song list");
+  heapsort(songlist.list, songlist.size, sizeof(songlist.list[0]), compar_song);
+  PROFILE_END();
+
+  for (int i = 0; i < songlist.size; i++)
+  {
+    iprintf("%.12s\n", songlist.list[i].filename);
+  }
 
 	//codec_bypass();
 	//record();

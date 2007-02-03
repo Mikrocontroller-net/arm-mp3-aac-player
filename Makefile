@@ -48,7 +48,8 @@ SRC = serial.c syscalls.c $(TARGET).c \
   aac/codec/fixpt/decoder/real/trigtabs.c \
   aac/codec/fixpt/decoder/real/trigtabs_fltgen.c \
   fatfs/ff.c \
-  fatfs/mmc.c
+  fatfs/mmc.c \
+  heapsort.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
