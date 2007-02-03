@@ -68,6 +68,7 @@ void mp3_free()
 
 int mp3_refill_inbuffer(FIL *mp3file)
 {
+  WORD bytes_read;
   int bytes_to_read;
   
   iprintf("left: %d. refilling inbuffer...\n", bytes_left);
@@ -97,7 +98,6 @@ int mp3_refill_inbuffer(FIL *mp3file)
 int mp3_process(FIL *mp3file)
 {
 	int writeable_buffer;
-	WORD bytes_read;
 	
 	if (read_ptr == NULL) {
 		if(mp3_refill_inbuffer(mp3file) != 0)
