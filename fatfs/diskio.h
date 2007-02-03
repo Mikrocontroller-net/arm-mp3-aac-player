@@ -1,5 +1,5 @@
 /*-----------------------------------------------------------------------
-/  Low level disk interface modlue include file  R0.01    (C)ChaN, 2006
+/  Low level disk interface modlue include file  R0.02    (C)ChaN, 2006
 /-----------------------------------------------------------------------*/
 
 #ifndef _DISKIF
@@ -51,6 +51,7 @@ void	disk_timerproc ();
 #define MMC_GET_OCR		12
 #define ATA_GET_REV		20
 #define ATA_GET_MODEL	21
+#define ATA_GET_SN		22
 
 
 #define _DISKIF
