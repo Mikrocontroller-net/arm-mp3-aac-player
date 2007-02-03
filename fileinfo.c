@@ -102,7 +102,7 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 		
 		assert(f_read(file, id3buffer, 128, &bytes_read) == FR_OK);
 		if (strncmp("TAG", id3buffer, 3) == 0) {
-			strncpy(songinfo->title, id3buffer + 3 + 30, MIN(30, sizeof(songinfo->title) - 1));
+			strncpy(songinfo->title, id3buffer + 3, MIN(30, sizeof(songinfo->title) - 1));
 			strncpy(songinfo->artist, id3buffer + 3 + 30, MIN(30, sizeof(songinfo->artist) - 1));
 			strncpy(songinfo->album, id3buffer + 3 + 60, MIN(30, sizeof(songinfo->album) - 1));
 			iprintf("found ID3 version 1\n");
