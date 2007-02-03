@@ -66,7 +66,7 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 	
   // try ID3v2
   #ifdef ARM
-	assert(f_read(file, &id3buffer, sizeof(id3buffer), &bytes_read) == FR_OK);
+	assert(f_read(file, id3buffer, sizeof(id3buffer), &bytes_read) == FR_OK);
 	#else
 	fread(id3buffer, 1, sizeof(id3buffer), file);
 	#endif
