@@ -71,6 +71,8 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 	fread(id3buffer, 1, sizeof(id3buffer), file);
 	#endif
 	
+	memset(songinfo, 0, sizeof(*songinfo));
+	
 	if (strncmp("ID3", id3buffer, 3) == 0) {
 		DWORD tag_size, frame_size;
 		BYTE version_major, version_release, extended_header;
@@ -83,7 +85,7 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 		extended_header = id3buffer[5] & (1<<6);
 		iprintf("found ID3 version 2.%x.%x, length %lu, extended header: %i\n", version_major, version_release, tag_size, extended_header);
 		i = 10;
-		// iterate thorugh frames
+		// iterate through frames
 		while (i < MIN(tag_size, sizeof(id3buffer))) {
 			//puts(id3buffer + i);
 			frame_size = ((DWORD)id3buffer[i + 3] << 14)|((WORD)id3buffer[i + 4] << 7)|id3buffer[i + 5];
