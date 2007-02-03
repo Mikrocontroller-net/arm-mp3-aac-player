@@ -96,7 +96,6 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 			}
 			i += frame_size + 6;
 		}
-		//f_lseek(&file, tag_size);
 	} else {
 		// try ID3v1
 		f_lseek(file, file->fsize - 128);
@@ -110,8 +109,6 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 		}
 		
 		songinfo->data_start = 0;
-		
-		//f_lseek(&file, 0);
 	}
 	
 	return 0;
