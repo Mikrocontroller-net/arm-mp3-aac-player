@@ -59,7 +59,7 @@ void play(void)
 	enum playing_states state = NEXT;
 	enum filetypes infile_type = UNKNOWN;
 	long key0=0, key1=0;
-	int bytes_read;
+	WORD bytes_read;
 	
 	memset(&dir, 0, sizeof(DIR));
 	assert(f_opendir(&dir, "/") == FR_OK);
@@ -124,7 +124,7 @@ void play(void)
 						long data_offset = -1;
 						
 						for(int n=0; n<100; n++) {
-							assert(f_read(&file, &buffer, sizeof(buffer), &bytes_read) == FR_OK);
+							assert(f_read(&file, buffer, sizeof(buffer), &bytes_read) == FR_OK);
 							p = memstr(buffer, "mdat", sizeof(buffer));
 							if(p != NULL) {
 								data_offset = (p - buffer) + file.fptr - bytes_read + 4;
