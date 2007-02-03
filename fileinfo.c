@@ -99,15 +99,18 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 		//f_lseek(&file, tag_size);
 	} else {
 		// try ID3v1
-		//f_lseek(&file, fileinfo.fsize - 128);
+		f_lseek(file, file->fsize - 128);
 		
-		//assert(f_read(&file, id3buffer, 128, &bytes_read) == FR_OK);
+		assert(f_read(file, id3buffer, 128, &bytes_read) == FR_OK);
 		if (strncmp("TAG", id3buffer, 3) == 0) {
 			strncpy(songinfo->title, id3buffer + 3 + 30, MIN(30, sizeof(songinfo->title) - 1));
 			strncpy(songinfo->artist, id3buffer + 3 + 30, MIN(30, sizeof(songinfo->artist) - 1));
 			strncpy(songinfo->album, id3buffer + 3 + 60, MIN(30, sizeof(songinfo->album) - 1));
-			iprintf("Artist: %.30s\nAlbum: %.30s\nTitle: %.30s\n", id3buffer + 3 + 30, id3buffer + 3 + 60, id3buffer + 3);
+			iprintf("found ID3 version 1\n");
 		}
+		
+		songinfo->data_start = 0;
+		
 		//f_lseek(&file, 0);
 	}
 	
