@@ -40,6 +40,7 @@
 
 SONGLIST songlist;
 
+#ifdef ARM
 // compare two songs to determine the list order
 int compar_song(SONGFILE *a, SONGFILE *b) {
   SONGINFO songinfo;
@@ -104,10 +105,11 @@ int read_song_info_for_song(SONGFILE *song, SONGINFO *songinfo)
   assert(f_close(&_file) == FR_OK);
   return 0;
 }
+#endif
 
 int read_song_info(FIL *file, SONGINFO *songinfo)
 {
-	char id3buffer[2000];
+	BYTE id3buffer[3000];
 	WORD bytes_read;
 
   // try ID3v2
@@ -122,7 +124,8 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 	if (strncmp("ID3", id3buffer, 3) == 0) {
 		DWORD tag_size, frame_size;
 		BYTE version_major, version_release, extended_header;
-		int i;
+		int frame_header_size;
+		DWORD i;
 		
 		tag_size = ((DWORD)id3buffer[6] << 21)|((DWORD)id3buffer[7] << 14)|((WORD)id3buffer[8] << 7)|id3buffer[9];
 		songinfo->data_start = tag_size;
@@ -130,28 +133,50 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 		version_release = id3buffer[4];
 		extended_header = id3buffer[5] & (1<<6);
 		//iprintf("found ID3 version 2.%x.%x, length %lu, extended header: %i\n", version_major, version_release, tag_size, extended_header);
+		if (version_major >= 3) {
+		  frame_header_size = 10;
+	  } else {
+	    frame_header_size = 6;
+	  }
 		i = 10;
 		// iterate through frames
 		while (i < MIN(tag_size, sizeof(id3buffer))) {
-			//puts(id3buffer + i);
-			frame_size = ((DWORD)id3buffer[i + 3] << 14)|((WORD)id3buffer[i + 4] << 7)|id3buffer[i + 5];
-			if (strncmp("TT2", id3buffer + i, 3) == 0) {
-				strncpy(songinfo->title, id3buffer + i + 7, MIN(frame_size - 1, sizeof(songinfo->title) - 1));
-			} else if (strncmp("TP1", id3buffer + i, 3) == 0) {
-				strncpy(songinfo->artist, id3buffer + i + 7, MIN(frame_size - 1, sizeof(songinfo->artist) - 1));
-			} else if (strncmp("TAL", id3buffer + i, 3) == 0) {
-				strncpy(songinfo->album, id3buffer + i + 7, MIN(frame_size - 1, sizeof(songinfo->album) - 1));
+			puts(id3buffer + i);
+			if (version_major >= 3) {
+			  frame_size = ((DWORD)id3buffer[i + 4] << 24)|((DWORD)id3buffer[i + 5] << 16)|((WORD)id3buffer[i + 6] << 8)|id3buffer[i + 7];
+			} else {
+			  frame_size = ((DWORD)id3buffer[i + 3] << 14)|((WORD)id3buffer[i + 4] << 7)|id3buffer[i + 5];
 			}
-			i += frame_size + 6;
+			iprintf("frame size: %lu\n", frame_size);
+			if (strncmp("TT2", id3buffer + i, 3) == 0 || strncmp("TIT2", id3buffer + i, 4) == 0) {
+				strncpy(songinfo->title, id3buffer + i + frame_header_size + 1, MIN(frame_size - 1, sizeof(songinfo->title) - 1));
+			} else if (strncmp("TP1", id3buffer + i, 3) == 0 || strncmp("TPE1", id3buffer + i, 4) == 0) {
+				strncpy(songinfo->artist, id3buffer + i + frame_header_size + 1, MIN(frame_size - 1, sizeof(songinfo->artist) - 1));
+			} else if (strncmp("TAL", id3buffer + i, 3) == 0) {
+				strncpy(songinfo->album, id3buffer + i + frame_header_size + 1, MIN(frame_size - 1, sizeof(songinfo->album) - 1));
+			}
+			i += frame_size + frame_header_size;
+			
+			/*
+			doesn't work when frame is too large
+			if (sizeof(id3buffer) - i < 500)
+			{
+			  puts("refilling buffer");
+			  memmove(id3buffer, id3buffer + i, sizeof(id3buffer) - i);
+			  #ifdef ARM
+      	assert(f_read(file, id3buffer + i, sizeof(id3buffer) - i, &bytes_read) == FR_OK);
+      	#else
+      	fread(id3buffer + i, 1, sizeof(id3buffer) - i, file);
+      	#endif
+      	i = 0;
+			}
+			*/
 		}
 	} else {
 		// try ID3v1
 		#ifdef ARM
-		// TODO: test this
-		puts("seeking");
-		iprintf("%d\n", file->fsize);
+		// TODO: test this. seems to fail with 12BEHI~1.M4A
 		assert(f_lseek(file, file->fsize - 128) == FR_OK);
-		puts("ok");
 		assert(f_read(file, id3buffer, 128, &bytes_read) == FR_OK);
 		#endif
 		
@@ -180,13 +205,18 @@ char * get_full_filename(char * filename)
 }
 
 #ifndef ARM
-int main(void)
+int main(int argc, char *argv[])
 {
 	FILE           *fp;
 	SONGINFO        songinfo;
 
+  if (argc != 2) {
+    puts("usage: program filename");
+    return 1;
+  }
+
 	memset(&songinfo, 0, sizeof(songinfo));
-	fp = fopen("/media/Music/Journey/Essential Journey/Good Morning Girl.mp3", "r");
+	fp = fopen(argv[1], "r");
 	read_song_info(fp, &songinfo);
 	puts(songinfo.title);
 	puts(songinfo.artist);
