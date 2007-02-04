@@ -38,6 +38,14 @@ static unsigned char buf[2048];
 extern FATFS fs;
 extern BYTE fbuff[512];
 
+enum playing_states {START, PLAY, STOP};
+static enum playing_states state = STOP;
+static enum filetypes infile_type = UNKNOWN;
+static WORD bytes_read;
+static FIL file;
+static SONGINFO songinfo;
+static int current_song_index = -1;
+
 char *memstr(char *haystack, char *needle, int size)
 {
 	char *p;
@@ -51,18 +59,29 @@ char *memstr(char *haystack, char *needle, int size)
 	return NULL;
 }
 
+void next(void) {
+  current_song_index++;
+  if (current_song_index >= songlist.size) {
+  	current_song_index = 0;
+  }
+  iprintf("selected file: %.12s\n", songlist.list[current_song_index].filename);
+
+  assert(f_open( &file, get_full_filename(songlist.list[current_song_index].filename), FA_OPEN_EXISTING|FA_READ) == FR_OK);
+
+  memset(&songinfo, 0, sizeof(songinfo));
+  read_song_info(&file, &songinfo);
+
+  iprintf("title: %s\n", songinfo.title);
+  iprintf("artist: %s\n", songinfo.artist);
+  iprintf("album: %s\n", songinfo.album);
+  iprintf("skipping: %i\n", songinfo.data_start);
+  f_lseek(&file, songinfo.data_start);
+}
+
 void play(void)
 {
-	enum playing_states {START, PLAY, STOP, NEXT};
-	enum playing_states state = NEXT;
-	enum filetypes infile_type = UNKNOWN;
 	long key0=0, key1=0;
-	WORD bytes_read;
-	FIL file;
-	SONGINFO songinfo;
 	
-	int song_index = -1;
-
 	dac_init();
 	wav_init(buf, sizeof(buf));
 	mp3_init(buf, sizeof(buf));
@@ -74,7 +93,8 @@ void play(void)
 	//iprintf("f_open: %i\n", f_open(&file, "/04TUYY~1.MP3", FA_OPEN_EXISTING|FA_READ));
 	//infile_type = MP3;
 	
-	//state = PLAY;
+	next();
+	state = STOP;
 	
 	//mp3_alloc();
 	
@@ -94,13 +114,14 @@ void play(void)
 			} else if (key1) {
 				f_close( &file );
 				puts("File closed.");
-				state = NEXT;
+				next();
+				state = STOP;
 			}
 
 		break;
 		
 		case START:
-			infile_type = get_filetype(songlist.list[song_index].filename);
+			infile_type = get_filetype(songlist.list[current_song_index].filename);
 			if (infile_type != UNKNOWN) {
 				//assert(f_open( &file, get_full_filename(fileinfo.fname), FA_OPEN_EXISTING|FA_READ) == FR_OK);
 				//puts("File opened.");
@@ -164,25 +185,29 @@ void play(void)
 			switch(infile_type) {
 			case MP3:
 				if(mp3_process(&file) != 0) {
-					state = NEXT;
+					next();
+					state = START;
 				}
 			break;
 			
 			case MP4:
 				if (aac_process(&file, 1) != 0) {
-					state = NEXT;
+				  next();
+					state = START;
 				}
 			break;
 			
 			case AAC:
 				if (aac_process(&file, 0) != 0) {
-					state = NEXT;
+				  next();
+					state = START;
 				}
 			break;
 			
 			case WAV:
 				if (wav_process(&file) != 0) {
-					state = NEXT;
+				  next();
+					state = START;
 				}
 			break;
 			
@@ -196,32 +221,12 @@ void play(void)
 				iprintf("underruns: %u\n", underruns);
 			} else if (key1) {
 				iprintf("underruns: %u\n", underruns);
-				state = NEXT;
+				next();
+				state = START;
 			}
 		break;
 			
-		case NEXT:
-		  song_index++;
-			if (song_index >= songlist.size) {
-				song_index = 0;
-			}
-			iprintf("selected file: %.12s\n", songlist.list[song_index].filename);
-
-			assert(f_open( &file, get_full_filename(songlist.list[song_index].filename), FA_OPEN_EXISTING|FA_READ) == FR_OK);
-
-			memset(&songinfo, 0, sizeof(songinfo));
-			read_song_info(&file, &songinfo);
-			
-			iprintf("title: %s\n", songinfo.title);
-			iprintf("artist: %s\n", songinfo.artist);
-			iprintf("album: %s\n", songinfo.album);
-			iprintf("skipping: %i\n", songinfo.data_start);
-			f_lseek(&file, songinfo.data_start);
-			
-			state = STOP;
-		break;
 		}
-		
 	}
 	
 }
