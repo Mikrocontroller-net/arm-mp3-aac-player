@@ -23,15 +23,13 @@
 #include <assert.h>
 
 #ifdef ARM
-
 #include "ff.h"
-
+#include "profile.h"
+#include "heapsort.h"
 #else
-
 #include "fatfs/integer.h"
 #define FIL FILE
 #define iprintf printf
-
 #endif
 
 #include "fileinfo.h"
@@ -41,7 +39,15 @@
 SONGLIST songlist;
 
 #ifdef ARM
-// compare two songs to determine the list order
+void songlist_sort(SONGLIST *songlist) {
+  PROFILE_START("sorting song list");
+  heapsort(songlist->list, songlist->size, sizeof(songlist->list[0]), compar_song);
+  PROFILE_END();
+}
+#endif
+
+#ifdef ARM
+// compare two songs to determine the sorting order
 int compar_song(SONGFILE *a, SONGFILE *b) {
   SONGINFO songinfo;
   char str_a[30], str_b[30];

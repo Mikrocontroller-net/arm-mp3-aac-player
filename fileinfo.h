@@ -26,19 +26,20 @@ typedef struct _SONGFILE {
 } SONGFILE;
 
 typedef struct _SONGLIST {
-  SONGFILE list[40];
+  SONGFILE list[100];
   unsigned int size;
 } SONGLIST;
 
 typedef struct _SONGINFO {
-	char	title[30];
-	char	artist[30];
-	char	album[30];
+	char	title[40];
+	char	artist[40];
+	char	album[40];
 	unsigned int	data_start;
 } SONGINFO;
 
 enum filetypes {WAV, MP3, MP4, AAC, UNKNOWN};
 
+void songlist_sort(SONGLIST *songlist);
 int compar_song(SONGFILE *a, SONGFILE *b);
 enum filetypes get_filetype(char * filename);
 char * get_full_filename(char * filename);

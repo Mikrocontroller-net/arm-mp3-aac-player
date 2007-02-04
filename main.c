@@ -36,7 +36,6 @@
 #include "profile.h"
 #include "dac.h"
 #include "aacdec.h"
-#include "heapsort.h"
 
 #include "raw_aac_data.h"
 
@@ -310,9 +309,7 @@ int main(void)
 	  }
 	}
 
-  PROFILE_START("sorting song list");
-  heapsort(songlist.list, songlist.size, sizeof(songlist.list[0]), compar_song);
-  PROFILE_END();
+  songlist_sort(&songlist);
 
   for (int i = 0; i < songlist.size; i++)
   {
