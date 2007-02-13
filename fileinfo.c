@@ -44,7 +44,7 @@ void songlist_build(SONGLIST *songlist)
   
   // build song list
   unsigned int song_index = 0;
-  memset(songlist, 0, sizeof(*songlist));
+  memset(songlist, 0, sizeof(SONGLIST));
   memset(&dir, 0, sizeof(DIR));
   assert(f_opendir(&dir, "/") == FR_OK);
   while ( f_readdir( &dir, &fileinfo ) == FR_OK && fileinfo.fname[0] ) {
@@ -86,11 +86,11 @@ int compar_song(SONGFILE *a, SONGFILE *b) {
   memset(str_a, 0, sizeof(str_a));
   memset(str_b, 0, sizeof(str_b));
   
-  memset(&songinfo, 0, sizeof(songinfo));
+  memset(&songinfo, 0, sizeof(SONGINFO));
   read_song_info_for_song(a, &songinfo);
   strncpy(str_a, skip_artist_prefix(songinfo.artist), sizeof(str_a)-1);
   
-  memset(&songinfo, 0, sizeof(songinfo));
+  memset(&songinfo, 0, sizeof(SONGINFO));
   read_song_info_for_song(b, &songinfo);
   strncpy(str_b, skip_artist_prefix(songinfo.artist), sizeof(str_b)-1);
   
@@ -123,7 +123,7 @@ enum filetypes get_filetype(char * filename)
 int read_song_info_for_song(SONGFILE *song, SONGINFO *songinfo)
 {
   static FIL _file;
-  memset(&_file, 0, sizeof(_file));
+  memset(&_file, 0, sizeof(FIL));
   assert(f_open(&_file, get_full_filename(song->filename), FA_OPEN_EXISTING|FA_READ) == FR_OK);
   assert(read_song_info(&_file, songinfo) == 0);
   assert(f_close(&_file) == FR_OK);
@@ -143,7 +143,7 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 	fread(id3buffer, 1, sizeof(id3buffer), file);
 	#endif
 	
-	memset(songinfo, 0, sizeof(*songinfo));
+	memset(songinfo, 0, sizeof(SONGINFO));
 	
 	if (strncmp("ID3", id3buffer, 3) == 0) {
 		DWORD tag_size, frame_size;
@@ -199,7 +199,6 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 	} else {
 		// try ID3v1
 		#ifdef ARM
-		// TODO: test this. seems to fail with 12BEHI~1.M4A
 		assert(f_lseek(file, file->fsize - 128) == FR_OK);
 		assert(f_read(file, id3buffer, 128, &bytes_read) == FR_OK);
 		#endif
@@ -239,7 +238,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-	memset(&songinfo, 0, sizeof(songinfo));
+	memset(&songinfo, 0, sizeof(SONGINFO));
 	fp = fopen(argv[1], "r");
 	read_song_info(fp, &songinfo);
 	puts(songinfo.title);

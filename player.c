@@ -75,7 +75,7 @@ void next(void) {
 
   assert(f_open( &file, get_full_filename(songlist.list[current_song_index].filename), FA_OPEN_EXISTING|FA_READ) == FR_OK);
 
-  memset(&songinfo, 0, sizeof(songinfo));
+  memset(&songinfo, 0, sizeof(SONGINFO));
   read_song_info(&file, &songinfo);
 
   iprintf("title: %s\n", songinfo.title);
@@ -93,8 +93,8 @@ void player_init(void)
   
   for (int i = 0; i < songlist.size; i++)
   {
-    read_song_info_for_song(songlist.list[i].filename, &songinfo);
-    iprintf("%.12s\n", songinfo.artist);
+    read_song_info_for_song(&(songlist.list[i]), &songinfo);
+    iprintf("%s\n", songinfo.artist);
   }
 }
 
