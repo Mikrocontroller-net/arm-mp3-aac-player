@@ -1,3 +1,7 @@
+/*
+from http://www.mikrocontroller.net/topic/48465
+*/
+
 #include "AT91SAM7S64.h"
 #include "Board.h"
 
@@ -8,9 +12,9 @@
 
 #define KEY_INPUT		(*AT91C_PIOA_PDSR)
 
-#define REPEAT_MASK	0 //(1<<KEY1)	// repeat: key1
-#define REPEAT_START	50		// after 500ms
-#define REPEAT_NEXT	20		// every 200ms
+#define REPEAT_MASK (1<<KEY1)	// repeat: key1
+#define REPEAT_START	50		// * 10ms
+#define REPEAT_NEXT	22		// * 10ms
 
 
 volatile unsigned long key_state;				// debounced and inverted key state:

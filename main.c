@@ -287,37 +287,10 @@ int main(void)
 	    // Get free bytes
 	    iprintf("%lu bytes available on the disk.\n", clust * FatFs->sects_clust * 512);
 	}
-	
-
-  {
-    // build song list
-    unsigned int song_index = 0;
-    memset(&songlist, 0, sizeof(songlist));
-	  memset(&dir, 0, sizeof(DIR));
-	  assert(f_opendir(&dir, "/") == FR_OK);
-	  while ( f_readdir( &dir, &fileinfo ) == FR_OK && fileinfo.fname[0] ) {
-		  iprintf( "%s ( %li bytes )\n" ,
-			  fileinfo.fname,
-			  fileinfo.fsize ) ;
-		
-		  if(get_filetype(fileinfo.fname) == MP3) {
-		    strncpy(songlist.list[song_index].filename, fileinfo.fname, sizeof(songlist.list[song_index].filename));
-		    song_index++;
-		  }
-		  
-		  songlist.size = song_index;
-	  }
-	}
-
-  songlist_sort(&songlist);
-
-  for (int i = 0; i < songlist.size; i++)
-  {
-    iprintf("%.12s\n", songlist.list[i].filename);
-  }
 
 	//codec_bypass();
 	//record();
+	player_init();
 	play();
 	//test_raw_aac();
 	while(1);

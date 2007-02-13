@@ -18,6 +18,12 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
+/*
+
+This is the controller of the player.
+
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,6 +49,7 @@ static enum playing_states state = STOP;
 static enum filetypes infile_type = UNKNOWN;
 static WORD bytes_read;
 static FIL file;
+static SONGLIST songlist;
 static SONGINFO songinfo;
 static int current_song_index = -1;
 
@@ -78,6 +85,19 @@ void next(void) {
   f_lseek(&file, songinfo.data_start);
 }
 
+void player_init(void)
+{
+  dac_init();
+  songlist_build(&songlist);
+  songlist_sort(&songlist);
+  
+  for (int i = 0; i < songlist.size; i++)
+  {
+    read_song_info_for_song(songlist.list[i].filename, &songinfo);
+    iprintf("%.12s\n", songinfo.artist);
+  }
+}
+
 void play(void)
 {
 	long key0=0, key1=0;
@@ -107,7 +127,7 @@ void play(void)
 		switch(state) {
 		case STOP:
 			key0 = get_key_press( 1<<KEY0 );
-			key1 = get_key_press( 1<<KEY1 );
+			key1 = get_key_rpt( 1<<KEY1 ) || get_key_press( 1<<KEY1 );
 			
 			if (key0) {
 				state = START;
@@ -180,7 +200,7 @@ void play(void)
 		
 		case PLAY:
 			key0 = get_key_press( 1<<KEY0 );
-			key1 = get_key_press( 1<<KEY1 );
+			key1 = get_key_rpt( 1<<KEY1 ) || get_key_press( 1<<KEY1 );
 			
 			switch(infile_type) {
 			case MP3:

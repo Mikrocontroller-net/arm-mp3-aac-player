@@ -21,6 +21,7 @@
 #ifndef _PLAYER_H_
 #define _PLAYER_H_
 
+void player_init(void);
 void next(void);
 void play(void);
 

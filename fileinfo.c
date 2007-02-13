@@ -36,9 +36,31 @@
 
 #define MIN(x,y) ( ((x) < (y)) ? (x) : (y) )
 
-SONGLIST songlist;
-
 #ifdef ARM
+void songlist_build(SONGLIST *songlist)
+{
+  DIR dir;
+  FILINFO fileinfo;
+  
+  // build song list
+  unsigned int song_index = 0;
+  memset(songlist, 0, sizeof(*songlist));
+  memset(&dir, 0, sizeof(DIR));
+  assert(f_opendir(&dir, "/") == FR_OK);
+  while ( f_readdir( &dir, &fileinfo ) == FR_OK && fileinfo.fname[0] ) {
+	  iprintf( "%s ( %li bytes )\n" ,
+		  fileinfo.fname,
+		  fileinfo.fsize ) ;
+
+	  if(get_filetype(fileinfo.fname) == MP3) {
+	    strncpy(songlist->list[song_index].filename, fileinfo.fname, sizeof(songlist->list[song_index].filename));
+	    song_index++;
+	  }
+
+	  songlist->size = song_index;
+  }
+}
+
 void songlist_sort(SONGLIST *songlist) {
   PROFILE_START("sorting song list");
   heapsort(songlist->list, songlist->size, sizeof(songlist->list[0]), compar_song);
@@ -46,35 +68,31 @@ void songlist_sort(SONGLIST *songlist) {
 }
 #endif
 
+char* skip_artist_prefix(char* s)
+{
+  if(strstr(s, "The ") || strstr(s, "Die ")) {
+    return s + 4;
+  } else {
+    return s;
+  }
+}
+
 #ifdef ARM
 // compare two songs to determine the sorting order
 int compar_song(SONGFILE *a, SONGFILE *b) {
   SONGINFO songinfo;
   char str_a[30], str_b[30];
-  int offset;
   
   memset(str_a, 0, sizeof(str_a));
   memset(str_b, 0, sizeof(str_b));
   
   memset(&songinfo, 0, sizeof(songinfo));
   read_song_info_for_song(a, &songinfo);
-  
-  if(strstr(songinfo.artist, "The ") == NULL) {
-    offset = 0;
-  } else {
-    offset = 4;
-  }
-  strncpy(str_a, songinfo.artist + offset, sizeof(str_a) - offset);
+  strncpy(str_a, skip_artist_prefix(songinfo.artist), sizeof(str_a)-1);
   
   memset(&songinfo, 0, sizeof(songinfo));
   read_song_info_for_song(b, &songinfo);
-  
-  if(strstr(songinfo.artist, "The ") == NULL) {
-    offset = 0;
-  } else {
-    offset = 4;
-  }
-  strncpy(str_b, songinfo.artist + offset, sizeof(str_b) - offset);
+  strncpy(str_b, skip_artist_prefix(songinfo.artist), sizeof(str_b)-1);
   
   //iprintf("comparing %s <-> %s: %d\n", str_a, str_b, strncasecmp(str_a, str_b, MIN(sizeof(str_a), sizeof(str_b))));
   
@@ -147,13 +165,13 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 		i = 10;
 		// iterate through frames
 		while (i < MIN(tag_size, sizeof(id3buffer))) {
-			puts(id3buffer + i);
+			//puts(id3buffer + i);
 			if (version_major >= 3) {
 			  frame_size = ((DWORD)id3buffer[i + 4] << 24)|((DWORD)id3buffer[i + 5] << 16)|((WORD)id3buffer[i + 6] << 8)|id3buffer[i + 7];
 			} else {
 			  frame_size = ((DWORD)id3buffer[i + 3] << 14)|((WORD)id3buffer[i + 4] << 7)|id3buffer[i + 5];
 			}
-			iprintf("frame size: %lu\n", frame_size);
+			//iprintf("frame size: %lu\n", frame_size);
 			if (strncmp("TT2", id3buffer + i, 3) == 0 || strncmp("TIT2", id3buffer + i, 4) == 0) {
 				strncpy(songinfo->title, id3buffer + i + frame_header_size + 1, MIN(frame_size - 1, sizeof(songinfo->title) - 1));
 			} else if (strncmp("TP1", id3buffer + i, 3) == 0 || strncmp("TPE1", id3buffer + i, 4) == 0) {
