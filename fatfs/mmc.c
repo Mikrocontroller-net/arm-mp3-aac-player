@@ -369,18 +369,9 @@ static void init_spi()
 	pSPI->SPI_MR |= ( (SPI_MR_PCS<<16) & AT91C_SPI_PCS ); // set PCS
 
 	// set chip-select-register
-	// 8 bits per transfer, CPOL=1, ClockPhase=0, DLYBCT = 0
-	// TODO: Why has CPOL to be active here and non-active on LPC2000?
-	//       Take closer look on timing diagrams in datasheets.
-	/*
-	MMC reads data on the rising edge => CPOL=CPHA can't work
-	=> possible settings: CPOL=0, CPHA=1; CPOL=1, CPHA=0
-
-	*/
-	//pSPI->SPI_CSR[SPI_CSR_NUM] = AT91C_SPI_CPOL | AT91C_SPI_BITS_8 | AT91C_SPI_NCPHA;
-	//pSPI->SPI_CSR[SPI_CSR_NUM] = AT91C_SPI_BITS_8 | AT91C_SPI_NCPHA; 
-	pSPI->SPI_CSR[SPI_CSR_NUM] = AT91C_SPI_CPOL | AT91C_SPI_BITS_8; // ok
-	//pSPI->SPI_CSR[SPI_CSR_NUM] = AT91C_SPI_BITS_8;
+	// 8 bits per transfer, CPOL=0, ClockPhase=0, DLYBCT = 0
+	//pSPI->SPI_CSR[SPI_CSR_NUM] = AT91C_SPI_CPOL | AT91C_SPI_BITS_8;
+	pSPI->SPI_CSR[SPI_CSR_NUM] = AT91C_SPI_NCPHA | AT91C_SPI_BITS_8; // ok
 
 	// slow during init
 	if_spiSetSpeed(0xFE); 
