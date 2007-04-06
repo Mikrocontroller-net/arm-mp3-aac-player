@@ -42,7 +42,6 @@ This is the controller of the player.
 static unsigned char buf[2048];
 //static SONGINFO songinfo;
 extern FATFS fs;
-extern BYTE fbuff[512];
 
 enum playing_states {START, PLAY, STOP};
 static enum playing_states state = STOP;
@@ -159,7 +158,7 @@ void play(void)
 				case MP4:
 					// skip MP4 header
 					{
-						char buffer[4000];
+						char buffer[1000];
 						char *p;
 						long data_offset = -1;
 						
