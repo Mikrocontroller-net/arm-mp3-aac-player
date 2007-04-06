@@ -21,7 +21,7 @@
 #ifndef _FILEINFO_H_
 #define _FILEINFO_H_
 
-#define MAX_SONGS 200
+#define MAX_SONGS 50
 
 typedef struct _SONGFILE {
   char  filename[12]; // 8.3 format, not null terminated!
