@@ -64,7 +64,7 @@
  *                if there are no codes at nBits, then we just keep << 1 each time 
  *                  (since count[nBits] = 0)
  **************************************************************************************/
-int DecodeHuffmanScalar(const signed short *huffTab, const HuffInfo *huffTabInfo, unsigned int bitBuf, signed int *val)
+__attribute__ ((section (".data"))) int DecodeHuffmanScalar(const signed short *huffTab, const HuffInfo *huffTabInfo, unsigned int bitBuf, signed int *val)
 {
     unsigned int count, start, shift, t;
 	const unsigned char *countPtr;
@@ -146,7 +146,7 @@ static void UnpackZeros(int nVals, int *coef)
  * Notes:       assumes nVals is always a multiple of 4 because all scalefactor bands
  *                are a multiple of 4 coefficients long
  **************************************************************************************/
-static void UnpackQuads(BitStreamInfo *bsi, int cb, int nVals, int *coef)
+__attribute__ ((section (".data"))) static void UnpackQuads(BitStreamInfo *bsi, int cb, int nVals, int *coef)
 {
 	int w, x, y, z, maxBits, nCodeBits, nSignBits, val;
 	unsigned int bitBuf;
@@ -193,7 +193,7 @@ static void UnpackQuads(BitStreamInfo *bsi, int cb, int nVals, int *coef)
  * Notes:       assumes nVals is always a multiple of 2 because all scalefactor bands
  *                are a multiple of 4 coefficients long
  **************************************************************************************/
-static void UnpackPairsNoEsc(BitStreamInfo *bsi, int cb, int nVals, int *coef)
+__attribute__ ((section (".data"))) static void UnpackPairsNoEsc(BitStreamInfo *bsi, int cb, int nVals, int *coef)
 {
 	int y, z, maxBits, nCodeBits, nSignBits, val;
 	unsigned int bitBuf;
@@ -236,7 +236,7 @@ static void UnpackPairsNoEsc(BitStreamInfo *bsi, int cb, int nVals, int *coef)
  * Notes:       assumes nVals is always a multiple of 2 because all scalefactor bands
  *                are a multiple of 4 coefficients long
  **************************************************************************************/
-static void UnpackPairsEsc(BitStreamInfo *bsi, int cb, int nVals, int *coef)
+__attribute__ ((section (".data"))) static void UnpackPairsEsc(BitStreamInfo *bsi, int cb, int nVals, int *coef)
 {
 	int y, z, maxBits, nCodeBits, nSignBits, n, val;
 	unsigned int bitBuf;
@@ -295,7 +295,7 @@ static void UnpackPairsEsc(BitStreamInfo *bsi, int cb, int nVals, int *coef)
  *              fills coefficient buffer with zeros in any region not coded with
  *                codebook in range [1, 11] (including sfb's above sfbMax)
  **************************************************************************************/
-void DecodeSpectrumLong(PSInfoBase *psi, BitStreamInfo *bsi, int ch)
+__attribute__ ((section (".data"))) void DecodeSpectrumLong(PSInfoBase *psi, BitStreamInfo *bsi, int ch)
 {
 	int i, sfb, cb, nVals, offset;
 	const short *sfbTab;
@@ -366,7 +366,7 @@ void DecodeSpectrumLong(PSInfoBase *psi, BitStreamInfo *bsi, int ch)
  *                codebook in range [1, 11] (including sfb's above sfbMax)
  *              deinterleaves window groups into 8 windows
  **************************************************************************************/
-void DecodeSpectrumShort(PSInfoBase *psi, BitStreamInfo *bsi, int ch)
+__attribute__ ((section (".data"))) void DecodeSpectrumShort(PSInfoBase *psi, BitStreamInfo *bsi, int ch)
 {
 	int gp, cb, nVals=0, win, offset, sfb;
 	const short *sfbTab;

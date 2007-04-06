@@ -34,19 +34,6 @@ SRC = serial.c syscalls.c $(TARGET).c \
   mp3/codec/fixpt/real/buffers.c \
   mp3/codec/fixpt/mp3dec.c \
   mp3/codec/fixpt/mp3tabs.c \
-  aac/codec/fixpt/decoder/aacdec.c \
-  aac/codec/fixpt/decoder/aactabs.c \
-  aac/codec/fixpt/decoder/real/bitstream.c \
-  aac/codec/fixpt/decoder/real/buffers.c \
-  aac/codec/fixpt/decoder/real/decelmnt.c \
-  aac/codec/fixpt/decoder/real/filefmt.c \
-  aac/codec/fixpt/decoder/real/huffman.c \
-  aac/codec/fixpt/decoder/real/hufftabs.c \
-  aac/codec/fixpt/decoder/real/noiseless.c \
-  aac/codec/fixpt/decoder/real/sbr.c \
-  aac/codec/fixpt/decoder/real/sbrtabs.c \
-  aac/codec/fixpt/decoder/real/trigtabs.c \
-  aac/codec/fixpt/decoder/real/trigtabs_fltgen.c \
   fatfs/ff.c \
   fatfs/mmc.c \
   heapsort.c
@@ -80,6 +67,19 @@ SRCARM = interrupt_utils.c systime.c \
   aac/codec/fixpt/decoder/real/sbrside.c \
   aac/codec/fixpt/decoder/real/stproc.c \
   aac/codec/fixpt/decoder/real/tns.c \
+  aac/codec/fixpt/decoder/aacdec.c \
+  aac/codec/fixpt/decoder/aactabs.c \
+  aac/codec/fixpt/decoder/real/bitstream.c \
+  aac/codec/fixpt/decoder/real/buffers.c \
+  aac/codec/fixpt/decoder/real/decelmnt.c \
+  aac/codec/fixpt/decoder/real/filefmt.c \
+  aac/codec/fixpt/decoder/real/huffman.c \
+  aac/codec/fixpt/decoder/real/hufftabs.c \
+  aac/codec/fixpt/decoder/real/noiseless.c \
+  aac/codec/fixpt/decoder/real/sbr.c \
+  aac/codec/fixpt/decoder/real/sbrtabs.c \
+  aac/codec/fixpt/decoder/real/trigtabs.c \
+  aac/codec/fixpt/decoder/real/trigtabs_fltgen.c \
   filter.c
 
 # List C++ source files here.
@@ -109,7 +109,7 @@ ASRCARM = startup_SAM7S.S mp3/codec/fixpt/real/arm/asmpoly_gcc.S \
 # Optimization level, can be [0, 1, 2, 3, s]. 
 # 0 = turn off optimization. s = optimize for size.
 # (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
-OPT = s
+OPT = 3
 #OPT = 0
 
 # List any extra directories to look for include files here.

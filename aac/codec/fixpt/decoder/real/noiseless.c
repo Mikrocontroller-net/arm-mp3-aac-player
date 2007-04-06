@@ -46,6 +46,11 @@
 
 #include "coder.h"
 
+#include "profile.h"
+
+//#define PROFILE_START(x)
+//#define PROFILE_END()
+
 /**************************************************************************************
  * Function:    DecodeICSInfo
  *
@@ -59,7 +64,7 @@
  *
  * Return:      none
  **************************************************************************************/
-void DecodeICSInfo(BitStreamInfo *bsi, ICSInfo *icsInfo, int sampRateIdx)
+__attribute__ ((section (".data"))) void DecodeICSInfo(BitStreamInfo *bsi, ICSInfo *icsInfo, int sampRateIdx)
 {
 	int sfb, g, mask;
 
@@ -116,7 +121,7 @@ void DecodeICSInfo(BitStreamInfo *bsi, ICSInfo *icsInfo, int sampRateIdx)
  *
  * Notes:       sectCB, sectEnd, sfbCodeBook, ordered by window groups for short blocks
  **************************************************************************************/
-static void DecodeSectionData(BitStreamInfo *bsi, int winSequence, int numWinGrp, int maxSFB, unsigned char *sfbCodeBook)
+__attribute__ ((section (".data")))  static void DecodeSectionData(BitStreamInfo *bsi, int winSequence, int numWinGrp, int maxSFB, unsigned char *sfbCodeBook)
 {
 	int g, cb, sfb;
 	int sectLen, sectLenBits, sectLenIncr, sectEscapeVal;
@@ -160,9 +165,10 @@ static int DecodeOneScaleFactor(BitStreamInfo *bsi)
 
 	/* decode next scalefactor from bitstream */
 	bitBuf = GetBitsNoAdvance(bsi, huffTabScaleFactInfo.maxBits) << (32 - huffTabScaleFactInfo.maxBits);
+  //PROFILE_START("DecodeHuffmanScalar");
 	nBits = DecodeHuffmanScalar(huffTabScaleFact, &huffTabScaleFactInfo, bitBuf, &val);
 	AdvanceBitstream(bsi, nBits);
-
+  //PROFILE_END();
 	return val;
 }
 
@@ -188,7 +194,7 @@ static int DecodeOneScaleFactor(BitStreamInfo *bsi)
  *              for section with codebook 14 or 15, scaleFactors buffer has intensity
  *                stereo weight instead of regular scalefactor
  **************************************************************************************/
-static void DecodeScaleFactors(BitStreamInfo *bsi, int numWinGrp, int maxSFB, int globalGain,
+__attribute__ ((section (".data")))  static void DecodeScaleFactors(BitStreamInfo *bsi, int numWinGrp, int maxSFB, int globalGain,
 								  unsigned char *sfbCodeBook, short *scaleFactors)
 {
 	int g, sfbCB, nrg, npf, val, sf, is;
@@ -241,7 +247,7 @@ static void DecodeScaleFactors(BitStreamInfo *bsi, int numWinGrp, int maxSFB, in
  *
  * Return:      none
  **************************************************************************************/
-static void DecodePulseInfo(BitStreamInfo *bsi, PulseInfo *pi)
+__attribute__ ((section (".data")))  static void DecodePulseInfo(BitStreamInfo *bsi, PulseInfo *pi)
 {
 	int i;
 
