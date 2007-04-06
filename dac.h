@@ -50,7 +50,7 @@
 #define AIC_STA1	(1 << 7)
 #define AIC_STA2	(1 << 8)
 
-#define MAX_BUFFERS 3
+#define MAX_BUFFERS 4
 #define DAC_BUFFER_MAX_SIZE 2400
 extern short dac_buffer[MAX_BUFFERS][DAC_BUFFER_MAX_SIZE];
 extern int dac_buffer_size[MAX_BUFFERS];
