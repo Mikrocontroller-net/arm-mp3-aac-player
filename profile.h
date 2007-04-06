@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "systime.h"
 
 #ifndef _PROFILE_H_
