@@ -52,7 +52,7 @@ void songlist_build(SONGLIST *songlist)
 		  fileinfo.fname,
 		  fileinfo.fsize ) ;
 
-	  if(get_filetype(fileinfo.fname) == MP3) {
+	  if(get_filetype(fileinfo.fname) == MP3 || get_filetype(fileinfo.fname) == MP4) {
 	    strncpy(songlist->list[song_index].filename, fileinfo.fname, sizeof(songlist->list[song_index].filename));
 	    song_index++;
 	  }
@@ -122,7 +122,7 @@ enum filetypes get_filetype(char * filename)
 
 int read_song_info_for_song(SONGFILE *song, SONGINFO *songinfo)
 {
-  static FIL _file;
+  FIL _file;
   memset(&_file, 0, sizeof(FIL));
   assert(f_open(&_file, get_full_filename(song->filename), FA_OPEN_EXISTING|FA_READ) == FR_OK);
   assert(read_song_info(&_file, songinfo) == 0);
