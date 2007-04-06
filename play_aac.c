@@ -31,8 +31,8 @@
 
 #define debug_printf
 
-//#define PROFILE_START(x)
-//#define PROFILE_END()
+#define PROFILE_START(x)
+#define PROFILE_END()
 
 static HAACDecoder hAACDecoder;
 static AACFrameInfo aacFrameInfo;
