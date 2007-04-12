@@ -5,7 +5,7 @@ from http://www.mikrocontroller.net/topic/48465
 #include "AT91SAM7S64.h"
 #include "Board.h"
 
-#include "control.h"
+#include "keys.h"
 #include "interrupt_utils.h"
 
 #include <stdio.h>

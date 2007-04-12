@@ -37,46 +37,49 @@ This is the controller of the player.
 #include "play_wav.h"
 #include "play_mp3.h"
 #include "play_aac.h"
-#include "control.h"
+#include "keys.h"
+#include "ir.h"
 
 static unsigned char buf[2048];
 //static SONGINFO songinfo;
 extern FATFS fs;
 
 enum playing_states {START, PLAY, STOP};
+enum user_commands {CMD_START, CMD_STOP, CMD_NEXT};
 static enum playing_states state = STOP;
-static enum filetypes infile_type = UNKNOWN;
-static WORD bytes_read;
 static FIL file;
 static SONGLIST songlist;
 static SONGINFO songinfo;
 static int current_song_index = -1;
 
-char *memstr(char *haystack, char *needle, int size)
+enum user_commands get_command(void)
 {
-	char *p;
-	char needlesize = strlen(needle);
-
-	for (p = haystack; p <= (haystack-needlesize+size); p++)
-	{
-		if (memcmp(p, needle, needlesize) == 0)
-			return p; /* found */
+  long key0 = get_key_press( 1<<KEY0 );
+	long key1 = get_key_rpt( 1<<KEY1 ) || get_key_press( 1<<KEY1 );
+  int ir_cmd = ir_get_cmd();
+	
+	if ((key0 && state == STOP) || ir_cmd == 0x35) {
+    return CMD_START;
+	} else if ((key0 && state == PLAY) || ir_cmd == 0x36) {
+    return CMD_STOP;
+	} else if (key1 || ir_cmd == 0x34) {
+    return CMD_NEXT;
 	}
-	return NULL;
+	
+  return -1;
 }
 
-void next(void) {
+void next(void)
+{
   current_song_index++;
   if (current_song_index >= songlist.size) {
   	current_song_index = 0;
   }
   iprintf("selected file: %.12s\n", songlist.list[current_song_index].filename);
 
-  assert(f_open( &file, get_full_filename(songlist.list[current_song_index].filename), FA_OPEN_EXISTING|FA_READ) == FR_OK);
-
   memset(&songinfo, 0, sizeof(SONGINFO));
-  read_song_info(&file, &songinfo);
-
+  read_song_info_for_song(&(songlist.list[current_song_index]), &songinfo);
+  assert(f_open( &file, get_full_filename(songlist.list[current_song_index].filename), FA_OPEN_EXISTING|FA_READ) == FR_OK);
   iprintf("title: %s\n", songinfo.title);
   iprintf("artist: %s\n", songinfo.artist);
   iprintf("album: %s\n", songinfo.album);
@@ -99,7 +102,7 @@ void player_init(void)
 
 void play(void)
 {
-	long key0=0, key1=0;
+  enum user_commands cmd;
 	
 	dac_init();
 	wav_init(buf, sizeof(buf));
@@ -111,26 +114,23 @@ void play(void)
 	
 	//iprintf("f_open: %i\n", f_open(&file, "/04TUYY~1.MP3", FA_OPEN_EXISTING|FA_READ));
 	//infile_type = MP3;
-	
 	next();
 	state = STOP;
 	
 	//mp3_alloc();
 	
-	get_key_press( 1<<KEY0 );
-	get_key_press( 1<<KEY1 );
+  get_command();
 	
 	while(1)
 	{
 	
 		switch(state) {
 		case STOP:
-			key0 = get_key_press( 1<<KEY0 );
-			key1 = get_key_rpt( 1<<KEY1 ) || get_key_press( 1<<KEY1 );
-			
-			if (key0) {
+      cmd = get_command();
+    
+      if (cmd == CMD_START) {
 				state = START;
-			} else if (key1) {
+			} else if (cmd == CMD_NEXT) {
 				f_close( &file );
 				puts("File closed.");
 				next();
@@ -140,8 +140,7 @@ void play(void)
 		break;
 		
 		case START:
-			infile_type = get_filetype(songlist.list[current_song_index].filename);
-			if (infile_type != UNKNOWN) {
+			if (songinfo.type != UNKNOWN) {
 				//assert(f_open( &file, get_full_filename(fileinfo.fname), FA_OPEN_EXISTING|FA_READ) == FR_OK);
 				//puts("File opened.");
 				
@@ -149,38 +148,16 @@ void play(void)
 				aac_free();
 				dac_reset();
 				
-				switch(infile_type) {
+				switch(songinfo.type) {
 				case AAC:
 					aac_alloc();
 					aac_reset();
 				break;
 				
 				case MP4:
-					// skip MP4 header
-					{
-						char buffer[1000];
-						char *p;
-						long data_offset = -1;
-						
-						for(int n=0; n<100; n++) {
-							assert(f_read(&file, buffer, sizeof(buffer), &bytes_read) == FR_OK);
-							p = memstr(buffer, "mdat", sizeof(buffer));
-							if(p != NULL) {
-								data_offset = (p - buffer) + file.fptr - bytes_read + 4;
-								iprintf("found mdat atom data at 0x%lx\n", data_offset);
-								break;
-							} else {
-								// seek backwards
-								assert(f_lseek(&file, file.fptr - 4) == FR_OK);
-							}
-						}
-						
-						assert(data_offset > 0);
-						assert(f_lseek(&file, data_offset) == FR_OK);
-					}
 					aac_alloc();
 					aac_reset();
-					aac_setup_raw();
+					aac_setup_raw(); // TODO: do this only when the file is first opened
 				break;
 					
 				case MP3:
@@ -198,10 +175,9 @@ void play(void)
 		break;
 		
 		case PLAY:
-			key0 = get_key_press( 1<<KEY0 );
-			key1 = get_key_rpt( 1<<KEY1 ) || get_key_press( 1<<KEY1 );
+      cmd = get_command();
 			
-			switch(infile_type) {
+			switch(songinfo.type) {
 			case MP3:
 				if(mp3_process(&file) != 0) {
 					next();
@@ -235,10 +211,10 @@ void play(void)
 			break;
 			}
 		
-			if (key0) {
+			if (cmd == CMD_STOP) {
 				state = STOP;
 				iprintf("underruns: %u\n", underruns);
-			} else if (key1) {
+			} else if (cmd == CMD_NEXT) {
 				iprintf("underruns: %u\n", underruns);
 				next();
 				state = START;

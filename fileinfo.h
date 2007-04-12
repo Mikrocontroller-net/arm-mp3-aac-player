@@ -23,6 +23,8 @@
 
 #define MAX_SONGS 50
 
+enum filetypes {WAV, MP3, MP4, AAC, UNKNOWN=0};
+
 typedef struct _SONGFILE {
   char  filename[12]; // 8.3 format, not null terminated!
 } SONGFILE;
@@ -37,9 +39,8 @@ typedef struct _SONGINFO {
 	char	artist[40];
 	char	album[40];
 	unsigned int	data_start;
+  enum filetypes  type;
 } SONGINFO;
-
-enum filetypes {WAV, MP3, MP4, AAC, UNKNOWN};
 
 void songlist_build(SONGLIST *songlist);
 char* skip_artist_prefix(char* s);
@@ -48,6 +49,7 @@ int compar_song(SONGFILE *a, SONGFILE *b);
 enum filetypes get_filetype(char * filename);
 char * get_full_filename(char * filename);
 int read_song_info_for_song(SONGFILE *song, SONGINFO *songinfo);
-int read_song_info(FIL *file, SONGINFO *songinfo);
+int read_song_info_mp3(FIL *file, SONGINFO *songinfo);
+int read_song_info_mp4(FIL *file, SONGINFO *songinfo);
 
 #endif /* _FILEINFO_H_ */

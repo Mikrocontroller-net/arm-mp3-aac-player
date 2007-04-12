@@ -28,7 +28,8 @@
 #include <stdlib.h>
 #include <malloc.h>
 
-#include "control.h"
+#include "keys.h"
+#include "ir.h"
 #include "ff.h"
 #include "diskio.h"
 #include "fileinfo.h"
@@ -262,6 +263,7 @@ int main(void)
 	systime_init();
 	key_init();
 	uart0_init();
+  ir_init();
 	
 	memset(&fs, 0, sizeof(FATFS));
 	FatFs = &fs;

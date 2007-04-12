@@ -36,6 +36,19 @@
 
 #define MIN(x,y) ( ((x) < (y)) ? (x) : (y) )
 
+char *memstr(char *haystack, char *needle, int size)
+{
+	char *p;
+	char needlesize = strlen(needle);
+
+	for (p = haystack; p <= (haystack-needlesize+size); p++)
+	{
+		if (memcmp(p, needle, needlesize) == 0)
+			return p; /* found */
+	}
+	return NULL;
+}
+
 #ifdef ARM
 void songlist_build(SONGLIST *songlist)
 {
@@ -123,18 +136,69 @@ enum filetypes get_filetype(char * filename)
 int read_song_info_for_song(SONGFILE *song, SONGINFO *songinfo)
 {
   FIL _file;
+  enum filetypes type = UNKNOWN;
+  
   memset(&_file, 0, sizeof(FIL));
   assert(f_open(&_file, get_full_filename(song->filename), FA_OPEN_EXISTING|FA_READ) == FR_OK);
-  assert(read_song_info(&_file, songinfo) == 0);
+  type = get_filetype(get_full_filename(song->filename));
+  
+  if (type == MP4) {
+    assert(read_song_info_mp4(&_file, songinfo) == 0);
+  } else if (type == MP3) {
+    assert(read_song_info_mp3(&_file, songinfo) == 0);
+  } else {
+    assert(0);
+  }
+  
+  assert(songinfo->type != 0);
   assert(f_close(&_file) == FR_OK);
   return 0;
 }
 #endif
 
-int read_song_info(FIL *file, SONGINFO *songinfo)
+/*int read_song_info(FIL *file, SONGINFO *songinfo) {
+
+}*/
+
+int read_song_info_mp4(FIL *file, SONGINFO *songinfo)
+{
+	char buffer[1000];
+	char *p;
+	long data_offset = -1;
+	WORD bytes_read;
+	
+	memset(songinfo, 0, sizeof(SONGINFO));
+	
+  songinfo->type = MP4;
+	
+	for(int n=0; n<100; n++) {
+		assert(f_read(file, buffer, sizeof(buffer), &bytes_read) == FR_OK);
+		p = memstr(buffer, "mdat", sizeof(buffer));
+		if(p != NULL) {
+			data_offset = (p - buffer) + file->fptr - bytes_read + 4;
+			iprintf("found mdat atom data at 0x%lx\n", data_offset);
+			break;
+		} else {
+			// seek backwards
+			assert(f_lseek(file, file->fptr - 4) == FR_OK);
+		}
+	}
+	
+	assert(data_offset > 0);
+	assert(f_lseek(file, data_offset) == FR_OK);
+  songinfo->data_start = data_offset;
+  
+  return 0;
+}
+
+int read_song_info_mp3(FIL *file, SONGINFO *songinfo)
 {
 	BYTE id3buffer[3000];
 	WORD bytes_read;
+
+	memset(songinfo, 0, sizeof(SONGINFO));
+	
+  songinfo->type = MP3;
 
   // try ID3v2
   #ifdef ARM
@@ -142,8 +206,6 @@ int read_song_info(FIL *file, SONGINFO *songinfo)
 	#else
 	fread(id3buffer, 1, sizeof(id3buffer), file);
 	#endif
-	
-	memset(songinfo, 0, sizeof(SONGINFO));
 	
 	if (strncmp("ID3", id3buffer, 3) == 0) {
 		DWORD tag_size, frame_size;

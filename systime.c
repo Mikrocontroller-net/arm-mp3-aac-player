@@ -18,17 +18,15 @@
 #include "Board.h"
 #include "interrupt_utils.h"
 #include "systime.h"
-#include "control.h"
+#include "keys.h"
 #include "diskio.h"
+#include "ir.h"
 
 #ifdef ERAM  /* Fast IRQ functions Run in RAM  - see board.h */
 #define ATTR RAMFUNC
 #else
 #define ATTR
 #endif
-
-#define TCK  1000                           /* Timer Clock  */
-#define PIV  ((MCK/TCK/16)-1)               /* Periodic Interval Value */
 
 volatile unsigned long systime_value;     /* Current Time Tick */            /* Current Time Tick */
 
@@ -45,12 +43,17 @@ void  NACKEDFUNC ATTR systime_isr(void) {        /* System Interrupt Handler */
 		//if ((systime_value % 500) == 0) {     /* 500ms Elapsed ? */
 		//	*AT91C_PIOA_ODSR ^= LED4;          /* Toggle LED4 */
 		//}
-		if (systime_value % 16 == 0) {
+		if (systime_value % 128 == 0) {
 			process_keys();
 		}
-		if (systime_value % 10 == 0) {
+		if (systime_value % 256 == 0) {
 			disk_timerproc();
 		}
+		if (systime_value % 1 == 0) {
+      ir_receive();
+		}
+		
+		
 		*AT91C_AIC_EOICR = pPIT->PITC_PIVR;    /* Ack & End of Interrupt */
 	} 
 	else {
