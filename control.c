@@ -71,9 +71,9 @@ long get_key_short( long key_mask )
 	long x;
 	unsigned state;
 	state = disableIRQ();
-  	x = get_key_press( ~key_state & key_mask );
-  	restoreIRQ(state);
-  	return x;
+  x = get_key_press( ~key_state & key_mask );
+  restoreIRQ(state);
+  return x;
 }
 
 
