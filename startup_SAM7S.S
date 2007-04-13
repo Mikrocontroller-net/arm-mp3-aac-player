@@ -166,6 +166,10 @@
 */
         .equ    PMC_SETUP,      1
         .equ    PMC_MOR_Val,    0x00000601
+			 	//Setting PLL and divider:
+			  //- div by 5 Fin = 3,6864 =(18,432 / 5)
+			  //- Mul 25+1: Fout =	95,8464 =(3,6864 *26)
+			  //for 96 MHz the erroe is 0.16%
         .equ    PMC_PLLR_Val,   0x00191C05
         .equ    PMC_MCKR_Val,   0x00000007
 
