@@ -258,10 +258,13 @@ void dac_init(void)
 	*/
 	
 	/************ Programmable Clock Output PCK2 ***********/
-	// select source (PLL)
-	// select prescaler (8)
+	// select source (MAIN CLK = external clock)
+	// select prescaler (1)
 	// => 12 MHz
-	pPMC->PMC_PCKR[2] = (AT91C_PMC_PRES_CLK_8 | AT91C_PMC_CSS_PLL_CLK);
+	pPMC->PMC_PCKR[2] = (AT91C_PMC_PRES_CLK | AT91C_PMC_CSS_MAIN_CLK);
+	// uncomment the following to use PLLCK/8 (if you are using a different XTAL and a PLL clock of 96 MHz):
+  //pPMC->PMC_PCKR[2] = (AT91C_PMC_PRES_CLK_8 | AT91C_PMC_CSS_PLL_CLK);
+
 	// enable PCK2
 	*AT91C_PMC_SCER = AT91C_PMC_PCK2;
 	// wait

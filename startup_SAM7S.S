@@ -28,6 +28,7 @@
 //*** <<< Use Configuration Wizard in Context Menu >>> ***
 */
 
+#include "pll.h"
 
 
 // *** Startup Code (executed after Reset) ***
@@ -169,8 +170,9 @@
 			 	//Setting PLL and divider:
 			  //- div by 5 Fin = 3,6864 =(18,432 / 5)
 			  //- Mul 25+1: Fout =	95,8464 =(3,6864 *26)
-			  //for 96 MHz the erroe is 0.16%
-        .equ    PMC_PLLR_Val,   0x00191C05
+			  //for 96 MHz the error is 0.16%
+				// TODO: figure out the rest of the configuration
+        .equ    PMC_PLLR_Val,   0x00001C00 | (PLLMUL << 16) | (PLLDIV);
         .equ    PMC_MCKR_Val,   0x00000007
 
 

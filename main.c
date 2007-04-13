@@ -40,9 +40,6 @@
 
 #include "raw_aac_data.h"
 
-#define TCK  1000                           /* Timer Clock  */
-#define PIV  ((MCK/TCK/16)-1)               /* Periodic Interval Value */
-
 FATFS fs;
 static FIL file;
 static DIR dir;

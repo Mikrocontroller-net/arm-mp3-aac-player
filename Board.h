@@ -22,6 +22,7 @@
 #define Board_h
 
 #include "AT91SAM7S64.h"
+#include "pll.h"
 //#define __inline inline
 //#include "include/lib_AT91SAM7S64.h"
 
@@ -131,8 +132,10 @@ extern void AT91F_RSTSetMode( AT91PS_RSTC pRSTC, unsigned int mode);
 /* Master Clock */
 /*--------------*/
 
-#define EXT_OC          18432000   // Exetrnal ocilator MAINCK
-#define MCK             48054857   // MCK (PLLRC div by 2)
-#define MCKKHz          (MCK/1000) //
+//#define EXT_CK          18432000ul   // External oscilator MAINCK
+#define EXT_CK          12000000ul
+#define PLLCK           (EXT_CK / PLLDIV * (PLLMUL+1)) //48054857   // MCK (PLLRC div by 2)
+#define MCK             (PLLCK/2)
+#define MCKKHz          (MCK/1000)
 
 #endif /* Board_h */
