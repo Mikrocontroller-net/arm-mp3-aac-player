@@ -21,8 +21,8 @@
 #ifndef _PLAYER_H_
 #define _PLAYER_H_
 
+enum user_commands get_command(void);
+
 void player_init(void);
-void next(void);
-void play(void);
 
 #endif /* _PLAYER_H_ */
