@@ -45,12 +45,13 @@ static void stop();
 static void start();
 static void do_playing();
 static void do_stopped();
+static void do_paused();
 
 static unsigned char buf[2048];
 //static SONGINFO songinfo;
 extern FATFS fs;
 
-enum playing_states {PLAYING, STOPPED};
+enum playing_states {PLAYING, STOPPED, PAUSED};
 enum user_commands {CMD_START, CMD_STOP, CMD_NEXT};
 static enum playing_states state = STOPPED;
 static FIL file;
@@ -64,10 +65,10 @@ enum user_commands get_command(void)
 	long key1 = get_key_rpt( 1<<KEY1 ) || get_key_press( 1<<KEY1 );
   int ir_cmd = ir_get_cmd();
 	
-	if ((key0 && state == STOPPED) || ir_cmd == 0x35) {
-    return CMD_START;
-	} else if ((key0 && state == PLAYING) || ir_cmd == 0x36) {
+	if ((key0 && state == PLAYING) || ir_cmd == 0x36) {
     return CMD_STOP;
+	} else if (key0 || ir_cmd == 0x35) {
+    return CMD_START;
 	} else if (key1 || ir_cmd == 0x34) {
     return CMD_NEXT;
 	}
@@ -143,6 +144,20 @@ static void start()
 	}
 }
 
+static void pause()
+{
+  // wait until both buffers are empty
+  while(dac_busy_buffers() > 0);
+  dac_disable_dma();
+  state = PAUSED;
+}
+
+static void cont()
+{
+  dac_enable_dma();
+  state = PLAYING;
+}
+
 // State loop actions
 
 static void do_playing()
@@ -189,7 +204,7 @@ static void do_playing()
 
 	switch(cmd) {
 	  case CMD_STOP:
-      stop();
+      pause();
 		  iprintf("underruns: %u\n", underruns);
       break;
 	  case CMD_NEXT:
@@ -210,6 +225,21 @@ static void do_stopped()
   		start();
       break;
   	case CMD_NEXT:
+  		next();
+      break;
+	}
+}
+
+void do_paused()
+{
+  enum user_commands cmd = get_command();
+  
+  switch(cmd) {
+    case CMD_START:
+  		cont();
+      break;
+  	case CMD_NEXT:
+      stop();
   		next();
       break;
 	}
@@ -258,6 +288,10 @@ void play(void)
 		
   		case PLAYING:
         do_playing();
+        break;
+      
+      case PAUSED:
+        do_paused();
         break;
 		}
 	}
