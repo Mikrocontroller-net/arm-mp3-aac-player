@@ -89,3 +89,8 @@ unsigned long systime_get(void)
 	
 	return ret;
 }
+
+unsigned long systime_get_ms(void)
+{
+  return systime_get() / 10;
+}
