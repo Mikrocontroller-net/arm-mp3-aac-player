@@ -9,6 +9,9 @@
 #include "systime.h"
 #include "interrupt_utils.h"
 
+static unsigned int ir_address(unsigned int received);
+static unsigned int ir_command(unsigned int received);
+
 unsigned int	rc5_bit;				// bit value
 unsigned int	rc5_time;				// count bit time
 unsigned int	rc5_tmp;				// shift bits in
