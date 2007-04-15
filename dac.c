@@ -39,7 +39,6 @@ void dac_reset()
 	stopped = 1;
 	underruns = 0;
 	dac_set_srate(44100);
-
 }
 
 // return the index of the next writeable buffer or -1 on failure
