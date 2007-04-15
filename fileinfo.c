@@ -164,7 +164,7 @@ int read_song_info_mp4(FIL *file, SONGINFO *songinfo)
 {
 	char buffer[1000];
 	char *p;
-	long data_offset = -1;
+	long data_offset = 0;
 	WORD bytes_read;
 	
 	memset(songinfo, 0, sizeof(SONGINFO));
@@ -184,7 +184,11 @@ int read_song_info_mp4(FIL *file, SONGINFO *songinfo)
 		}
 	}
 	
-	assert(data_offset > 0);
+  if(data_offset == 0) {
+    puts("couldn't find mdat atom");
+  }
+	
+	
 	assert(f_lseek(file, data_offset) == FR_OK);
   songinfo->data_start = data_offset;
   
