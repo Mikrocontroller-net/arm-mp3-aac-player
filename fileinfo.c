@@ -54,6 +54,7 @@ void songlist_build(SONGLIST *songlist)
 {
   DIR dir;
   FILINFO fileinfo;
+  SONGINFO songinfo;
   
   // build song list
   unsigned int song_index = 0;
@@ -65,9 +66,13 @@ void songlist_build(SONGLIST *songlist)
 		  fileinfo.fname,
 		  fileinfo.fsize ) ;
 
-	  if(get_filetype(fileinfo.fname) == MP3 || get_filetype(fileinfo.fname) == MP4) {
+	  if (get_filetype(fileinfo.fname) == MP3 || get_filetype(fileinfo.fname) == MP4 || get_filetype(fileinfo.fname) == MP2) {
+	    // save filename in list
 	    strncpy(songlist->list[song_index].filename, fileinfo.fname, sizeof(songlist->list[song_index].filename));
-	    song_index++;
+	    // try to read song info or don't save this entry
+      if (read_song_info_for_song(&(songlist->list[song_index]), &songinfo) == 0) {
+	      song_index++;
+	    }
 	  }
 
 	  songlist->size = song_index;
@@ -76,7 +81,7 @@ void songlist_build(SONGLIST *songlist)
 
 void songlist_sort(SONGLIST *songlist) {
   PROFILE_START("sorting song list");
-  heapsort(songlist->list, songlist->size, sizeof(songlist->list[0]), compar_song);
+  heapsort(songlist->list, songlist->size, sizeof(songlist->list[0]), (void *)compar_song);
   PROFILE_END();
 }
 #endif
@@ -100,11 +105,11 @@ int compar_song(SONGFILE *a, SONGFILE *b) {
   memset(str_b, 0, sizeof(str_b));
   
   memset(&songinfo, 0, sizeof(SONGINFO));
-  read_song_info_for_song(a, &songinfo);
+  assert(read_song_info_for_song(a, &songinfo) == 0);
   strncpy(str_a, skip_artist_prefix(songinfo.artist), sizeof(str_a)-1);
   
   memset(&songinfo, 0, sizeof(SONGINFO));
-  read_song_info_for_song(b, &songinfo);
+  assert(read_song_info_for_song(b, &songinfo) == 0);
   strncpy(str_b, skip_artist_prefix(songinfo.artist), sizeof(str_b)-1);
   
   //iprintf("comparing %s <-> %s: %d\n", str_a, str_b, strncasecmp(str_a, str_b, MIN(sizeof(str_a), sizeof(str_b))));
@@ -118,8 +123,10 @@ enum filetypes get_filetype(char * filename)
 	
 	extension = strrchr(filename, '.') + 1;
 	
-	if(strncasecmp(extension, "MP3", 3) == 0) {
-		return MP3;
+	if(strncasecmp(extension, "MP2", 3) == 0) {
+		return MP2;
+	} else if (strncasecmp(extension, "MP3", 3) == 0) {
+    return MP3;
 	} else if (strncasecmp(extension, "MP4", 3) == 0 ||
 	           strncasecmp(extension, "M4A", 3) == 0) {
 		return MP4;
@@ -137,22 +144,25 @@ int read_song_info_for_song(SONGFILE *song, SONGINFO *songinfo)
 {
   FIL _file;
   enum filetypes type = UNKNOWN;
+  int result = -1;
   
   memset(&_file, 0, sizeof(FIL));
   assert(f_open(&_file, get_full_filename(song->filename), FA_OPEN_EXISTING|FA_READ) == FR_OK);
   type = get_filetype(get_full_filename(song->filename));
   
+  songinfo->type = type;
+  
   if (type == MP4) {
-    assert(read_song_info_mp4(&_file, songinfo) == 0);
+    result = read_song_info_mp4(&_file, songinfo);
   } else if (type == MP3) {
-    assert(read_song_info_mp3(&_file, songinfo) == 0);
+    result = read_song_info_mp3(&_file, songinfo);
   } else {
-    assert(0);
+    result = -1;
   }
   
   assert(songinfo->type != 0);
   assert(f_close(&_file) == FR_OK);
-  return 0;
+  return result;
 }
 #endif
 
@@ -162,7 +172,7 @@ int read_song_info_for_song(SONGFILE *song, SONGINFO *songinfo)
 
 int read_song_info_mp4(FIL *file, SONGINFO *songinfo)
 {
-	char buffer[1000];
+	char buffer[3000];
 	char *p;
 	long data_offset = 0;
 	WORD bytes_read;
@@ -180,12 +190,13 @@ int read_song_info_mp4(FIL *file, SONGINFO *songinfo)
 			break;
 		} else {
 			// seek backwards
-			assert(f_lseek(file, file->fptr - 4) == FR_OK);
+			//assert(f_lseek(file, file->fptr - 4) == FR_OK);
 		}
 	}
 	
   if(data_offset == 0) {
     puts("couldn't find mdat atom");
+    return -1;
   }
 	
 	

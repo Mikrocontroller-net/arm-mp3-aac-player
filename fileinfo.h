@@ -23,7 +23,7 @@
 
 #define MAX_SONGS 50
 
-enum filetypes {WAV, MP3, MP4, AAC, UNKNOWN=0};
+enum filetypes {WAV, MP2, MP3, MP4, AAC, UNKNOWN=0};
 
 typedef struct _SONGFILE {
   char  filename[12]; // 8.3 format, not null terminated!
